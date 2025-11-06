@@ -6,11 +6,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.experimental.Accessors;
 
 @Entity
 @Table(name = "companies")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Company {
 
     @Id
@@ -42,6 +49,7 @@ public class Company {
 
     @NotNull(message = "Active status is required")
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(name = "created_at", updatable = false)

@@ -1,0 +1,209 @@
+### Kiotviet Multi-Tenant and Security Tests
+### Base URL: http://localhost:8080
+
+### Variables
+@baseUrl = http://localhost:8080
+
+### Company 1 Variables
+@company1Name = CompanyAlpha
+@company1Email = alpha@company.com
+@company1Username = alphauser
+@company1Password = AlphaSecure123!
+
+### Company 2 Variables
+@company2Name = CompanyBeta
+@company2Email = beta@company.com
+@company2Username = betauser
+@company2Password = BetaSecure123!
+
+### ====================================================================
+### 1. MULTI-TENANT ISOLATION TESTS
+### ====================================================================
+
+### 1.1 Register Company 1 user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "{{company1Name}}",
+  "companyEmail": "{{company1Email}}",
+  "companyPhone": "0123456789",
+  "companyAddress": "Alpha Street, District 1, HCMC",
+  "taxCode": "ALPHA123",
+  "username": "{{company1Username}}",
+  "email": "{{company1Username}}@{{company1Name}}.com",
+  "fullName": "Alpha User",
+  "phone": "0912345678",
+  "password": "{{company1Password}}",
+  "role": "admin"
+}
+
+### 1.2 Register Company 2 user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "{{company2Name}}",
+  "companyEmail": "{{company2Email}}",
+  "companyPhone": "0987654321",
+  "companyAddress": "Beta Street, District 7, HCMC",
+  "taxCode": "BETA456",
+  "username": "{{company2Username}}",
+  "email": "{{company2Username}}@{{company2Name}}.com",
+  "fullName": "Beta User",
+  "phone": "0923456789",
+  "password": "{{company2Password}}",
+  "role": "admin"
+}
+
+### 1.3 Login as Company 1 user
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "{{company1Password}}"
+}
+
+### 1.4 Login as Company 2 user
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company2Username}}",
+  "password": "{{company2Password}}"
+}
+
+### 1.5 Try to login with same username from different company (should fail if username uniqueness is enforced)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "Company Gamma",
+  "companyEmail": "gamma@company.com",
+  "companyPhone": "0976543210",
+  "companyAddress": "Gamma Street, District 3, HCMC",
+  "taxCode": "GAMMA789",
+  "username": "{{company1Username}}",
+  "email": "gammauser@gamma.com",
+  "fullName": "Gamma User",
+  "phone": "0934567890",
+  "password": "GammaSecure123!",
+  "role": "manager"
+}
+
+### ====================================================================
+### 2. SECURITY AND AUTHENTICATION TESTS
+### ====================================================================
+
+### 2.1 Test account lockout (multiple failed attempts)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "wrongpassword1"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "wrongpassword2"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "wrongpassword3"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "wrongpassword4"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "wrongpassword5"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "{{company1Password}}"
+}
+
+### ====================================================================
+### 3. INPUT VALIDATION TESTS
+### ====================================================================
+
+### 3.1 Test SQL Injection attempts
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin' OR '1'='1",
+  "password": "password"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "password' OR '1'='1"
+}
+
+### 3.2 Test XSS attempts
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "<script>alert('xss')</script>",
+  "password": "{{company1Password}}"
+}
+
+### 3.3 Test Unicode and special characters
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "nguyễn-văn-tést",
+  "password": "{{company1Password}}"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{company1Username}}",
+  "password": "пароль123!"
+}
+
+### 3.4 Test very long inputs
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "thisisaverylongusernamethatexceedsthemaximumallowedlengthandshouldbevalidatedandrejectedbythesystem",
+  "password": "{{company1Password}}"
+}

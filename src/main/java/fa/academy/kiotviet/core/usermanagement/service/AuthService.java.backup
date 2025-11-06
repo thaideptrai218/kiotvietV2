@@ -1,0 +1,237 @@
+package fa.academy.kiotviet.core.usermanagement.service;
+
+import fa.academy.kiotviet.application.dto.auth.request.LoginRequest;
+import fa.academy.kiotviet.application.dto.auth.request.RegistrationRequest;
+import fa.academy.kiotviet.application.dto.auth.response.AuthResponse;
+import fa.academy.kiotviet.core.tenant.domain.Company;
+import fa.academy.kiotviet.core.tenant.repository.CompanyRepository;
+import fa.academy.kiotviet.core.usermanagement.domain.UserAuth;
+import fa.academy.kiotviet.core.usermanagement.domain.UserInfo;
+import fa.academy.kiotviet.core.usermanagement.domain.UserToken;
+import fa.academy.kiotviet.core.usermanagement.repository.UserAuthRepository;
+import fa.academy.kiotviet.core.usermanagement.repository.UserInfoRepository;
+import fa.academy.kiotviet.core.usermanagement.repository.UserTokenRepository;
+import fa.academy.kiotviet.infrastructure.security.JwtUtil;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final CompanyRepository companyRepository;
+    private final UserInfoRepository userInfoRepository;
+    private final UserAuthRepository userAuthRepository;
+    private final UserTokenRepository userTokenRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    @Transactional
+    public AuthResponse register(RegistrationRequest request) {
+        // Phase 1: Complete business validation before creating any entities
+        validateBusinessRules(request);
+
+        // Phase 2: Create entities only after all validation passes
+        Company company = createCompanyFromRequest(request);
+        UserInfo user = createUserFromRequest(request, company);
+        UserAuth userAuth = createUserAuth(request, user);
+
+        // Phase 3: Save all entities atomically
+        company = companyRepository.save(company);
+        user.setCompany(company);
+        user = userInfoRepository.save(user);
+        userAuth.setUser(user);
+        userAuthRepository.save(userAuth);
+
+        // Phase 4: Generate tokens
+        return generateAuthResponse(user, company);
+    }
+
+    private void validateBusinessRules(RegistrationRequest request) {
+        // Company-level validation
+        if (companyRepository.existsByName(request.getCompanyName())) {
+            throw new IllegalArgumentException("Company with this name already exists");
+        }
+
+        if (companyRepository.existsByEmail(request.getCompanyEmail())) {
+            throw new IllegalArgumentException("Company with this email already exists");
+        }
+
+        // Global user validation (prevent basic conflicts before company creation)
+        if (userInfoRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists in system");
+        }
+
+        if (userInfoRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists in system");
+        }
+    }
+
+    private Company createCompanyFromRequest(RegistrationRequest request) {
+        return Company.builder()
+                .name(request.getCompanyName())
+                .email(request.getCompanyEmail())
+                .phone(request.getCompanyPhone())
+                .address(request.getCompanyAddress())
+                .taxCode(request.getTaxCode())
+                .isActive(true)
+                .build();
+    }
+
+    private UserInfo createUserFromRequest(RegistrationRequest request, Company company) {
+        UserInfo user = new UserInfo();
+        user.setCompany(company);
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setFullName(request.getFullName());
+        user.setPhone(request.getPhone());
+        user.setRole(request.getRole());
+        user.setIsActive(true);
+        return user;
+    }
+
+    private UserAuth createUserAuth(RegistrationRequest request, UserInfo user) {
+        String salt = generateSalt();
+        String passwordHash = passwordEncoder.encode(request.getPassword() + salt);
+
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUser(user);
+        userAuth.setPasswordHash(passwordHash);
+        userAuth.setSalt(salt);
+        userAuth.setTwoFactorEnabled(false);
+        userAuth.setFailedAttempts(0);
+        return userAuth;
+    }
+
+    private AuthResponse generateAuthResponse(UserInfo user, Company company) {
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateToken(user.getId(), company.getId(), user.getUsername(),
+                user.getRole().toString());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), jti);
+        String refreshTokenHash = hashRefreshToken(refreshToken);
+
+        UserToken token = new UserToken();
+        token.setUser(user);
+        token.setRefreshTokenHash(refreshTokenHash);
+        token.setExpiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenExpiration() * 7));
+        token.setDeviceInfo("Registration");
+        token.setDeviceType(UserToken.DeviceType.WEB);
+        token.setIsActive(true);
+        userTokenRepository.save(token);
+
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
+                user.getId(),
+                company.getId(),
+                company.getName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getRole().toString());
+
+        return new AuthResponse(accessToken, refreshToken, "Bearer", jwtUtil.getAccessTokenExpiration(), userInfo);
+    }
+
+    @Transactional
+    public AuthResponse login(LoginRequest request) {
+        // Find user by username
+        UserInfo user = userInfoRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+
+        // Get user authentication details
+        UserAuth userAuth = userAuthRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid authentication details"));
+
+        // Check if user account is active
+        if (!user.getIsActive()) {
+            throw new IllegalArgumentException("User account is disabled");
+        }
+
+        // Check if company is active
+        if (!user.getCompany().getIsActive()) {
+            throw new IllegalArgumentException("Company account is disabled");
+        }
+
+        // Check if account is locked due to too many failed attempts
+        if (userAuth.getFailedAttempts() >= 5) {
+            throw new IllegalArgumentException("Account is locked due to too many failed login attempts");
+        }
+
+        // Verify password
+        if (!passwordEncoder.matches(request.getPassword() + userAuth.getSalt(), userAuth.getPasswordHash())) {
+            // Increment failed attempts
+            userAuth.setFailedAttempts(userAuth.getFailedAttempts() + 1);
+            userAuthRepository.save(userAuth);
+            throw new IllegalArgumentException("Invalid username or password");
+        }
+
+        // Reset failed attempts on successful login
+        if (userAuth.getFailedAttempts() > 0) {
+            userAuth.setFailedAttempts(0);
+            userAuthRepository.save(userAuth);
+        }
+
+        // Generate JWT tokens
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateToken(
+                user.getId(),
+                user.getCompany().getId(),
+                user.getUsername(),
+                user.getRole().toString());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), jti);
+        String refreshTokenHash = hashRefreshToken(refreshToken);
+
+        // Save refresh token
+        UserToken token = new UserToken();
+        token.setUser(user);
+        token.setRefreshTokenHash(refreshTokenHash);
+        token.setExpiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenExpiration() * 7));
+        token.setDeviceInfo("Login");
+        token.setDeviceType(UserToken.DeviceType.WEB);
+        token.setIsActive(true);
+        userTokenRepository.save(token);
+
+        // Build response
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
+                user.getId(),
+                user.getCompany().getId(),
+                user.getCompany().getName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getRole().toString());
+
+        return new AuthResponse(accessToken, refreshToken, "Bearer", jwtUtil.getAccessTokenExpiration(), userInfo);
+    }
+
+    private String generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        return Base64.getEncoder().encodeToString(salt);
+    }
+
+    /**
+     * Hashes refresh token using SHA-256 (for tokens longer than 72 bytes)
+     * BCryptPasswordEncoder has a 72-byte limit, so we use SHA-256 for refresh
+     * tokens
+     */
+    private String hashRefreshToken(String refreshToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(refreshToken.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+}

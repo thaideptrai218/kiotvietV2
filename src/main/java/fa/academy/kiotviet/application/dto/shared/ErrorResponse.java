@@ -21,6 +21,7 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private String path;
     private List<String> details;
+    private String stackTrace;
 
     // Factory methods for common cases
     public static ErrorResponse of(String message, String errorCode, int httpCode) {

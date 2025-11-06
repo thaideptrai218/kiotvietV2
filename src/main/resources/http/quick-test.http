@@ -1,0 +1,43 @@
+### Quick Test for Login Functionality
+### Use this file to quickly test the basic login functionality
+
+### Variables
+@baseUrl = http://localhost:8080
+
+### Quick Registration and Login Test
+
+### 1. Register a test user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "QuickTest Company",
+  "companyEmail": "quick@test.com",
+  "companyPhone": "0123456789",
+  "companyAddress": "Test Address",
+  "taxCode": "123456789",
+  "username": "quickuser",
+  "email": "quickuser@test.com",
+  "fullName": "Quick User",
+  "phone": "0987654321",
+  "password": "QuickTest123!",
+  "role": "admin"
+}
+
+### 2. Login with the registered user
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "quickuser",
+  "password": "QuickTest123!"
+}
+
+### 3. Test invalid login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "quickuser",
+  "password": "wrongpassword"
+}

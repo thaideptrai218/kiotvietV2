@@ -1,4 +1,4 @@
-package fa.academy.kiotviet.core.usermanagement.service;
+package fa.academy.kiotviet.core.usermanagement.service.registration;
 
 import fa.academy.kiotviet.application.dto.auth.request.RegistrationRequest;
 import fa.academy.kiotviet.application.dto.auth.response.AuthResponse;
@@ -6,34 +6,54 @@ import fa.academy.kiotviet.core.tenant.domain.Company;
 import fa.academy.kiotviet.core.tenant.repository.CompanyRepository;
 import fa.academy.kiotviet.core.usermanagement.domain.UserAuth;
 import fa.academy.kiotviet.core.usermanagement.domain.UserInfo;
-import fa.academy.kiotviet.core.usermanagement.domain.UserToken;
 import fa.academy.kiotviet.core.usermanagement.repository.UserAuthRepository;
 import fa.academy.kiotviet.core.usermanagement.repository.UserInfoRepository;
-import fa.academy.kiotviet.core.usermanagement.repository.UserTokenRepository;
-import fa.academy.kiotviet.infrastructure.security.JwtUtil;
+import fa.academy.kiotviet.core.usermanagement.service.auth.AuthService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.UUID;
 
+/**
+ * Service handling user registration flow including company creation,
+ * user account setup, and initial authentication.
+ */
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class RegistrationService {
 
     private final CompanyRepository companyRepository;
     private final UserInfoRepository userInfoRepository;
     private final UserAuthRepository userAuthRepository;
-    private final UserTokenRepository userTokenRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+      private final PasswordEncoder passwordEncoder;
+    private final AuthService authService; // Delegate authentication
 
     @Transactional
     public AuthResponse register(RegistrationRequest request) {
+        // Phase 1: Complete business validation before creating any entities
+        validateBusinessRules(request);
+
+        // Phase 2: Create entities only after all validation passes
+        Company company = createCompanyFromRequest(request);
+        UserInfo user = createUserFromRequest(request, company);
+        UserAuth userAuth = createUserAuth(request, user);
+
+        // Phase 3: Save all entities atomically
+        company = companyRepository.save(company);
+        user.setCompany(company);
+        user = userInfoRepository.save(user);
+        userAuth.setUser(user);
+        userAuthRepository.save(userAuth);
+
+        // Phase 4: Auto-login after registration
+        return authService.autoLogin(user);
+    }
+
+    private void validateBusinessRules(RegistrationRequest request) {
+        // Company-level validation
         if (companyRepository.existsByName(request.getCompanyName())) {
             throw new IllegalArgumentException("Company with this name already exists");
         }
@@ -42,6 +62,17 @@ public class AuthService {
             throw new IllegalArgumentException("Company with this email already exists");
         }
 
+        // Global user validation (prevent basic conflicts before company creation)
+        if (userInfoRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists in system");
+        }
+
+        if (userInfoRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists in system");
+        }
+    }
+
+    private Company createCompanyFromRequest(RegistrationRequest request) {
         Company company = new Company();
         company.setName(request.getCompanyName());
         company.setEmail(request.getCompanyEmail());
@@ -49,16 +80,10 @@ public class AuthService {
         company.setAddress(request.getCompanyAddress());
         company.setTaxCode(request.getTaxCode());
         company.setIsActive(true);
-        company = companyRepository.save(company);
+        return company;
+    }
 
-        if (userInfoRepository.existsByUsernameAndCompanyId(request.getUsername(), company.getId())) {
-            throw new IllegalArgumentException("Username already exists in this company");
-        }
-
-        if (userInfoRepository.existsByEmailAndCompanyId(request.getEmail(), company.getId())) {
-            throw new IllegalArgumentException("Email already exists in this company");
-        }
-
+    private UserInfo createUserFromRequest(RegistrationRequest request, Company company) {
         UserInfo user = new UserInfo();
         user.setCompany(company);
         user.setUsername(request.getUsername());
@@ -67,8 +92,10 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setRole(request.getRole());
         user.setIsActive(true);
-        user = userInfoRepository.save(user);
+        return user;
+    }
 
+    private UserAuth createUserAuth(RegistrationRequest request, UserInfo user) {
         String salt = generateSalt();
         String passwordHash = passwordEncoder.encode(request.getPassword() + salt);
 
@@ -78,33 +105,7 @@ public class AuthService {
         userAuth.setSalt(salt);
         userAuth.setTwoFactorEnabled(false);
         userAuth.setFailedAttempts(0);
-        userAuthRepository.save(userAuth);
-
-        String jti = UUID.randomUUID().toString();
-        String accessToken = jwtUtil.generateToken(user.getId(), company.getId(), user.getUsername(), user.getRole().toString());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), jti);
-        String refreshTokenHash = passwordEncoder.encode(refreshToken);
-
-        UserToken token = new UserToken();
-        token.setUser(user);
-        token.setRefreshTokenHash(refreshTokenHash);
-        token.setExpiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenExpiration() * 7));
-        token.setDeviceInfo("Registration");
-        token.setDeviceType(UserToken.DeviceType.WEB);
-        token.setIsActive(true);
-        userTokenRepository.save(token);
-
-        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
-            user.getId(),
-            company.getId(),
-            company.getName(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getFullName(),
-            user.getRole().toString()
-        );
-
-        return new AuthResponse(accessToken, refreshToken, "Bearer", jwtUtil.getAccessTokenExpiration(), userInfo);
+        return userAuth;
     }
 
     private String generateSalt() {

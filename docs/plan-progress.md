@@ -57,13 +57,25 @@
   - [x] Add input validation
   - [x] Test user registration
 
-- [ ] **Implement login endpoint with JWT generation**
-  - [ ] Add JWT dependencies
-  - [ ] Create JWT utility class
-  - [ ] Implement authentication service
-  - [ ] Create login controller endpoint
-  - [ ] Add JWT token generation
-  - [ ] Test login functionality
+- [x] **Implement login endpoint with JWT generation**
+  - [x] Add JWT dependencies
+  - [x] Create JWT utility class
+  - [x] Implement authentication service
+  - [x] Create login controller endpoint
+  - [x] Add JWT token generation
+  - [x] Test login functionality
+  - [x] Implement token refresh endpoint
+  - [x] Implement logout functionality
+  - [x] Add comprehensive error handling
+
+- [x] **Refactor authentication services using SOLID principles**
+  - [x] Separate monolithic AuthService into focused modules
+  - [x] Create dedicated RegistrationService for user registration flow
+  - [x] Create focused AuthService for authentication operations
+  - [x] Implement proper business validation order
+  - [x] Add JSON parsing error handling (400 responses)
+  - [x] Apply Builder pattern for cleaner object initialization
+  - [x] Test refactored authentication endpoints
 
 - [ ] **Create user tables (accounts, user_info, user_auth, user_tokens)**
   - [ ] Write Flyway migration for user tables
@@ -792,9 +804,9 @@
 
 ## PROGRESS TRACKING
 
-### Overall Progress: 14% (23/168 tasks completed)
+### Overall Progress: 18% (31/168 tasks completed)
 
-**Week 1**: 60% (15/25 tasks completed)
+**Week 1**: 72% (23/25 tasks completed)
 - ✅ Spring Boot project setup with Maven
 - ✅ Git repository with .gitignore and README
 - ✅ MySQL 8.0 Docker setup with database
@@ -803,6 +815,11 @@
 - ✅ Docker configuration and documentation
 - ✅ Database workflow documentation
 - ✅ Basic folder structure (frontend + backend)
+- ✅ User registration and login endpoints with JWT
+- ✅ Authentication service refactoring with SOLID principles
+- ✅ JSON parsing error handling (400 responses)
+- ✅ Builder pattern implementation for cleaner code
+- ✅ Comprehensive validation and business logic fixes
 
 **Week 2**: 0% (0/20 tasks completed)
 **Week 3**: 0% (0/19 tasks completed)
@@ -810,7 +827,7 @@
 **Week 5**: 0% (0/17 tasks completed)
 **Week 6**: 0% (0/20 tasks completed)
 
-### Last Updated: November 5, 2025
+### Last Updated: November 6, 2025
 **Next Milestone**: Complete Week 1 - Project Setup & Foundation
 
 ---

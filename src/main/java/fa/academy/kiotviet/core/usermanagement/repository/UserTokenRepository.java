@@ -1,6 +1,9 @@
 package fa.academy.kiotviet.core.usermanagement.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import fa.academy.kiotviet.core.usermanagement.domain.UserInfo;
@@ -20,4 +23,11 @@ public interface UserTokenRepository extends JpaRepository<UserToken, Long> {
     void deleteByUser(UserInfo user);
 
     void deleteByExpiresAtBefore(LocalDateTime date);
+
+    // Token management methods
+    Optional<UserToken> findByRefreshTokenHash(String refreshTokenHash);
+
+    @Modifying
+    @Query("UPDATE UserToken t SET t.isActive = false WHERE t.user.id = :userId")
+    void deactivateAllUserTokens(@Param("userId") Long userId);
 }

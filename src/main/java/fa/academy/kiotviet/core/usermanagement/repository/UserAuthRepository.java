@@ -14,4 +14,7 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, Long> {
     Optional<UserAuth> findByUser(UserInfo user);
 
     boolean existsByUser(UserInfo user);
+
+    // For login - find user auth by user ID
+    Optional<UserAuth> findByUserId(Long userId);
 }

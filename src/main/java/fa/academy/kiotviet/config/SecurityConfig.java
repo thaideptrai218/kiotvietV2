@@ -43,8 +43,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                // Permit registration endpoint
+                // Permit authentication endpoints
                 .requestMatchers("/api/auth/register").permitAll()
+                .requestMatchers("/api/auth/login").permitAll()
                 // Allow all requests for development - will be restricted later
                 .anyRequest().permitAll()
             )
