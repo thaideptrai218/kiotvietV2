@@ -1,0 +1,162 @@
+-- =============================================
+-- PERFORMANCE INDEXES & BUSINESS CONSTRAINTS
+-- Critical for multi-tenant performance and data integrity
+-- =============================================
+
+-- ============= BUSINESS RULE CONSTRAINTS =============
+
+-- Product pricing constraints (skip if already exist)
+ALTER TABLE products
+ADD CONSTRAINT IF NOT EXISTS chk_price_positive
+CHECK (cost_price >= 0 AND selling_price >= 0);
+
+ALTER TABLE products
+ADD CONSTRAINT IF NOT EXISTS chk_selling_price_cost
+CHECK (selling_price >= cost_price);
+
+-- Inventory quantity constraints (skip if already exist)
+ALTER TABLE inventory
+ADD CONSTRAINT IF NOT EXISTS chk_stock_quantities
+CHECK (quantity >= 0 AND min_stock >= 0 AND max_stock >= min_stock);
+
+-- Inventory transaction quantity validation
+ALTER TABLE inventory_transactions
+ADD CONSTRAINT chk_transaction_quantity
+CHECK (
+    (transaction_type IN ('stock_in', 'initial_stock', 'transfer_in', 'return') AND quantity > 0) OR
+    (transaction_type IN ('stock_out', 'adjustment', 'transfer_out', 'sale', 'damage', 'expired') AND quantity < 0) OR
+    (transaction_type NOT IN ('stock_in', 'initial_stock', 'transfer_in', 'return', 'stock_out', 'adjustment', 'transfer_out', 'sale', 'damage', 'expired') AND quantity = 0)
+);
+
+-- User constraints
+ALTER TABLE user_info
+ADD CONSTRAINT chk_role_valid
+CHECK (role IN ('admin', 'manager', 'staff'));
+
+ALTER TABLE user_auth
+ADD CONSTRAINT chk_failed_attempts
+CHECK (failed_attempts >= 0);
+
+-- Token validation
+ALTER TABLE user_tokens
+ADD CONSTRAINT chk_expires_future
+CHECK (expires_at > created_at);
+
+-- Category path validation
+ALTER TABLE categories
+ADD CONSTRAINT chk_level_non_negative
+CHECK (level >= 0);
+
+ALTER TABLE categories
+ADD CONSTRAINT chk_path_format
+CHECK (path LIKE '/%' AND path != '/' AND path NOT LIKE '%/%/');
+
+-- ============= CRITICAL COMPOSITE INDEXES =============
+
+-- Multi-tenant performance indexes
+CREATE INDEX idx_products_company_active_name ON products(company_id, is_active, name);
+CREATE INDEX idx_products_company_category_active ON products(company_id, category_id, is_active);
+CREATE INDEX idx_categories_company_level_active ON categories(company_id, level, is_active);
+CREATE INDEX idx_categories_company_parent_active ON categories(company_id, parent_id, is_active);
+CREATE INDEX idx_users_company_role_active ON user_info(company_id, role, is_active);
+CREATE INDEX idx_inventory_company_branch_active ON inventory(company_id, branch_id);
+CREATE INDEX idx_inventory_company_product_active ON inventory(company_id, product_id);
+
+-- Full-text search for Vietnamese product names
+CREATE FULLTEXT INDEX idx_products_name_search ON products(name);
+CREATE FULLTEXT INDEX idx_products_description_search ON products(description);
+
+-- Product search optimization (common query patterns)
+CREATE INDEX idx_products_search ON products(company_id, is_active, name, barcode, code);
+CREATE INDEX idx_products_brand_active ON products(brand, is_active) WHERE brand IS NOT NULL;
+
+-- Inventory performance indexes
+CREATE INDEX idx_inventory_low_stock_alert ON inventory(company_id, quantity, min_stock)
+WHERE quantity <= min_stock;
+CREATE INDEX idx_inventory_reorder_needed ON inventory(company_id, quantity, reorder_point)
+WHERE quantity <= reorder_point;
+
+-- Transaction analysis indexes
+CREATE INDEX idx_transactions_company_product_date ON inventory_transactions(company_id, product_id, created_at);
+CREATE INDEX idx_transactions_branch_type_date ON inventory_transactions(branch_id, transaction_type, created_at);
+CREATE INDEX idx_transactions_reference_lookup ON inventory_transactions(reference_code, reference_type)
+WHERE reference_code IS NOT NULL;
+
+-- User session management indexes
+CREATE INDEX idx_tokens_user_device_active ON user_tokens(user_info_id, device_type, is_active);
+CREATE INDEX idx_tokens_expires_cleanup ON user_tokens(expires_at, is_active) WHERE is_active = TRUE;
+
+-- Product image optimization
+CREATE INDEX idx_product_images_primary_active ON product_images(product_id, is_primary, is_active);
+CREATE INDEX idx_product_images_order ON product_images(product_id, display_order, is_active);
+
+-- Category tree traversal optimization
+CREATE INDEX idx_categories_path_lookup ON categories(path, company_id, is_active);
+CREATE INDEX idx_categories_parent_order ON categories(parent_id, display_order, is_active);
+
+-- ============= ARCHIVAL & CLEANUP INDEXES =============
+
+-- Indexes for data archiving queries
+CREATE INDEX idx_transactions_old_records ON inventory_transactions(created_at)
+WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 YEAR);
+CREATE INDEX idx_tokens_expired ON user_tokens(expires_at, is_active)
+WHERE expires_at < NOW() OR is_active = FALSE;
+
+-- ============= PERFORMANCE MONITORING VIEWS =============
+
+-- Create view for low stock alerts across all branches
+CREATE OR REPLACE VIEW v_low_stock_alerts AS
+SELECT
+    c.name as company_name,
+    b.name as branch_name,
+    p.name as product_name,
+    p.code as product_code,
+    i.quantity,
+    i.min_stock,
+    i.reorder_point,
+    i.reorder_quantity,
+    i.last_updated
+FROM inventory i
+JOIN branches b ON i.branch_id = b.id
+JOIN products p ON i.product_id = p.id
+JOIN companies c ON b.company_id = c.id
+WHERE i.quantity <= i.min_stock
+  AND i.min_stock > 0
+  AND b.is_active = TRUE
+  AND p.is_active = TRUE
+  AND c.is_active = TRUE
+ORDER BY c.name, b.name, p.name;
+
+-- Create view for product search (with images)
+CREATE OR REPLACE VIEW v_products_with_images AS
+SELECT
+    p.*,
+    c.name as category_name,
+    c.path as category_path,
+    COALESCE(pi.image_url, '/images/placeholder.jpg') as primary_image_url
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id
+LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = TRUE AND pi.is_active = TRUE
+WHERE p.is_active = TRUE;
+
+-- Create view for user authentication info
+CREATE OR REPLACE VIEW v_user_auth_info AS
+SELECT
+    ui.id,
+    ui.company_id,
+    ui.username,
+    ui.email,
+    ui.full_name,
+    ui.role,
+    ui.is_active as user_active,
+    ua.password_hash,
+    ua.two_factor_enabled,
+    ua.failed_attempts,
+    ua.locked_until,
+    ua.last_login,
+    COUNT(ut.id) as active_sessions
+FROM user_info ui
+LEFT JOIN user_auth ua ON ui.id = ua.user_info_id
+LEFT JOIN user_tokens ut ON ui.id = ut.user_info_id AND ut.is_active = TRUE AND ut.expires_at > NOW()
+GROUP BY ui.id, ui.company_id, ui.username, ui.email, ui.full_name, ui.role, ui.user_active,
+         ua.password_hash, ua.two_factor_enabled, ua.failed_attempts, ua.locked_until, ua.last_login;
