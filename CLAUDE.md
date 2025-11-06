@@ -183,4 +183,4 @@ If only one function changes, just show that one.
 Take your time to ultrathink when on extended thinking mode — thinking is cheaper than fixing bugs.
 
 Update CLAUDE.md after complete a big changes. Alway let claude memory up to date.
-- when complate a task please go to @plan-progress.md and tick for completion
+- when complate a task please go to @plan-progress.md and tick for completion and git commit the project.
