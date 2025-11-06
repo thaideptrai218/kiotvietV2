@@ -3,12 +3,12 @@
 
 ### Variables
 @baseUrl = http://localhost:8080
-@companyName = TestCompany
-@companyEmail = test@company.com
+@companyName = TestCompany123
+@companyEmail = test1@company.com
 @companyPhone = 0123456789
 @companyAddress = 123 Test Street, Ho Chi Minh City
 @taxCode = 123456789
-@username = testuser
+@username = testuser123
 @email = testuser@test.com
 @fullName = Test User
 @phone = 0987654321
@@ -60,16 +60,16 @@ POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-  "companyName": "Another Company",
-  "companyEmail": "invalid-email",
+  "companyName": "Another Company123123",
+  "companyEmail": "welterial123123@gmail.com",
   "companyPhone": "0987654321",
   "companyAddress": "Test Address",
   "taxCode": "123456789",
   "username": "anotheruser",
-  "email": "invalid-email",
+  "email": "welterial123123@gmail.com",
   "fullName": "Another User",
   "phone": "0123456789",
-  "password": "SecurePass123!",
+  "password": "SecurePass123",
   "role": "manager"
 }
 

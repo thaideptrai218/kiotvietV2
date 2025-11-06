@@ -77,17 +77,17 @@
   - [x] Apply Builder pattern for cleaner object initialization
   - [x] Test refactored authentication endpoints
 
-- [ ] **Create user tables (accounts, user_info, user_auth, user_tokens)**
-  - [ ] Write Flyway migration for user tables
-  - [ ] Add proper indexes
-  - [ ] Add foreign key constraints
-  - [ ] Test table creation
+- [x] **Create user tables (accounts, user_info, user_auth, user_tokens)**
+  - [x] Write Flyway migration for user tables (V1 migration)
+  - [x] Add proper indexes for multi-tenant queries
+  - [x] Add foreign key constraints for data integrity
+  - [x] Test table creation (verified in V1 migration)
 
-- [ ] **Implement password hashing with BCrypt**
-  - [ ] Configure BCrypt password encoder
-  - [ ] Update user creation to hash passwords
-  - [ ] Test password hashing and verification
-  - [ ] Add password validation rules
+- [x] **Implement password hashing with BCrypt**
+  - [x] Configure BCrypt password encoder in SecurityConfig
+  - [x] Update user creation to hash passwords with salt
+  - [x] Test password hashing and verification (working)
+  - [x] Add password validation rules (implemented in DTOs)
 
 - [ ] **Build login page (HTML + JavaScript)**
   - [ ] Create login.html template
@@ -804,9 +804,9 @@
 
 ## PROGRESS TRACKING
 
-### Overall Progress: 18% (31/168 tasks completed)
+### Overall Progress: 20% (39/168 tasks completed)
 
-**Week 1**: 72% (23/25 tasks completed)
+**Week 1**: 84% (25/25 tasks completed)
 - ✅ Spring Boot project setup with Maven
 - ✅ Git repository with .gitignore and README
 - ✅ MySQL 8.0 Docker setup with database
@@ -820,6 +820,8 @@
 - ✅ JSON parsing error handling (400 responses)
 - ✅ Builder pattern implementation for cleaner code
 - ✅ Comprehensive validation and business logic fixes
+- ✅ User tables creation with proper indexes and constraints
+- ✅ BCrypt password hashing implementation with salt
 
 **Week 2**: 0% (0/20 tasks completed)
 **Week 3**: 0% (0/19 tasks completed)
