@@ -74,9 +74,64 @@ This is a Kiotviet-style multi-tenant product management system for large retail
 -   **Run tests**: `./mvnw test`
 -   **Run specific test**: `./mvnw test -Dtest=ClassName`
 
+### Development Patterns
+
+#### Finding @Autowired Usage (for migration)
+```bash
+# Find all files using @Autowired for migration to @RequiredArgsConstructor
+find /home/welterial/haizz/kiotviet/src/main/java -name "*.java" -exec grep -l "@Autowired" {} \;
+```
+
+#### Testing API Endpoints
+```bash
+# Test authentication endpoint
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"companyName":"Test Company","email":"test@example.com","username":"testuser","password":"TestPass123!"}'
+
+# Test with authentication
+curl -X GET http://localhost:8080/api/users/me \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### Database Operations
+```bash
+# Run database migrations
+./mvnw flyway:migrate
+
+# Check migration status
+./mvnw flyway:info
+
+# Repair database after failed migration
+./mvnw flyway:repair
+```
+
 ### Maven Wrapper
 
 -   Use `./mvnw` (Linux/Mac) or `mvnw.cmd` (Windows) instead of `mvn` to ensure consistent Maven version
+
+### Code Quality Checks
+
+#### Find Lombok Usage
+```bash
+# Verify @RequiredArgsConstructor usage
+grep -r "@RequiredArgsConstructor" /home/welterial/haizz/kiotviet/src/main/java/
+
+# Check for remaining @Autowired usage
+grep -r "@Autowired" /home/welterial/haizz/kiotviet/src/main/java/
+```
+
+#### Verify Package Structure
+```bash
+# Check DTO organization
+find /home/welterial/haizz/kiotviet/src/main/java/fa/academy/kiotviet/application/dto -type d
+
+# Check controller organization
+find /home/welterial/haizz/kiotviet/src/main/java/fa/academy/kiotviet/application/controller -type d
+
+# Check core domain organization
+find /home/welterial/haizz/kiotviet/src/main/java/fa/academy/kiotviet/core -type d
+```
 
 ## Architecture
 
@@ -92,7 +147,7 @@ This is a Kiotviet-style multi-tenant product management system for large retail
 -   **Build Tool**: Maven 3.9
 -   **Code Quality**: Lombok for boilerplate reduction
 
-### Project Structure (Updated - Enterprise Architecture)
+### Project Structure (Domain-First Enterprise Architecture)
 
 ```
 kiotviet/
@@ -109,30 +164,76 @@ kiotviet/
 │   │   │   │   ├── SecurityConfig.java  # Spring Security configuration
 │   │   │   │   ├── JpaConfig.java      # JPA and auditing config
 │   │   │   │   ├── RedisConfig.java    # Redis caching configuration
-│   │   │   │   └── WebConfig.java      # Web MVC and CORS configuration
+│   │   │   │   ├── WebConfig.java      # Web MVC and CORS configuration
+│   │   │   │   └── GlobalExceptionHandler.java # Global error handling
 │   │   │   ├── application/             # Application layer
-│   │   │   │   ├── controller/          # REST API controllers
+│   │   │   │   ├── controller/          # Web controllers
+│   │   │   │   │   ├── api/            # REST API controllers
+│   │   │   │   │   │   ├── AuthApiController.java     # Authentication APIs
+│   │   │   │   │   │   ├── UserController.java        # User management APIs
+│   │   │   │   │   │   ├── ProductController.java     # Product catalog APIs
+│   │   │   │   │   │   └── InventoryController.java   # Inventory APIs
+│   │   │   │   │   ├── web/            # Page rendering controllers
+│   │   │   │   │   │   ├── AuthPageController.java    # Authentication pages
+│   │   │   │   │   │   ├── DashboardController.java   # Dashboard pages
+│   │   │   │   │   │   └── ProductPageController.java # Product pages
+│   │   │   │   │   └── shared/         # Shared controller utilities
+│   │   │   │   │       ├── BaseController.java        # Common controller functionality
+│   │   │   │   │       └── ControllerAdvice.java     # Global controller advice
 │   │   │   │   ├── dto/                 # Data transfer objects
-│   │   │   │   └── facade/              # Complex business operations
-│   │   │   ├── core/                    # Domain layer
-│   │   │   │   ├── domain/              # Business entities organized by domain
-│   │   │   │   │   ├── usermanagement/  # User, Permission entities
-│   │   │   │   │   ├── tenant/           # Multi-tenant Account entity
-│   │   │   │   │   ├── productcatalog/  # Product, Category entities
-│   │   │   │   │   ├── inventory/       # Inventory entities
-│   │   │   │   │   ├── orders/          # Order entities
-│   │   │   │   │   ├── suppliers/       # Supplier entities
-│   │   │   │   │   └── analytics/       # Analytics entities
-│   │   │   │   ├── service/             # Business services
-│   │   │   │   └── repository/          # JPA data access interfaces
-│   │   │   ├── infrastructure/          # Infrastructure layer
-│   │   │   │   ├── security/            # JWT, authentication, authorization
-│   │   │   │   │   ├── JwtAuthenticationFilter.java
-│   │   │   │   │   └── service/         # Security services
-│   │   │   │   ├── persistence/         # JPA implementations
-│   │   │   │   └── external/            # Third-party integrations
-│   │   │   ├── shared/                 # Shared utilities
-│   │   │   │   └── BaseEntity.java     # Common entity functionality
+│   │   │   │   │   ├── shared/         # Shared across domains
+│   │   │   │   │   │   ├── SuccessResponse.java       # API success wrapper
+│   │   │   │   │   │   ├── ErrorResponse.java         # API error wrapper
+│   │   │   │   │   │   ├── PagedResponse.java         # Pagination wrapper
+│   │   │   │   │   │   ├── BaseRequest.java           # Base API request class
+│   │   │   │   │   │   ├── BaseResponse.java          # Base API response class
+│   │   │   │   │   │   └── common/                    # Common data structures
+│   │   │   │   │   │       ├── UserInfoDto.java      # User information
+│   │   │   │   │   │       ├── AddressDto.java       # Address information
+│   │   │   │   │   │       └── ContactInfoDto.java   # Contact information
+│   │   │   │   │   ├── auth/           # Authentication domain DTOs
+│   │   │   │   │   │   ├── request/RegistrationRequest.java
+│   │   │   │   │   │   └── response/AuthResponse.java
+│   │   │   │   │   ├── form/           # HTML form objects
+│   │   │   │   │   │   ├── LoginForm.java             # Login form
+│   │   │   │   │   │   ├── RegistrationForm.java      # Registration form
+│   │   │   │   │   │   └── ProductSearchForm.java     # Product search form
+│   │   │   │   │   ├── user/           # User management DTOs
+│   │   │   │   │   ├── product/        # Product catalog DTOs
+│   │   │   │   │   ├── inventory/      # Inventory DTOs
+│   │   │   │   │   └── orders/         # Order DTOs
+│   │   │   │   └── service/            # Application services
+│   │   │   │       └── ResponseFactory.java           # Centralized response creation
+│   │   │   ├── core/                    # Domain layer (domain-first organization)
+│   │   │   │   ├── tenant/             # Multi-tenant domain
+│   │   │   │   │   ├── domain/Company.java            # Company entity
+│   │   │   │   │   ├── repository/CompanyRepository.java
+│   │   │   │   │   ├── service/TenantService.java
+│   │   │   │   │   └── exception/TenantException.java
+│   │   │   │   ├── usermanagement/    # User management domain
+│   │   │   │   │   ├── domain/UserInfo.java, UserAuth.java, UserToken.java
+│   │   │   │   │   ├── repository/UserInfoRepository.java, UserAuthRepository.java
+│   │   │   │   │   ├── service/AuthService.java, UserService.java
+│   │   │   │   │   └── exception/UserManagementException.java
+│   │   │   │   ├── productcatalog/    # Product catalog domain
+│   │   │   │   ├── inventory/         # Inventory management domain
+│   │   │   │   ├── orders/            # Order processing domain
+│   │   │   │   ├── suppliers/         # Supplier management domain
+│   │   │   │   ├── analytics/         # Business analytics domain
+│   │   │   │   └── shared/            # Shared domain components
+│   │   │   │       ├── domain/BaseEntity.java     # Common entity functionality
+│   │   │   │       ├── exception/                # Exception hierarchy
+│   │   │   │       │   ├── KiotvietException.java     # Base exception
+│   │   │   │       │   ├── BusinessRuleException.java  # Business logic
+│   │   │   │       │   └── ResourceNotFoundException.java
+│   │   │   │       └── util/CommonUtilities.java     # Shared utilities
+│   │   │   ├── infrastructure/         # Infrastructure layer
+│   │   │   │   ├── security/          # Security implementation
+│   │   │   │   │   ├── JwtAuthenticationFilter.java   # JWT authentication filter
+│   │   │   │   │   ├── JwtUtil.java                   # JWT token utilities
+│   │   │   │   │   └── service/                       # Security services
+│   │   │   │   ├── persistence/       # JPA implementations
+│   │   │   │   └── external/          # Third-party integrations
 │   │   │   └── KiotvietApplication.java # Main Spring Boot application
 │   │   └── resources/
 │   │       ├── db/migration/            # Flyway database migrations (MVP simplified)
@@ -232,13 +333,210 @@ spring.jpa.show-sql=true
 -   Multi-tenant architecture with account-based isolation
 -   Role-based access control (ADMIN, MANAGER, STAFF)
 
-### Testing
+### Response Handling Patterns
 
--   Test classes mirror main package structure
--   Use Spring Boot Test framework with JUnit
--   Located in `src/test/java/fa/academy/kiotviet/`
--   Organized by test type: unit/, integration/, e2e/
--   Multi-tenant testing with isolated test data
+#### Standard API Response Structure
+```java
+// Success Response
+public SuccessResponse<T> success(T data, String message) {
+    return ResponseFactory.success(data, message);
+}
+
+// JSON Response Format
+{
+  "httpCode": 200,
+  "message": "Operation successful",
+  "data": { ... },
+  "timestamp": "2025-11-06T10:30:00"
+}
+```
+
+#### Global Exception Handling
+- Use `@RestControllerAdvice` for centralized error handling
+- Controllers should NOT catch exceptions - let them bubble up
+- Custom exceptions extend `KiotvietException` base class
+- Validation errors are handled automatically by `GlobalExceptionHandler`
+
+#### Response Factory Usage
+```java
+// In controllers
+public SuccessResponse<AuthResponse> registerUser(@Valid RegistrationRequest request) {
+    AuthResponse response = authService.register(request);
+    return ResponseFactory.success(response, "User registered successfully");
+}
+```
+
+### DTO Package Organization
+
+#### DTO Package Structure
+- **shared/** - Common response wrappers and shared DTOs
+  - `SuccessResponse.java`, `ErrorResponse.java`, `PagedResponse.java`
+  - `common/` - Common data structures (UserInfoDto, AddressDto)
+- **auth/** - Authentication-specific DTOs
+  - `request/` - API request DTOs (RegistrationRequest)
+  - `response/` - API response DTOs (AuthResponse)
+- **form/** - HTML form objects (LoginForm, RegistrationForm)
+- **[domain]/** - Domain-specific DTOs (user/, product/, inventory/)
+
+#### DTO vs Model vs Entity
+- **DTO**: Data transfer across system boundaries with validation
+- **Model**: Internal data structures for processing
+- **Entity**: Database persistence with JPA annotations
+
+### Controller Organization
+
+#### API vs Web Controllers
+- **api/** - REST API controllers (@RestController)
+  - Return JSON responses using SuccessResponse/ErrorResponse
+  - Handle API request/response with proper HTTP semantics
+  - Use `@RequestBody` for JSON input, `@Valid` for validation
+- **web/** - Page rendering controllers (@Controller)
+  - Return template names for HTML rendering
+  - Handle form submissions with `@ModelAttribute`
+  - Support traditional web applications
+
+#### Controller Growth Strategy
+- Keep flat structure until 8-10 controllers
+- Then organize by domain (auth/, users/, products/, etc.)
+- Use `shared/` for common controller utilities
+
+### Modern Dependency Injection
+
+#### Use @RequiredArgsConstructor
+```java
+@Service
+@RequiredArgsConstructor  // Generates constructor with final fields
+public class AuthService {
+    private final UserRepository userRepository;  // No @Autowired needed
+    private final EmailService emailService;
+
+    // Business logic methods
+}
+```
+
+#### Benefits
+- **Immutability**: Dependencies can't be changed after construction
+- **Testability**: Easy to create instances with mocks
+- **Compile-time Safety**: Missing dependencies caught at compile time
+- **Clean Code**: Less annotation clutter, clear dependency visibility
+
+#### Migration from @Autowired
+```java
+// OLD (avoid):
+@Autowired
+private UserRepository userRepository;
+
+// NEW (recommended):
+private final UserRepository userRepository;
+```
+
+## Architecture Decisions
+
+### Domain-First Architecture
+
+#### Decision: Organize by Business Domain Instead of Technical Layer
+- **Rationale**: Each business domain (tenant, usermanagement, productcatalog) has its own complete substructure
+- **Benefits**: Clear ownership, easier team collaboration, natural scalability
+- **Implementation**: Each domain contains domain/, repository/, service/, exception/ packages
+
+#### Why Not Flat Structure
+- Flat structure becomes unmanageable with 30+ controllers/services
+- No clear boundaries between business areas
+- Difficult to assign team ownership
+- Poor scalability as project grows
+
+### DTO vs Entity vs Model
+
+#### DTO (Data Transfer Object)
+- **Purpose**: Transfer data across system boundaries
+- **Characteristics**: Validation annotations, JSON serialization, API contracts
+- **Usage**: API requests/responses, form submissions
+- **Example**: `RegistrationRequest`, `AuthResponse`
+
+#### Entity
+- **Purpose**: Database persistence
+- **Characteristics**: JPA annotations, database mapping, relationships
+- **Usage**: Data access layer, database operations
+- **Example**: `UserEntity`, `ProductEntity`
+
+#### Model
+- **Purpose**: Internal data processing
+- **Characteristics**: Business logic, temporary state, calculations
+- **Usage**: Service layer business operations
+- **Example**: `UserCreationModel`, `ProductPricingModel`
+
+### API vs Web Controller Separation
+
+#### API Controllers (@RestController)
+- **Purpose**: Serve REST APIs for SPA/mobile clients
+- **Return**: JSON responses with SuccessResponse/ErrorResponse wrapper
+- **Input**: @RequestBody with JSON payloads
+- **Example**: `/api/auth/register`
+
+#### Web Controllers (@Controller)
+- **Purpose**: Render HTML pages for traditional web apps
+- **Return**: Template names that render to HTML
+- **Input**: @ModelAttribute with form objects
+- **Example**: `/auth/register` (HTML page)
+
+### Global Exception Handling Strategy
+
+#### Decision: Centralized Exception Handling with @RestControllerAdvice
+- **Rationale**: Controllers should focus on business logic, not error handling
+- **Benefits**: Consistent error responses, clean controllers, easy maintenance
+- **Implementation**: `GlobalExceptionHandler` handles all exceptions automatically
+- **Pattern**: Throw custom exceptions, never catch in controllers
+
+### Modern Dependency Injection
+
+#### Decision: Constructor Injection with @RequiredArgsConstructor
+- **Rationale**: Immutability, testability, compile-time safety
+- **Benefits**: Final dependencies, easier mocking, no reflection overhead
+- **Migration**: Replace @Autowired field injection with constructor injection
+- **Example**: All dependencies are final and injected via generated constructor
+
+## Testing
+
+### Testing with New Architecture
+
+#### Unit Testing Services
+```java
+@ExtendWith(MockitoExtension.class)
+class AuthServiceTest {
+    @Mock private UserRepository userRepository;
+    @Mock private EmailService emailService;
+
+    private AuthService authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = new AuthService(userRepository, emailService, ...);
+    }
+
+    @Test
+    void testRegisterUser() {
+        // Test business logic without Spring context
+    }
+}
+```
+
+#### Integration Testing Controllers
+```java
+@WebMvcTest(AuthApiController.class)
+class AuthApiControllerTest {
+    @Autowired private MockMvc mockMvc;
+    @MockBean private AuthService authService;
+
+    @Test
+    void testRegisterEndpoint() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"test@example.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("test@example.com"));
+    }
+}
+```
 
 ### Development Tools
 
@@ -257,13 +555,52 @@ spring.jpa.show-sql=true
 
 ### Team Role Organization
 
--   **Backend Developers**: Work in `core/service/`, `application/controller/`, `infrastructure/`
--   **Security Specialists**: Work in `infrastructure/security/`, `config/`
--   **Database Architects**: Work in `core/domain/`, `infrastructure/persistence/`
--   **Frontend Developers**: Work in `static/`, `templates/` with module-based approach
--   **QA Engineers**: Work in `test/` with comprehensive test structure
--   **DevOps Engineers**: Work in `scripts/`, `docker/`, `ci-cd/`, `monitoring/`
--   No artifacts.
+#### Backend Developers
+- **API Development**: `application/controller/api/`, `application/dto/`
+- **Business Logic**: `core/[domain]/service/`, `core/[domain]/domain/`
+- **Data Access**: `core/[domain]/repository/`
+- **Integration**: `infrastructure/external/`, `infrastructure/persistence/`
+
+#### Security Specialists
+- **Authentication**: `infrastructure/security/`, `core/usermanagement/`
+- **Authorization**: `config/SecurityConfig.java`, `GlobalExceptionHandler.java`
+- **JWT Implementation**: `infrastructure/security/JwtUtil.java`
+- **Multi-tenant Security**: Tenant isolation and access control
+
+#### Database Architects
+- **Domain Modeling**: `core/[domain]/domain/` entities
+- **Schema Design**: `src/main/resources/db/migration/`
+- **Performance**: Database indexing, query optimization
+- **Multi-tenant Design**: Account isolation strategies
+
+#### Frontend Developers
+- **API Controllers**: `application/controller/web/` (HTML pages)
+- **Templates**: `src/main/resources/templates/`
+- **Static Assets**: `src/main/resources/static/`
+- **Form Objects**: `application/dto/form/`
+
+#### Full-Stack Developers
+- **End-to-End Features**: Complete domains (auth, products, inventory)
+- **DTO Design**: `application/dto/[domain]/`
+- **Service Integration**: API ↔ Web controller coordination
+- **Testing**: Integration and E2E tests
+
+#### QA Engineers
+- **Unit Tests**: `src/test/unit/` - business logic validation
+- **Integration Tests**: `src/test/integration/` - API endpoint testing
+- **E2E Tests**: `src/test/e2e/` - complete user workflows
+- **API Testing**: Postman/Swagger documentation validation
+
+#### DevOps Engineers
+- **CI/CD**: `ci-cd/`, deployment pipelines
+- **Docker**: `docker/`, container orchestration
+- **Monitoring**: `monitoring/`, logging setup
+- **Scripts**: `scripts/`, build automation
+
+#### Domain Experts (Business Stakeholders)
+- **Requirements**: Domain-specific business rules
+- **Validation**: Review DTO structures and business logic
+- **User Stories**: Feature specifications and acceptance criteria
 
 Less code is better than more code.
 

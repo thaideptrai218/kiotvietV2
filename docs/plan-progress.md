@@ -41,21 +41,21 @@
   - [x] Create test structure
   - [x] Create documentation structure
 
-- [ ] **Configure Spring Security (basic setup)**
-  - [ ] Add Spring Security dependencies
-  - [ ] Create basic SecurityConfig
-  - [ ] Set up password encoder
-  - [ ] Test security configuration
+- [x] **Configure Spring Security (basic setup)**
+  - [x] Add Spring Security dependencies
+  - [x] Create basic SecurityConfig
+  - [x] Set up password encoder
+  - [x] Test security configuration
 
 ### Days 3-4: User Management & Authentication
-- [ ] **Implement user registration endpoint**
-  - [ ] Create Account entity and repository
-  - [ ] Create UserInfo entity and repository
-  - [ ] Create UserAuth entity and repository
-  - [ ] Implement registration service
-  - [ ] Create registration controller endpoint
-  - [ ] Add input validation
-  - [ ] Test user registration
+- [x] **Implement user registration endpoint**
+  - [x] Create Account entity and repository
+  - [x] Create UserInfo entity and repository
+  - [x] Create UserAuth entity and repository
+  - [x] Implement registration service
+  - [x] Create registration controller endpoint
+  - [x] Add input validation
+  - [x] Test user registration
 
 - [ ] **Implement login endpoint with JWT generation**
   - [ ] Add JWT dependencies
@@ -792,9 +792,9 @@
 
 ## PROGRESS TRACKING
 
-### Overall Progress: 11% (18/168 tasks completed)
+### Overall Progress: 14% (23/168 tasks completed)
 
-**Week 1**: 56% (14/25 tasks completed)
+**Week 1**: 60% (15/25 tasks completed)
 - ✅ Spring Boot project setup with Maven
 - ✅ Git repository with .gitignore and README
 - ✅ MySQL 8.0 Docker setup with database
