@@ -26,12 +26,29 @@ spring:
         locations: classpath:db/migration
         validate-on-migrate: true
         clean-disabled: false
+    data:
+        redis:
+            host: localhost
+            port: 6379
+            timeout: 2000ms
+            lettuce:
+                pool:
+                    max-active: 8
+                    max-idle: 8
+                    min-idle: 0
         
 
 server:
     port: 8080
 
+app:
+  jwt:
+    secret: kiotvietSecretKeyForJWTTokenGeneration123456789
+    expiration: 900 # 15 minutes in seconds
+    refresh-expiration: 604800 # 7 days in seconds
+
 logging:
     level:
         root: INFO
-        com.kiotviet: DEBUG
+        fa.academy.kiotviet: DEBUG
+        org.springframework.security: DEBUG

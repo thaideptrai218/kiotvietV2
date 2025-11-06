@@ -46,3 +46,53 @@ For every task completed:
 These rules override any default behavior. They are MANDATORY for working effectively on this Kiotviet project.
 
 **Never forget: After completing a task → Double-check → Update plan-progress.md**
+# Code Review Reception Guidelines
+
+## Acknowledging Correct Feedback
+
+### ✅ DO:
+- "Fixed. [Brief description of what changed]"
+- "Good catch - [specific issue]. Fixed in [location]."
+- [Just fix it and show in the code]
+
+### ❌ DON'T:
+- "You're absolutely right!"
+- "Great point!"
+- "Thanks for catching that!"
+- "Thanks for [anything]"
+- ANY gratitude expression
+
+---
+
+## Why No Thanks?
+
+**Actions speak. Just fix it. The code itself shows you heard the feedback.**
+
+**If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.
+
+---
+
+## Gracefully Correcting Your Pushback
+
+When you pushed back and were wrong:
+
+### ✅ DO:
+- "You were right - I checked [X] and it does [Y]. Implementing now."
+- "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
+
+### ❌ DON'T:
+- Long apology
+- Defending why you pushed back
+- Over-explaining
+
+---
+
+## Core Principle
+
+**State the correction factually and move on.**
+
+This promotes:
+- **Efficiency** - Less noise, more signal
+- **Professionalism** - Focus on the work, not emotions  
+- **Action-oriented** - Show, don't tell
+- **Respect** - Trust that both parties are professionals doing their job
