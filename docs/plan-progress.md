@@ -143,12 +143,12 @@
   - [x] ~~Dashboard navigation and layout~~ (deferred)
   - [x] ~~User information display~~ (deferred)
 
-- [ ] **Implement logout functionality**
-  - [ ] Create logout endpoint
-  - [ ] Invalidate refresh tokens
-  - [ ] Clear client-side cookies
-  - [ ] Redirect to login page
-  - [ ] Test logout flow
+- [x] **Implement logout functionality**
+  - [x] Create secure logout endpoint requiring authentication
+  - [x] Invalidate refresh tokens on logout
+  - [x] Add device-specific logout with ownership validation
+  - [x] Refactor UserPrincipal to use Lombok annotations
+  - [x] Add comprehensive logout testing scenarios
 
 - [ ] **Start Week 2: Categories & Suppliers**
   - [ ] Create categories table with materialized path
