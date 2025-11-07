@@ -71,74 +71,45 @@ class RegistrationForm {
     }
 
     setupAutoFocus() {
-        // Focus first field on load
-        const firstField = document.querySelector('#step1Collapse input');
+        const firstField = document.querySelector('#step1 input, #step1 textarea');
         if (firstField) {
             setTimeout(() => firstField.focus(), 100);
         }
-
-        // Focus management for step transitions
-        this.setupStepFocus();
-    }
-
-    setupStepFocus() {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    const target = mutation.target;
-                    if (target.classList.contains('show')) {
-                        const firstInput = target.querySelector('input, textarea');
-                        if (firstInput) {
-                            setTimeout(() => firstInput.focus(), 300);
-                        }
-                    }
-                }
-            });
-        });
-
-        document.querySelectorAll('.accordion-collapse').forEach(collapse => {
-            observer.observe(collapse, { attributes: true });
-        });
     }
 
     // Step Navigation
     goToStep(step) {
         if (step < 1 || step > this.totalSteps) return;
 
-        // Hide all steps
-        document.querySelectorAll('.accordion-collapse').forEach(collapse => {
-            const bsCollapse = bootstrap.Collapse.getInstance(collapse);
-            if (bsCollapse) {
-                bsCollapse.hide();
-            }
+        // Hide all panes
+        document.querySelectorAll('.step-pane').forEach(pane => {
+            pane.classList.remove('active');
         });
 
-        // Show target step
-        const targetCollapse = document.getElementById(`step${step}Collapse`);
-        if (targetCollapse) {
-            const bsCollapse = new bootstrap.Collapse(targetCollapse, {
-                show: true
-            });
+        // Show target pane
+        const targetPane = document.getElementById(`step${step}`);
+        if (targetPane) {
+            targetPane.classList.add('active');
         }
 
         // Update progress indicators
         this.updateProgress(step);
         this.currentStep = step;
 
-        // Smooth scroll to form
-        targetCollapse?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Focus first field in the step
+        const firstInput = targetPane?.querySelector('input, textarea');
+        if (firstInput) setTimeout(() => firstInput.focus(), 150);
 
-        // Add animation class
+        // Smooth scroll and subtle animation
+        targetPane?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         setTimeout(() => {
-            targetCollapse?.classList.add('success-animation');
-            setTimeout(() => {
-                targetCollapse?.classList.remove('success-animation');
-            }, 600);
+            targetPane?.classList.add('success-animation');
+            setTimeout(() => targetPane?.classList.remove('success-animation'), 600);
         }, 100);
     }
 
     validateAndGoToStep(nextStep) {
-        const currentStepFields = document.querySelectorAll(`#step${this.currentStep}Collapse [data-validation]`);
+        const currentStepFields = document.querySelectorAll(`#step${this.currentStep} [data-validation]`);
         let isValid = true;
         let firstInvalidField = null;
 
@@ -193,8 +164,8 @@ class RegistrationForm {
         }
 
         // Add success animation before proceeding
-        const currentCollapse = document.getElementById(`step${this.currentStep}Collapse`);
-        currentCollapse?.classList.add('success-animation');
+        const currentPane = document.getElementById(`step${this.currentStep}`);
+        currentPane?.classList.add('success-animation');
 
         setTimeout(() => {
             this.goToStep(nextStep);
@@ -353,7 +324,7 @@ class RegistrationForm {
 
         // Validate all steps
         for (let step = 1; step <= this.totalSteps; step++) {
-            const stepFields = document.querySelectorAll(`#step${step}Collapse [data-validation]`);
+            const stepFields = document.querySelectorAll(`#step${step} [data-validation]`);
             let stepValid = true;
 
             stepFields.forEach(field => {
@@ -404,37 +375,39 @@ class RegistrationForm {
         submitBtn.disabled = true;
 
         try {
+            // Collect form data and convert to JSON payload expected by API
             const formData = new FormData(this.form);
+            const payload = Object.fromEntries(formData.entries());
 
             const response = await fetch(this.form.action, {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'text/html'
-                }
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
 
-            if (response.ok) {
-                // Check if response is a redirect
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('text/html')) {
-                    // Server returned HTML (likely a redirect page)
-                    window.location.href = response.url;
-                } else {
-                    // Check for redirect
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    } else {
-                        throw new Error('Unexpected response from server');
+            if (!response.ok) {
+                // Try to extract server error message
+                let message = `Registration failed (HTTP ${response.status}).`;
+                try {
+                    const err = await response.json();
+                    if (err && (err.message || err.error || err.details)) {
+                        message = err.message || err.error || (Array.isArray(err.details) ? err.details.join(', ') : message);
                     }
+                } catch (_) {
+                    // No JSON body
                 }
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                throw new Error(message);
             }
+
+            // SuccessResponse<AuthResponse>
+            // We don't need tokens here for now; redirect to login page
+            window.location.href = '/auth/login?registered=true';
         } catch (error) {
             console.error('Registration error:', error);
-            this.showGlobalError('Registration failed. Please try again or contact support.');
+            this.showGlobalError(error?.message || 'Registration failed. Please try again or contact support.');
 
             // Reset button state
             buttonText.style.display = 'inline';
