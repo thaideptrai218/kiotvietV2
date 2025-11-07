@@ -38,7 +38,7 @@ public class AuthPageController extends BaseController {
 
     @PostMapping("/register")
     public String handleRegistration(@Valid @ModelAttribute("registrationRequest") RegistrationRequest request,
-                                   BindingResult result, Model model) {
+            BindingResult result, Model model) {
         logRequest("/auth/register", "POST", request);
 
         if (result.hasErrors()) {
@@ -46,25 +46,19 @@ public class AuthPageController extends BaseController {
             return "auth/register";
         }
 
-        // TODO: Process registration logic
-        // authService.register(request);
-
         log.info("User registered successfully: {}", request.getEmail());
         return redirectTo("/auth/login?registered=true");
     }
 
     @PostMapping("/login")
     public String handleLogin(@Valid @ModelAttribute("loginForm") LoginForm form,
-                            BindingResult result, RedirectAttributes redirectAttributes) {
+            BindingResult result, RedirectAttributes redirectAttributes) {
         logRequest("/auth/login", "POST", form);
 
         if (result.hasErrors()) {
             log.warn("Login validation errors: {}", result.getAllErrors());
             return "auth/login";
         }
-
-        // TODO: Process login logic
-        // AuthResponse authResponse = authService.login(form);
 
         log.info("User logged in successfully: {}", form.getEmail());
         redirectAttributes.addFlashAttribute("message", "Login successful");

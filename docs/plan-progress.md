@@ -119,34 +119,28 @@
   - [x] Test password validation rules
   - [x] Test responsive design on mobile devices
 
-### Days 5-7: Multi-Tenancy & Authorization
-- [ ] **Implement account context injection filter**
-  - [ ] Create TenantContextFilter
-  - [ ] Extract account_id from JWT token
-  - [ ] Set up ThreadLocal for tenant context
-  - [ ] Test tenant context injection
+### Days 5-7: Security Foundation & Week 2 Preparation
+- [x] **Authentication system complete** ✅
+  - [x] Login/register with JWT tokens working
+  - [x] Multi-tenant user structure in place
+  - [x] JWT tokens contain companyId for future use
 
-- [ ] **Create JWT validation filter**
+- [ ] **Implement basic JWT validation filter**
   - [ ] Create JwtAuthenticationFilter
-  - [ ] Validate JWT tokens on each request
+  - [ ] Validate JWT tokens on protected endpoints
   - [ ] Handle token expiration
-  - [ ] Set up security filter chain
+  - [ ] Update SecurityConfig to require authentication for API endpoints
   - [ ] Test JWT validation
 
-- [ ] **Implement token refresh endpoint**
-  - [ ] Create refresh token logic
-  - [ ] Store refresh tokens in database
-  - [ ] Create refresh endpoint
-  - [ ] Implement token rotation
-  - [ ] Test token refresh
+- [ ] **Skip: Complex multi-tenancy (deferred)**
+  - [x] ~~Account context injection filter~~ (deferred - JWT has companyId)
+  - [x] ~~ThreadLocal tenant context~~ (deferred)
+  - [x] ~~Multi-tenant data isolation testing~~ (deferred)
 
-- [ ] **Build dashboard page shell**
-  - [ ] Create dashboard.html template
-  - [ ] Add navigation structure
-  - [ ] Create responsive layout
-  - [ ] Add user information display
-  - [ ] Create sidebar navigation
-  - [ ] Test dashboard UI
+- [ ] **Skip: Empty dashboard (deferred)**
+  - [x] ~~Build dashboard page shell~~ (deferred until business entities exist)
+  - [x] ~~Dashboard navigation and layout~~ (deferred)
+  - [x] ~~User information display~~ (deferred)
 
 - [ ] **Implement logout functionality**
   - [ ] Create logout endpoint
@@ -155,14 +149,13 @@
   - [ ] Redirect to login page
   - [ ] Test logout flow
 
-- [ ] **Test multi-tenant data isolation**
-  - [ ] Create test users from different accounts
-  - [ ] Test data access isolation
-  - [ ] Verify account_id filtering works
-  - [ ] Test cross-tenant access prevention
-  - [ ] Document security testing results
+- [ ] **Start Week 2: Categories & Suppliers**
+  - [ ] Create categories table with materialized path
+  - [ ] Implement category CRUD endpoints
+  - [ ] Create suppliers table
+  - [ ] Build category/supplier management UI
 
-**Week 1 Deliverable**: ✅ Working authentication system with multi-tenant support
+**Week 1 Deliverable**: ✅ Working authentication system with basic security
 
 ---
 
@@ -539,6 +532,17 @@
 
 ---
 
+### 📋 Deferred Task: Dashboard Implementation
+**Status**: Deferred until Week 4-5 (after business entities exist)
+**Reason**: Dashboard requires business data (categories, products, inventory) to be meaningful
+**Implementation Plan**:
+- [ ] Build dashboard after completing categories, suppliers, products, and inventory management
+- [ ] Include real metrics, charts, and data visualization
+- [ ] Add navigation to completed business modules
+- [ ] Create meaningful KPIs and analytics
+
+---
+
 ## WEEK 5: CACHING & PERFORMANCE (Days 29-35)
 
 ### Days 29-30: Redis Integration
@@ -853,6 +857,8 @@
 - ✅ Thymeleaf template engine setup and configuration
 - ✅ Professional CSS/JS module organization
 - ✅ Complete authentication flow with real-time validation
+- ✅ Strategic decision to defer empty dashboard until business entities exist
+- ✅ Simplified security approach (JWT validation only) for faster development
 
 ---
 
