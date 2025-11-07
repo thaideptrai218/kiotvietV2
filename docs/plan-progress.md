@@ -150,93 +150,257 @@
   - [x] Refactor UserPrincipal to use Lombok annotations
   - [x] Add comprehensive logout testing scenarios
 
-- [ ] **Start Week 2: Categories & Suppliers**
-  - [ ] Create categories table with materialized path
-  - [ ] Implement category CRUD endpoints
-  - [ ] Create suppliers table
-  - [ ] Build category/supplier management UI
-
 **Week 1 Deliverable**: ✅ Working authentication system with basic security
 
 ---
 
-## WEEK 2: CATEGORY & SUPPLIER MANAGEMENT (Days 8-14)
+## WEEK 2: PARALLEL DEVELOPMENT - CATEGORIES & SUPPLIERS (Days 8-14)
+**Team**: Developer A (Categories) + Developer B (Suppliers) working in parallel
 
-### Days 8-9: Category System
-- [ ] **Create categories table with materialized path**
-  - [ ] Design Category entity with path field
-  - [ ] Write Flyway migration for categories table
-  - [ ] Add indexes for path-based queries
-  - [ ] Add self-referencing foreign key
-  - [ ] Test category table creation
+---
 
-- [ ] **Implement category CRUD endpoints**
-  - [ ] Create Category entity
+### 🧩 **DEVELOPER A: CATEGORY MANAGEMENT**
+**Business Purpose**: Group products for easier management, reporting, and POS navigation
+**Requirements**: New category system from scratch with sophisticated tree UI
+
+#### Days 8-10: Category Database & Backend
+- [ ] **Create new categories table V6 with materialized path**
+  - [ ] Design Category entity with unlimited hierarchy support
+  - [ ] Write Flyway migration V6 for categories table
+  - [ ] Materialized path field: "/drinks/soft-drinks/coke"
+  - [ ] Add self-referencing foreign key for parent-child
+  - [ ] Add indexes: (company_id, path), (company_id, parent_id), (company_id, is_active)
+  - [ ] Test table creation with sample data
+
+- [ ] **Implement Category entity and repository**
+  - [ ] Create Category entity with JPA annotations and Lombok
   - [ ] Create CategoryRepository with account isolation
-  - [ ] Create CategoryService with business logic
-  - [ ] Create CategoryController with REST endpoints
-  - [ ] Add input validation and error handling
-  - [ ] Test all CRUD operations
+  - [ ] Add methods: findByCompanyId, findByParentId, findByPathStartingWith
+  - [ ] Add tree building queries and path manipulation methods
+  - [ ] Add soft delete support with is_active field
 
-- [ ] **Build category tree selector UI**
+- [ ] **Create CategoryService with business logic**
+  - [ ] Implement path generation for new categories
+  - [ ] Add parent assignment validation (prevent cycles)
+  - [ ] Create tree building algorithms
+  - [ ] Add category movement logic with path updates
+  - [ ] Add validation rules (name uniqueness per level)
+
+- [ ] **Create Category API endpoints**
+  - [ ] Create CategoryApiController with REST endpoints
+  - [ ] GET /api/categories - Return flat list for tree building
+  - [ ] POST /api/categories - Create new category
+  - [ ] PUT /api/categories/{id} - Update category
+  - [ ] DELETE /api/categories/{id} - Soft delete with validation
+  - [ ] Add ResponseFactory for consistent responses
+
+#### Days 11-12: Category Frontend with Sophisticated UI
+- [ ] **Build category tree HTML structure**
   - [ ] Create category management HTML template
-  - [ ] Build recursive category tree display
-  - [ ] Add category creation form
-  - [ ] Add category editing form
-  - [ ] Implement category deletion with confirmation
-  - [ ] Test category UI components
+  - [ ] Build recursive tree with tri-state checkboxes
+  - [ ] Add expand/collapse functionality (default collapsed)
+  - [ ] Display product counts: "Beverages (23)"
+  - [ ] Add pencil icon menu per category
 
-- [ ] **Implement hierarchical category queries**
-  - [ ] Create methods for building category trees
-  - [ ] Implement path-based category retrieval
-  - [ ] Add category children/parent queries
-  - [ ] Optimize queries with proper indexes
-  - [ ] Test hierarchical queries
+- [ ] **Implement tri-state checkbox system**
+  - [ ] Recursive selection: parent selects all children
+  - [ ] Indeterminate state for partial selection
+  - [ ] "Select All" for currently visible categories only
+  - [ ] Apply button returns all selected category IDs
+  - [ ] Maintain selection state during operations
 
-- [ ] **Test category operations**
-  - [ ] Test category creation with parent assignment
-  - [ ] Test category tree building
-  - [ ] Test category moving between parents
-  - [ ] Test category deletion constraints
-  - [ ] Test category operations with account isolation
+- [ ] **Create CRUD operations via pencil menu**
+  - [ ] Rename category (inline or modal)
+  - [ ] Create subcategory functionality
+  - [ ] Move category (change parent) with validation
+  - [ ] Delete category with confirmation modal
+  - [ ] Add validation: prevent delete if has children or products
 
-### Days 10-11: Supplier Management
-- [ ] **Create suppliers table**
-  - [ ] Design Supplier entity
-  - [ ] Write Flyway migration for suppliers table
-  - [ ] Add account_id and indexes
-  - [ ] Add unique constraints for supplier names per account
-  - [ ] Test supplier table creation
+#### Days 13-14: Category Advanced Features & Polish
+- [ ] **Implement advanced search functionality**
+  - [ ] Search with substring matching (case-sensitive)
+  - [ ] Auto-expand branches to reveal matches
+  - [ ] Optional text highlighting for matches
+  - [ ] Maintain selection state when clearing search
+  - [ ] Keep last expanded state option
 
-- [ ] **Implement supplier CRUD endpoints**
-  - [ ] Create Supplier entity
+- [ ] **Add category movement and validation**
+  - [ ] Move category with path updates for all descendants
+  - [ ] Prevent moving under self or descendants
+  - [ ] Refresh affected branches after movement
+  - [ ] Add animation for tree updates
+  - [ ] Handle sort order within parent levels
+
+- [ ] **Testing and UX improvements**
+  - [ ] Test unlimited depth hierarchy with mock data
+  - [ ] Test recursive selection and propagation
+  - [ ] Test CRUD operations with validation
+  - [ ] Add loading indicators and transitions
+  - [ ] Test responsive design on mobile devices
+
+---
+
+### 🏭 **DEVELOPER B: SUPPLIER MANAGEMENT**
+**Business Purpose**: Track suppliers, manage purchase relationships, and monitor debt/credit
+**Requirements**: Basic debt tracking + auto-complete for future product integration
+
+#### Days 8-10: Supplier Database & Backend
+- [ ] **Create suppliers table V7 with basic debt tracking**
+  - [ ] Design Supplier entity with contact info and basic debt fields
+  - [ ] Write Flyway migration V7 for suppliers table
+  - [ ] Add basic debt fields: outstanding_balance, last_payment_date, credit_limit
+  - [ ] Add account_id, name, contact_person, phone, email, address, tax_code, website, notes
+  - [ ] Add indexes: (company_id, name), (company_id, is_active), (contact_person), (tax_code)
+  - [ ] Add unique constraint: (company_id, name)
+  - [ ] Test table creation with sample data
+
+- [ ] **Implement Supplier entity and repository**
+  - [ ] Create Supplier entity with JPA annotations and Lombok
   - [ ] Create SupplierRepository with account isolation
-  - [ ] Create SupplierService with validation
-  - [ ] Create SupplierController with REST endpoints
-  - [ ] Add search functionality
-  - [ ] Test supplier CRUD operations
+  - [ ] Add methods: findByCompanyId, findByNameContaining, findByContactPerson, findByTaxCode
+  - [ ] Add search functionality with case-insensitive options
+  - [ ] Add soft delete support with is_active field
+  - [ ] Add pagination support
 
-- [ ] **Build supplier management UI**
+- [ ] **Create SupplierService with validation**
+  - [ ] Implement supplier name uniqueness validation per company
+  - [ ] Add email format validation
+  - [ ] Add tax code format validation
+  - [ ] Add basic debt tracking methods
+  - [ ] Create supplier search service with multiple criteria
+  - [ ] Add contact information validation rules
+
+- [ ] **Create Supplier API endpoints**
+  - [ ] Create SupplierApiController with REST endpoints
+  - [ ] GET /api/suppliers - List with pagination and search
+  - [ ] POST /api/suppliers - Create new supplier
+  - [ ] GET /api/suppliers/{id} - Get supplier details
+  - [ ] PUT /api/suppliers/{id} - Update supplier
+  - [ ] DELETE /api/suppliers/{id} - Soft delete supplier
+  - [ ] GET /api/suppliers/search - Advanced search endpoint
+  - [ ] Add ResponseFactory for consistent responses
+
+- [ ] **Create auto-complete service for future integration**
+  - [ ] Implement supplier search auto-complete API
+  - [ ] Create endpoint: GET /api/suppliers/autocomplete?query=
+  - [ ] Return limited results with id and display name for dropdowns
+  - **Add product-supplier relationship preparation**
+  - [ ] Add supplier_id field to products table (future V8 migration)
+  - [ ] Test supplier selection in product forms
+  - [ ] Create shared supplier search component
+
+#### Days 11-12: Supplier Frontend with Auto-Complete
+- [ ] **Build supplier management HTML structure**
   - [ ] Create supplier management HTML template
-  - [ ] Build supplier list with pagination
-  - [ ] Add supplier creation form
-  - [ ] Add supplier editing form
-  - [ ] Implement supplier search functionality
-  - [ ] Test supplier UI
+  - [ ] Build supplier list/table with responsive design
+  - [ ] Add search and filter sidebar
+  - [ ] Add supplier details modal for viewing
+  - [ ] Add create/edit supplier modals
 
-- [ ] **Implement supplier search**
-  - [ ] Add search by supplier name
-  - [ ] Add search by contact person
-  - [ ] Implement search result caching
-  - [ ] Add search result pagination
-  - [ ] Test supplier search functionality
+- [ ] **Create supplier forms and validation**
+  - [ ] Create supplier creation form with all fields
+  - [ ] Add supplier editing form with data population
+  - [ ] Implement field validation (email, phone, tax code)
+  - [ ] Add form validation messages and error handling
+  - [ ] Add loading indicators for AJAX operations
 
-- [ ] **Test supplier operations**
-  - [ ] Test supplier creation and validation
-  - [ ] Test supplier search functionality
-  - [ ] Test supplier account isolation
-  - [ ] Test supplier deletion constraints
-  - [ ] Test supplier-product relationships
+- [ ] **Implement supplier search functionality**
+  - [ ] Real-time search with debouncing
+  - [ ] Multiple search criteria (name, contact, tax code)
+  - [ ] Search result highlighting
+  - [ ] Filter by active status
+  - [ ] Pagination with page numbers and sorting
+
+- [ ] **Create auto-complete component for integration**
+  - [ ] Build reusable supplier auto-complete component
+  - [ ] Keyboard navigation support
+  - [ ] Selected value display and removal
+  - [ ] Loading states and error handling
+  - [ ] Test in context of future product forms
+
+#### Days 13-14: Supplier Advanced Features & Polish
+- [ ] **Implement supplier data management**
+  - [ ] CSV import functionality with validation
+  - [ ] CSV export with selected fields
+  - [ ] Bulk supplier operations (activate/deactivate)
+  - [ ] Supplier duplicate detection
+  - [ ] Supplier contact management enhancement
+
+- [ ] **Enhanced search and filtering**
+  - [ ] Advanced search with multiple filter combinations
+  - [ ] Search result caching for performance
+  - [ ] Save search preferences and history
+  - [ ] Search analytics and reporting
+  - [ ] Performance optimization for large supplier lists
+
+- [ ] **Testing and integration preparation**
+  - [ ] End-to-end supplier creation and management flow
+  - [ ] Test auto-complete component integration
+  - [ ] Test supplier selection in product context
+  - [ ] Mobile responsive design testing
+  - ] Cross-browser compatibility testing
+
+- [ ] **UX improvements and documentation**
+  - [ ] Loading indicators and transitions
+  - ] Keyboard shortcuts for navigation
+  - **Success notifications for CRUD operations**
+  - **Error handling with specific messages**
+  - **API documentation for supplier endpoints**
+  - **User guide for supplier management**
+  - **Code documentation and integration guide**
+
+---
+
+### 🤝 **COORDINATION POINTS & INTEGRATION**
+
+#### Shared Responsibilities:
+- **Database Schema**: Coordinate Flyway migrations (V6 for categories, V7 for suppliers, V8 for product-supplier relationship)
+- **Common UI Components**: Share modal dialogs, form components, loading indicators
+- **Auto-Complete Component**: Create reusable supplier search component for future product forms
+- **Authentication**: Both use existing JWT authentication system
+- **Multi-tenancy**: Both implement account isolation consistently
+- **Validation Patterns**: Use consistent validation approaches and error messaging
+
+#### Integration Checkpoints:
+- **Day 10**: Both backend APIs functional and tested
+- **Day 12**: Supplier auto-complete component ready for future product integration
+- **Day 14**: Final cross-module integration testing and code review
+
+#### Business Flow Preparation:
+- **Product Import Flow**: When importing goods → Select Supplier + Choose Category (both dropdowns ready)
+- **Reporting Integration**: Categories for sales reports, Suppliers for debt tracking and purchase analysis
+- **Example**: "Coca-Cola 330ml" → Category: "Drinks/Soft Drinks", Supplier: "Coca-Cola Vietnam Ltd."
+- **Future Enhancement**: Product forms will use both category tree selection and supplier auto-complete components
+
+#### Technical Standards:
+- **Follow existing patterns**: @RequiredArgsConstructor, ResponseFactory, domain-first architecture
+- **Multi-tenant enforcement**: Account isolation in all queries and operations
+- **JWT Security**: All endpoints require authentication
+- **Bootstrap 5 Integration**: Consistent styling with existing theme
+- **RESTful Design**: Proper HTTP methods, status codes, and error responses
+- **Database Optimization**: Proper indexing for search and hierarchical queries
+
+---
+
+### 🤝 **COORDINATION POINTS**
+
+#### Shared Responsibilities:
+- **Database Schema**: Coordinate Flyway migrations (V6, V7) to avoid conflicts
+- **Common UI Components**: Share CSS classes and JavaScript utilities
+- **Authentication**: Both use existing JWT authentication system
+- **Multi-tenancy**: Both implement account isolation consistently
+
+#### Integration Checkpoints:
+- **Day 10**: Both backend APIs should be functional
+- **Day 12**: Both frontend systems should connect to their APIs
+- **Day 14**: Final integration testing and code review
+
+#### Business Flow Preparation:
+- **Product Import Flow**: When importing goods → Select Supplier + Choose Category
+- **Reporting Integration**: Categories for sales reports, Suppliers for debt reports
+- **Example**: "Coca-Cola 330ml" → Category: "Drinks/Soft Drinks", Supplier: "Coca-Cola Vietnam Ltd."
+
+**Week 2 Deliverable**: ✅ Complete category and supplier management systems developed in parallel
 
 ### Days 12-14: Foundation Testing
 - [ ] **Write unit tests for services**
