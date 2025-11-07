@@ -7,8 +7,11 @@ import fa.academy.kiotviet.application.dto.shared.SuccessResponse;
 import fa.academy.kiotviet.application.service.ResponseFactory;
 import fa.academy.kiotviet.core.usermanagement.service.auth.AuthService;
 import fa.academy.kiotviet.core.usermanagement.service.registration.RegistrationService;
+import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -42,16 +45,41 @@ public class AuthApiController {
     }
 
     @PostMapping("/logout")
-    public SuccessResponse<Void> logout(@RequestBody Map<String, Long> request) {
-        Long userId = request.get("userId");
-        authService.logout(userId);
+    public SuccessResponse<Void> logout() {
+        // Get current authenticated user from security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
+            return ResponseFactory.success(null, "No authenticated user found");
+        }
+
+        JwtAuthenticationFilter.UserPrincipal userPrincipal =
+            (JwtAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+
+        // Logout current user by invalidating their refresh tokens
+        authService.logout(userPrincipal.getUserId());
         return ResponseFactory.success(null, "Logout successful");
     }
 
     @PostMapping("/logout/device")
     public SuccessResponse<Void> logoutFromDevice(@RequestBody Map<String, Long> request) {
+        // Get current authenticated user from security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
+            return ResponseFactory.success(null, "No authenticated user found");
+        }
+
+        JwtAuthenticationFilter.UserPrincipal userPrincipal =
+            (JwtAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+
         Long tokenId = request.get("tokenId");
-        authService.logoutFromDevice(tokenId);
+        if (tokenId == null) {
+            return ResponseFactory.success(null, "Token ID is required");
+        }
+
+        // Logout from specific device (validate token belongs to current user)
+        authService.logoutFromDevice(tokenId, userPrincipal.getUserId());
         return ResponseFactory.success(null, "Device logout successful");
     }
 }

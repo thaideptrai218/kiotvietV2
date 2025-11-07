@@ -31,7 +31,7 @@ public class UserToken {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "device_type", length = 20)
-    private DeviceType deviceType = DeviceType.WEB;
+    private DeviceType deviceType = DeviceType.web;
 
     @Size(max = 45, message = "IP address must not exceed 45 characters")
     @Column(name = "ip_address")
@@ -65,6 +65,6 @@ public class UserToken {
     }
 
     public enum DeviceType {
-        WEB, MOBILE, DESKTOP
+        web, mobile, desktop
     }
 }
