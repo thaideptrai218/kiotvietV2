@@ -1,6 +1,8 @@
 package fa.academy.kiotviet.application.controller.web;
 
 import fa.academy.kiotviet.application.controller.shared.BaseController;
+import fa.academy.kiotviet.application.dto.auth.request.RegistrationRequest;
+import fa.academy.kiotviet.application.dto.form.LoginForm;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -28,16 +30,16 @@ public class AuthPageController extends BaseController {
     public String showRegisterPage(Model model) {
         logRequest("/auth/register", "GET", "Register page requested");
 
-        model.addAttribute("registrationForm", new RegistrationForm());
+        model.addAttribute("registrationRequest", new RegistrationRequest());
 
         logResponse("/auth/register", "GET", "register template");
         return "auth/register";
     }
 
     @PostMapping("/register")
-    public String handleRegistration(@Valid @ModelAttribute("registrationForm") RegistrationForm form,
+    public String handleRegistration(@Valid @ModelAttribute("registrationRequest") RegistrationRequest request,
                                    BindingResult result, Model model) {
-        logRequest("/auth/register", "POST", form);
+        logRequest("/auth/register", "POST", request);
 
         if (result.hasErrors()) {
             log.warn("Registration validation errors: {}", result.getAllErrors());
@@ -45,9 +47,9 @@ public class AuthPageController extends BaseController {
         }
 
         // TODO: Process registration logic
-        // authService.register(form);
+        // authService.register(request);
 
-        log.info("User registered successfully: {}", form.getEmail());
+        log.info("User registered successfully: {}", request.getEmail());
         return redirectTo("/auth/login?registered=true");
     }
 
@@ -68,40 +70,5 @@ public class AuthPageController extends BaseController {
         redirectAttributes.addFlashAttribute("message", "Login successful");
 
         return redirectTo("/dashboard");
-    }
-
-    // Form objects for web pages
-    public static class LoginForm {
-        private String email;
-        private String password;
-        private boolean rememberMe;
-
-        // Getters and setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public boolean isRememberMe() { return rememberMe; }
-        public void setRememberMe(boolean rememberMe) { this.rememberMe = rememberMe; }
-    }
-
-    public static class RegistrationForm {
-        private String name;
-        private String email;
-        private String password;
-        private String confirmPassword;
-        private String phone;
-
-        // Getters and setters
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getConfirmPassword() { return confirmPassword; }
-        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
-        public String getPhone() { return phone; }
-        public void setPhone(String phone) { this.phone = phone; }
     }
 }

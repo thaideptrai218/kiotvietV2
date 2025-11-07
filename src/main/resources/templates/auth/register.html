@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Kiotviet</title>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/modules/auth/css/register.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="register-container">
+                    <div class="register-header">
+                        <h2 class="mb-3">
+                            <i class="fas fa-store me-2"></i>
+                            Kiotviet
+                        </h2>
+                        <p class="mb-0">Create your account and start managing your business</p>
+                    </div>
+
+                    <div class="register-form">
+                        <!-- Progress Steps -->
+                        <div class="progress-steps">
+                            <div class="progress-step active" id="progressStep1">
+                                <div class="step-number">1</div>
+                                <span>Personal Info</span>
+                            </div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" id="progressStep2">
+                                <div class="step-number">2</div>
+                                <span>Company Info</span>
+                            </div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" id="progressStep3">
+                                <div class="step-number">3</div>
+                                <span>Account Setup</span>
+                            </div>
+                        </div>
+
+                        <!-- Error Messages -->
+                        <div id="globalErrorAlert" class="alert alert-danger" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span id="globalErrorMessage"></span>
+                        </div>
+
+                        <form id="registrationForm" th:action="@{/auth/register}" th:object="${registrationRequest}" method="post">
+                            <!-- Validation Errors -->
+                            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger mb-4">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Please fix the following errors:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li th:each="error : ${#fields.errors('*')}" th:text="${error}"></li>
+                                </ul>
+                            </div>
+
+                            <!-- Registration Accordion -->
+                            <div class="accordion registration-accordion" id="registrationAccordion">
+
+                                <!-- Step 1: Personal Information -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" id="step1Button"
+                                                data-bs-toggle="collapse" data-bs-target="#step1Collapse"
+                                                aria-expanded="true" aria-controls="step1Collapse">
+                                            <i class="fas fa-user me-2"></i>
+                                            Step 1: Personal Information
+                                        </button>
+                                    </h2>
+                                    <div id="step1Collapse" class="accordion-collapse collapse show"
+                                         aria-labelledby="step1Button" data-bs-parent="#registrationAccordion">
+                                        <div class="accordion-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="fullName"
+                                                               th:field="*{fullName}" placeholder="John Doe"
+                                                               data-validation="required">
+                                                        <label for="fullName">
+                                                            <i class="fas fa-user me-2"></i>Full Name *
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('fullName')}"
+                                                             th:errors="*{fullName}"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="tel" class="form-control" id="phone"
+                                                               th:field="*{phone}" placeholder="+84 123 456 789"
+                                                               data-validation="phone">
+                                                        <label for="phone">
+                                                            <i class="fas fa-phone me-2"></i>Phone Number
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('phone')}"
+                                                             th:errors="*{phone}"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="username"
+                                                               th:field="*{username}" placeholder="johndoe"
+                                                               data-validation="username">
+                                                        <label for="username">
+                                                            <i class="fas fa-at me-2"></i>Username *
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('username')}"
+                                                             th:errors="*{username}"></div>
+                                                        <small class="text-muted">This will be your unique identifier</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-end mt-3">
+                                                <button type="button" class="btn btn-next" onclick="validateAndGoToStep(2)">
+                                                    Next: Company Information
+                                                    <i class="fas fa-arrow-right ms-2"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: Company Information -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" id="step2Button"
+                                                data-bs-toggle="collapse" data-bs-target="#step2Collapse"
+                                                aria-expanded="false" aria-controls="step2Collapse">
+                                            <i class="fas fa-building me-2"></i>
+                                            Step 2: Company Information
+                                        </button>
+                                    </h2>
+                                    <div id="step2Collapse" class="accordion-collapse collapse"
+                                         aria-labelledby="step2Button" data-bs-parent="#registrationAccordion">
+                                        <div class="accordion-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="companyName"
+                                                               th:field="*{companyName}" placeholder="Company Name"
+                                                               data-validation="required">
+                                                        <label for="companyName">
+                                                            <i class="fas fa-building me-2"></i>Company Name *
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('companyName')}"
+                                                             th:errors="*{companyName}"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="email" class="form-control" id="companyEmail"
+                                                               th:field="*{companyEmail}" placeholder="company@example.com"
+                                                               data-validation="email">
+                                                        <label for="companyEmail">
+                                                            <i class="fas fa-envelope me-2"></i>Company Email
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('companyEmail')}"
+                                                             th:errors="*{companyEmail}"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="tel" class="form-control" id="companyPhone"
+                                                               th:field="*{companyPhone}" placeholder="+84 123 456 789"
+                                                               data-validation="phone">
+                                                        <label for="companyPhone">
+                                                            <i class="fas fa-phone me-2"></i>Company Phone
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('companyPhone')}"
+                                                             th:errors="*{companyPhone}"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control" id="taxCode"
+                                                               th:field="*{taxCode}" placeholder="Tax Code"
+                                                               data-validation="optional">
+                                                        <label for="taxCode">
+                                                            <i class="fas fa-receipt me-2"></i>Tax Code
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('taxCode')}"
+                                                             th:errors="*{taxCode}"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="form-floating">
+                                                        <textarea class="form-control" id="companyAddress"
+                                                                  th:field="*{companyAddress}" placeholder="Company Address"
+                                                                  style="height: 80px;" data-validation="optional"></textarea>
+                                                        <label for="companyAddress">
+                                                            <i class="fas fa-map-marker-alt me-2"></i>Company Address
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('companyAddress')}"
+                                                             th:errors="*{companyAddress}"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-3">
+                                                <button type="button" class="btn btn-prev" onclick="goToStep(1)">
+                                                    <i class="fas fa-arrow-left me-2"></i>
+                                                    Previous
+                                                </button>
+                                                <button type="button" class="btn btn-next" onclick="validateAndGoToStep(3)">
+                                                    Next: Account Setup
+                                                    <i class="fas fa-arrow-right ms-2"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: Account Setup -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" id="step3Button"
+                                                data-bs-toggle="collapse" data-bs-target="#step3Collapse"
+                                                aria-expanded="false" aria-controls="step3Collapse">
+                                            <i class="fas fa-lock me-2"></i>
+                                            Step 3: Account Setup
+                                        </button>
+                                    </h2>
+                                    <div id="step3Collapse" class="accordion-collapse collapse"
+                                         aria-labelledby="step3Button" data-bs-parent="#registrationAccordion">
+                                        <div class="accordion-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="email" class="form-control" id="email"
+                                                               th:field="*{email}" placeholder="your@email.com"
+                                                               data-validation="required,email">
+                                                        <label for="email">
+                                                            <i class="fas fa-envelope me-2"></i>Login Email *
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('email')}"
+                                                             th:errors="*{email}"></div>
+                                                        <small class="text-muted">This will be used for login</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <input type="password" class="form-control" id="password"
+                                                               th:field="*{password}" placeholder="Password"
+                                                               data-validation="required,password">
+                                                        <label for="password">
+                                                            <i class="fas fa-lock me-2"></i>Password *
+                                                        </label>
+                                                        <div class="field-error" th:if="${#fields.hasErrors('password')}"
+                                                             th:errors="*{password}"></div>
+                                                        <div class="password-strength" id="passwordStrength"></div>
+                                                        <small class="text-muted">Min 8 chars, include uppercase, lowercase, number & special</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="alert alert-info">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <strong>Account Summary:</strong><br>
+                                                        • You will be automatically assigned as <strong>Manager</strong><br>
+                                                        • Your company will be created automatically<br>
+                                                        • You can invite team members after registration
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-3">
+                                                <button type="button" class="btn btn-prev" onclick="goToStep(2)">
+                                                    <i class="fas fa-arrow-left me-2"></i>
+                                                    Previous
+                                                </button>
+                                                <button type="submit" class="btn btn-register btn-lg">
+                                                    <span class="button-text">
+                                                        <i class="fas fa-user-plus me-2"></i>
+                                                        Create Account
+                                                    </span>
+                                                    <span class="loading-spinner">
+                                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                        Creating Account...
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">
+                                Already have an account?
+                                <a th:href="@{/auth/login}" class="text-decoration-none fw-bold">
+                                    Sign in here
+                                </a>
+                            </p>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Your data is secure and encrypted • Read our Terms and Privacy Policy
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script th:src="@{/modules/auth/js/register.js}"></script>
+</body>
+</html>

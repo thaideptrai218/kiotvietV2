@@ -1,6 +1,16 @@
 spring:
     application:
         name: kiotviet
+    thymeleaf:
+        cache: false
+        prefix: classpath:/templates/
+        suffix: .html
+        mode: HTML
+        encoding: UTF-8
+        template-resolver-order: 1
+        servlet:
+            content-type: text/html
+        check-template-location: true
     datasource:
         url: jdbc:mysql://localhost:33006/kiotviet_db
         username: root
@@ -36,19 +46,19 @@ spring:
                     max-active: 8
                     max-idle: 8
                     min-idle: 0
-        
-
 server:
     port: 8080
 
 app:
-  jwt:
-    secret: kiotvietSecretKeyForJWTTokenGeneration123456789
-    expiration: 900 # 15 minutes in seconds
-    refresh-expiration: 604800 # 7 days in seconds
+    jwt:
+        secret: kiotvietSecretKeyForJWTTokenGeneration123456789
+        expiration: 900 # 15 minutes in seconds
+        refresh-expiration: 604800 # 7 days in seconds
+    include-stack-trace: true
+
 
 logging:
     level:
         root: INFO
-        fa.academy.kiotviet: DEBUG
-        org.springframework.security: DEBUG
+        "[org.flywaydb]": INFO
+        "[fa.academy.kiotviet]": DEBUG
