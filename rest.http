@@ -100,6 +100,57 @@ GET {{baseUrl}}/api/test/hello
 Content-Type: {{contentType}}
 Authorization: Bearer {{authToken}}
 
+### Test 6: Logout functionality (NEW - requires authentication)
+
+### Try logout without authentication (should fail with 401)
+POST {{baseUrl}}/api/auth/logout
+Content-Type: {{contentType}}
+
+### Logout with valid JWT token (should succeed)
+POST {{baseUrl}}/api/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+### Logout from specific device with valid JWT token
+POST {{baseUrl}}/api/auth/logout/device
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{
+  "tokenId": 1
+}
+
+### Try to use the same JWT token after logout (access token still works until it expires)
+GET {{baseUrl}}/api/test/hello
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+### Try to refresh token after logout (should fail - refresh token invalidated)
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+### Test 7: Security validation tests
+
+### Try to logout from device belonging to another user (should be silently ignored)
+POST {{baseUrl}}/api/auth/logout/device
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{
+  "tokenId": 999999
+}
+
+### Logout device without tokenId (should return appropriate message)
+POST {{baseUrl}}/api/auth/logout/device
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{}
+
 ### Instructions:
 ### 1. Run the application: ./mvnw spring-boot:run
 ### 2. Execute the requests in order
@@ -109,4 +160,7 @@ Authorization: Bearer {{authToken}}
 ###    - Protected endpoints without token should fail (401 Unauthorized)
 ###    - Protected endpoints with valid token should work (200 OK)
 ###    - Invalid tokens should fail (401 Unauthorized)
+###    - Logout without authentication should fail (401 Unauthorized)
+###    - Logout with authentication should succeed (200 OK)
+###    - Token refresh after logout should fail (invalid refresh token)
 ###    - Check application logs for JWT filter debugging information

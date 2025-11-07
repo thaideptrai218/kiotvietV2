@@ -11,6 +11,7 @@ import fa.academy.kiotviet.core.usermanagement.repository.UserTokenRepository;
 import fa.academy.kiotviet.infrastructure.security.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserInfoRepository userInfoRepository;
@@ -127,6 +129,24 @@ public class AuthService {
                 .ifPresent(token -> {
                     token.setIsActive(false);
                     userTokenRepository.save(token);
+                });
+    }
+
+    /**
+     * Logout from specific device/session with user validation.
+     * Ensures the token belongs to the current user before logging out.
+     *
+     * @param tokenId Specific token ID to logout
+     * @param userId Current authenticated user ID
+     */
+    @Transactional
+    public void logoutFromDevice(Long tokenId, Long userId) {
+        userTokenRepository.findById(tokenId)
+                .filter(token -> token.getUser().getId().equals(userId))
+                .ifPresent(token -> {
+                    token.setIsActive(false);
+                    userTokenRepository.save(token);
+                    log.debug("User {} logged out from device with token ID: {}", userId, tokenId);
                 });
     }
 

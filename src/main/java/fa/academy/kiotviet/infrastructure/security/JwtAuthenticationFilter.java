@@ -18,6 +18,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * JWT authentication filter that validates JWT tokens on each request
@@ -96,35 +100,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /**
      * User principal implementation that holds user information.
      */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = false)
     public static class UserPrincipal implements UserDetails {
-        private final Long userId;
-        private final Long companyId;
-        private final String username;
-        private final String role;
-
-        public UserPrincipal(Long userId, Long companyId, String username, String role) {
-            this.userId = userId;
-            this.companyId = companyId;
-            this.username = username;
-            this.role = role;
-        }
-
-        public Long getUserId() {
-            return userId;
-        }
-
-        public Long getCompanyId() {
-            return companyId;
-        }
-
-        public String getRole() {
-            return role;
-        }
-
-        @Override
-        public String getUsername() {
-            return username;
-        }
+        private Long userId;
+        private Long companyId;
+        private String username;
+        private String role;
 
         @Override
         public boolean isAccountNonExpired() {
