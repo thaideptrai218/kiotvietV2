@@ -168,7 +168,7 @@ public class AuthService {
         token.setRefreshTokenHash(refreshTokenHash);
         token.setExpiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenExpiration() * 7));
         token.setDeviceInfo(deviceInfo);
-        token.setDeviceType(UserToken.DeviceType.WEB);
+        token.setDeviceType(UserToken.DeviceType.web);
         token.setIsActive(true);
         userTokenRepository.save(token);
 

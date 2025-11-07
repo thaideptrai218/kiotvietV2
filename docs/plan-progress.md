@@ -125,12 +125,13 @@
   - [x] Multi-tenant user structure in place
   - [x] JWT tokens contain companyId for future use
 
-- [ ] **Implement basic JWT validation filter**
-  - [ ] Create JwtAuthenticationFilter
-  - [ ] Validate JWT tokens on protected endpoints
-  - [ ] Handle token expiration
-  - [ ] Update SecurityConfig to require authentication for API endpoints
-  - [ ] Test JWT validation
+- [x] **Implement basic JWT validation filter**
+  - [x] Create JwtAuthenticationFilter
+  - [x] Validate JWT tokens on protected endpoints
+  - [x] Handle token expiration
+  - [x] Update SecurityConfig to require authentication for API endpoints
+  - [x] Test JWT validation
+  - [x] Fix JWT secret key configuration to read from YAML
 
 - [ ] **Skip: Complex multi-tenancy (deferred)**
   - [x] ~~Account context injection filter~~ (deferred - JWT has companyId)

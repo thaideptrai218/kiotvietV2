@@ -1,0 +1,112 @@
+### REST HTTP file for testing JWT validation functionality
+
+### Variables
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### Test 1: Public endpoints (should work without authentication)
+
+### Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Test Company Ltd1111",
+  "companyEmail": "company1111231231@test.com",
+  "companyPhone": "0901234567",
+  "companyAddress": "123 Test Street, HCMC",
+  "taxCode": "123456789",
+  "username": "testuser1231111",
+  "email": "user123123@test.com",
+  "fullName": "Test User",
+  "phone": "0912345678",
+  "password": "TestPass123!"
+}
+
+### Login with the registered user
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser123",
+  "password": "TestPass123!"
+}
+
+### Store the JWT token from the login response (replace YOUR_JWT_TOKEN_HERE)
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjcsInVzZXJuYW1lIjoidGVzdHVzZXIxMjMxMTExIiwiY29tcGFueUlkIjo3LCJyb2xlIjoiYWRtaW4iLCJzdWIiOiJ0ZXN0dXNlcjEyMzExMTEiLCJpYXQiOjE3NjI1MDA5OTgsImV4cCI6MTc2MjUwMTg5OH0.K-XE4AlK9rPUUe_bDY_8u3hmjeNGpZ8MH6KvDu_YnPyKGAvzKS_Wa0iHjNXz7sFlHinuMs_p9DyeHQxTPz9QyA
+
+### Test 2: Protected endpoints (should fail without authentication)
+
+### Try to access protected endpoint without token (should return 401)
+GET {{baseUrl}}/api/test/hello
+Content-Type: {{contentType}}
+
+### Get auth info without token (should return 401)
+GET {{baseUrl}}/api/test/auth-info
+Content-Type: {{contentType}}
+
+### Test 3: Protected endpoints with valid JWT token
+
+### Access protected endpoint with valid JWT token
+GET {{baseUrl}}/api/test/hello
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+### Get auth info with valid JWT token
+GET {{baseUrl}}/api/test/auth-info
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+### Check role information with valid JWT token
+GET {{baseUrl}}/api/test/role-check
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+### Test 4: Token refresh functionality
+
+### Refresh the access token
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjcsInR5cGUiOiJyZWZyZXNoIiwianRpIjoiNTU1ZjljMjUtNzc5NC00YzhhLThkYWYtMWI2MjhmODMzNDFhIiwiaWF0IjoxNzYyNTAwOTk5LCJleHAiOjE3NjMxMDU3OTl9.wkmz1M9SnZPlvx4IHkeTwNnM1XOVUAfjCNzDPICYpED6nwer-8S4j_EnfmvJ3Po00zRxLLn_hY-N8Yxff635UA"
+}
+
+### Test 5: Malformed/Invalid tokens (should return 401)
+
+### Access with malformed token
+GET {{baseUrl}}/api/test/hello
+Content-Type: {{contentType}}
+Authorization: Bearer invalid.token.format
+
+### Access with expired token (if you have one)
+GET {{baseUrl}}/api/test/hello
+Content-Type: {{contentType}}
+Authorization: Bearer expired.jwt.token
+
+### Test 6: Logout functionality
+
+### Logout (should invalidate refresh token)
+POST {{baseUrl}}/api/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{
+  "userId": 7
+}
+
+### Try to use the same token after logout (should still work until token expires)
+GET {{baseUrl}}/api/test/hello
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+### Instructions:
+### 1. Run the application: ./mvnw spring-boot:run
+### 2. Execute the requests in order
+### 3. Replace YOUR_JWT_TOKEN_HERE and YOUR_REFRESH_TOKEN_HERE with actual tokens from login response
+### 4. Expected results:
+###    - Public endpoints should work (200 OK)
+###    - Protected endpoints without token should fail (401 Unauthorized)
+###    - Protected endpoints with valid token should work (200 OK)
+###    - Invalid tokens should fail (401 Unauthorized)
+###    - Check application logs for JWT filter debugging information
