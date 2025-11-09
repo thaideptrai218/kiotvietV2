@@ -12,7 +12,7 @@
 @email = suppliers_user@example.com
 
 ### Paste a token here if scripts are disabled (optional)
-@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6InN1cHBsaWVyc191c2VyIiwiY29tcGFueUlkIjoxLCJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjEsInN1YiI6InN1cHBsaWVyc191c2VyIiwiaWF0IjoxNzYyNjg5MDg1LCJleHAiOjE3NjI2ODk5ODV9.eeXK4IQWLGIuJ6fNbDZEale2ei_XO8dICY9jLHIEMD9KcZcXjkiR_FrMLu7bi0OKiiYtTH79DlU_p7CBLBS8Cg
+@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjQsInVzZXJuYW1lIjoic3VwcGxpZXJzX3VzZXIiLCJjb21wYW55SWQiOjQsInJvbGUiOiJhZG1pbiIsInN1YiI6InN1cHBsaWVyc191c2VyIiwiaWF0IjoxNzYyNzA4MzAxLCJleHAiOjE3NjI3MDkyMDF9.jcv6p2kPDatVZYSi9w7ZtPoU0dFkmUZjbKafEYzzAhQ0hbkxJNF4_QuGYl0WungIdFLq8WOC6DiQi7Fz45iArQ
 
 ### Paste a refresh token here if scripts are disabled (optional)
 @refreshToken = 
