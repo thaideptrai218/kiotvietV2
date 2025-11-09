@@ -75,4 +75,12 @@ public class AuthPageController extends BaseController {
 
         return redirectTo("/dashboard");
     }
+
+    @GetMapping("/reset")
+    public String showResetPage(@RequestParam(value = "token", required = false) String token, Model model) {
+        logRequest("/auth/reset", "GET", token != null ? "token provided" : "no token");
+        model.addAttribute("token", token);
+        logResponse("/auth/reset", "GET", "reset template");
+        return "auth/reset";
+    }
 }

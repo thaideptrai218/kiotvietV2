@@ -3,10 +3,14 @@ package fa.academy.kiotviet.application.controller.api;
 import fa.academy.kiotviet.application.dto.auth.response.AuthResponse;
 import fa.academy.kiotviet.application.dto.auth.request.LoginRequest;
 import fa.academy.kiotviet.application.dto.auth.request.RegistrationRequest;
+import fa.academy.kiotviet.application.dto.auth.request.ForgotPasswordRequest;
+import fa.academy.kiotviet.application.dto.auth.request.ResetPasswordRequest;
 import fa.academy.kiotviet.application.dto.shared.SuccessResponse;
 import fa.academy.kiotviet.application.service.ResponseFactory;
 import fa.academy.kiotviet.core.usermanagement.service.auth.AuthService;
 import fa.academy.kiotviet.core.usermanagement.service.registration.RegistrationService;
+import fa.academy.kiotviet.core.usermanagement.service.auth.PasswordResetService;
+import jakarta.servlet.http.HttpServletRequest;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,7 @@ public class AuthApiController {
 
     private final AuthService authService;
     private final RegistrationService registrationService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public SuccessResponse<AuthResponse> registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
@@ -84,6 +89,19 @@ public class AuthApiController {
         return ResponseFactory.success(null, "Device logout successful");
     }
 
+    @PostMapping("/forgot")
+    public SuccessResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
+                                                HttpServletRequest httpRequest) {
+        passwordResetService.requestReset(request, httpRequest);
+        return ResponseFactory.success(null, "If the account exists, a reset link has been sent");
+    }
+
+    @PostMapping("/reset")
+    public SuccessResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request);
+        return ResponseFactory.success(null, "Password has been reset successfully");
+    }
+}
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         // Get current authenticated user from security context

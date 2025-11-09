@@ -46,6 +46,17 @@ spring:
                     max-active: 8
                     max-idle: 8
                     min-idle: 0
+    mail:
+        host: smtp.gmail.com
+        port: 587
+        username: dmanhtien104@gmail.com
+        password: pqsk qfez nfpy gglm
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
 server:
     port: 8080
 
@@ -61,3 +72,5 @@ logging:
         root: INFO
         "[org.flywaydb]": INFO
         "[fa.academy.kiotviet]": DEBUG
+
+ 
