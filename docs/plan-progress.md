@@ -245,45 +245,45 @@
 **Requirements**: Basic debt tracking + auto-complete for future product integration
 
 #### Days 8-10: Supplier Database & Backend
-- [ ] **Create suppliers table V7 with basic debt tracking**
+- [x] **Create suppliers table V7 with basic debt tracking** (Implemented in V3 per tech-spec; minimal contact fields only, no debt fields)
   - [ ] Design Supplier entity with contact info and basic debt fields
-  - [ ] Write Flyway migration V7 for suppliers table
+  - [x] Write Flyway migration V7 for suppliers table (done as V3 with minimal schema)
   - [ ] Add basic debt fields: outstanding_balance, last_payment_date, credit_limit
   - [ ] Add account_id, name, contact_person, phone, email, address, tax_code, website, notes
   - [ ] Add indexes: (company_id, name), (company_id, is_active), (contact_person), (tax_code)
-  - [ ] Add unique constraint: (company_id, name)
-  - [ ] Test table creation with sample data
+  - [x] Add unique constraint: (company_id, name)
+  - [x] Test table creation with sample data
 
-- [ ] **Implement Supplier entity and repository**
-  - [ ] Create Supplier entity with JPA annotations and Lombok
-  - [ ] Create SupplierRepository with account isolation
+- [x] **Implement Supplier entity and repository**
+  - [x] Create Supplier entity with JPA annotations and Lombok
+  - [x] Create SupplierRepository with account isolation
   - [ ] Add methods: findByCompanyId, findByNameContaining, findByContactPerson, findByTaxCode
-  - [ ] Add search functionality with case-insensitive options
-  - [ ] Add soft delete support with is_active field
-  - [ ] Add pagination support
+  - [x] Add search functionality with case-insensitive options
+  - [x] Add soft delete support with is_active field
+  - [x] Add pagination support
 
-- [ ] **Create SupplierService with validation**
-  - [ ] Implement supplier name uniqueness validation per company
-  - [ ] Add email format validation
+- [x] **Create SupplierService with validation**
+  - [x] Implement supplier name uniqueness validation per company
+  - [x] Add email format validation
   - [ ] Add tax code format validation
   - [ ] Add basic debt tracking methods
-  - [ ] Create supplier search service with multiple criteria
-  - [ ] Add contact information validation rules
+  - [x] Create supplier search service with multiple criteria
+  - [x] Add contact information validation rules
 
-- [ ] **Create Supplier API endpoints**
-  - [ ] Create SupplierApiController with REST endpoints
-  - [ ] GET /api/suppliers - List with pagination and search
-  - [ ] POST /api/suppliers - Create new supplier
-  - [ ] GET /api/suppliers/{id} - Get supplier details
-  - [ ] PUT /api/suppliers/{id} - Update supplier
-  - [ ] DELETE /api/suppliers/{id} - Soft delete supplier
-  - [ ] GET /api/suppliers/search - Advanced search endpoint
-  - [ ] Add ResponseFactory for consistent responses
+- [x] **Create Supplier API endpoints**
+  - [x] Create SupplierApiController with REST endpoints
+  - [x] GET /api/suppliers - List with pagination and search
+  - [x] POST /api/suppliers - Create new supplier
+  - [x] GET /api/suppliers/{id} - Get supplier details
+  - [x] PUT /api/suppliers/{id} - Update supplier
+  - [x] DELETE /api/suppliers/{id} - Soft delete supplier
+  - [x] GET /api/suppliers/search - Advanced search endpoint
+  - [x] Add ResponseFactory for consistent responses
 
-- [ ] **Create auto-complete service for future integration**
-  - [ ] Implement supplier search auto-complete API
-  - [ ] Create endpoint: GET /api/suppliers/autocomplete?query=
-  - [ ] Return limited results with id and display name for dropdowns
+- [x] **Create auto-complete service for future integration**
+  - [x] Implement supplier search auto-complete API
+  - [x] Create endpoint: GET /api/suppliers/autocomplete?query=
+  - [x] Return limited results with id and display name for dropdowns
   - **Add product-supplier relationship preparation**
   - [ ] Add supplier_id field to products table (future V8 migration)
   - [ ] Test supplier selection in product forms
