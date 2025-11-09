@@ -55,12 +55,13 @@ public class AuthApiController {
         // Get current authenticated user from security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
             return ResponseFactory.success(null, "No authenticated user found");
         }
 
-        JwtAuthenticationFilter.UserPrincipal userPrincipal =
-            (JwtAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+        JwtAuthenticationFilter.UserPrincipal userPrincipal = (JwtAuthenticationFilter.UserPrincipal) authentication
+                .getPrincipal();
 
         // Logout current user by invalidating their refresh tokens
         authService.logout(userPrincipal.getUserId());
@@ -72,12 +73,13 @@ public class AuthApiController {
         // Get current authenticated user from security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
             return ResponseFactory.success(null, "No authenticated user found");
         }
 
-        JwtAuthenticationFilter.UserPrincipal userPrincipal =
-            (JwtAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+        JwtAuthenticationFilter.UserPrincipal userPrincipal = (JwtAuthenticationFilter.UserPrincipal) authentication
+                .getPrincipal();
 
         Long tokenId = request.get("tokenId");
         if (tokenId == null) {
@@ -91,7 +93,7 @@ public class AuthApiController {
 
     @PostMapping("/forgot")
     public SuccessResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
-                                                HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest) {
         passwordResetService.requestReset(request, httpRequest);
         return ResponseFactory.success(null, "If the account exists, a reset link has been sent");
     }
@@ -101,18 +103,20 @@ public class AuthApiController {
         passwordResetService.resetPassword(request);
         return ResponseFactory.success(null, "Password has been reset successfully");
     }
-}
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         // Get current authenticated user from security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
-            return ResponseEntity.status(401).body(ResponseFactory.unauthorized("User not authenticated", "UNAUTHORIZED"));
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
+            return ResponseEntity.status(401)
+                    .body(ResponseFactory.unauthorized("User not authenticated", "UNAUTHORIZED"));
         }
 
-        JwtAuthenticationFilter.UserPrincipal userPrincipal =
-            (JwtAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+        JwtAuthenticationFilter.UserPrincipal userPrincipal = (JwtAuthenticationFilter.UserPrincipal) authentication
+                .getPrincipal();
 
         // Return user information (using default company name for simplicity)
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
@@ -122,8 +126,7 @@ public class AuthApiController {
                 userPrincipal.getUsername(),
                 userPrincipal.getEmail(),
                 userPrincipal.getFullName(),
-                userPrincipal.getRole()
-        );
+                userPrincipal.getRole());
 
         return ResponseEntity.ok(ResponseFactory.success(userInfo, "User retrieved successfully"));
     }
