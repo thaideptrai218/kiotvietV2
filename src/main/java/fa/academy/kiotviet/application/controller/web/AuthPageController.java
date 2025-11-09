@@ -17,12 +17,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthPageController extends BaseController {
 
     @GetMapping("/login")
-    public String showLoginPage(Model model) {
-        logRequest("/auth/login", "GET", "Login page requested");
+    public String showLoginPage(@RequestParam(value = "redirect", required = false) String redirectUrl,
+                               @RequestParam(value = "from", required = false) String from,
+                               Model model) {
+        logRequest("/login", "GET", "Login page requested with redirect: " + redirectUrl);
 
         model.addAttribute("loginForm", new LoginForm());
 
-        logResponse("/auth/login", "GET", "login template");
+        // Add redirect URL to model for use in the form
+        if (redirectUrl != null) {
+            model.addAttribute("redirectUrl", redirectUrl);
+        }
+        if (from != null) {
+            model.addAttribute("fromLanding", true);
+        }
+
+        logResponse("/login", "GET", "login template");
         return "auth/login";
     }
 

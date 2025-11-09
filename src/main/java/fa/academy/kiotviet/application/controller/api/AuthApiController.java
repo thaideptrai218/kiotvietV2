@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -99,5 +100,31 @@ public class AuthApiController {
     public SuccessResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request);
         return ResponseFactory.success(null, "Password has been reset successfully");
+    }
+}
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        // Get current authenticated user from security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof JwtAuthenticationFilter.UserPrincipal)) {
+            return ResponseEntity.status(401).body(ResponseFactory.unauthorized("User not authenticated", "UNAUTHORIZED"));
+        }
+
+        JwtAuthenticationFilter.UserPrincipal userPrincipal =
+            (JwtAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+
+        // Return user information (using default company name for simplicity)
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
+                userPrincipal.getUserId(),
+                userPrincipal.getCompanyId(),
+                "Company", // Default company name
+                userPrincipal.getUsername(),
+                userPrincipal.getEmail(),
+                userPrincipal.getFullName(),
+                userPrincipal.getRole()
+        );
+
+        return ResponseEntity.ok(ResponseFactory.success(userInfo, "User retrieved successfully"));
     }
 }
