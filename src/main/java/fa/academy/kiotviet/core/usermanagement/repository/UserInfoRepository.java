@@ -22,6 +22,9 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
     // For login - find user by globally unique username
     Optional<UserInfo> findByUsername(String username);
 
+    // Find user by email (global)
+    Optional<UserInfo> findByEmail(String email);
+
     // Global validation methods (for registration validation)
     boolean existsByUsername(String username);
 

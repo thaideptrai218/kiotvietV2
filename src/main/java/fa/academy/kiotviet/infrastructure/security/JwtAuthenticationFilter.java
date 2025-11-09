@@ -55,8 +55,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(null);
 
                 if (user != null && username.equals(user.getUsername())) {
-                    // Create authentication token
-                    UserPrincipal userPrincipal = new UserPrincipal(userId, companyId, username, role);
+                    // Create authentication token with user info
+                    UserPrincipal userPrincipal = new UserPrincipal(
+                        userId,
+                        companyId,
+                        username,
+                        role,
+                        user.getFullName() != null ? user.getFullName() : "",
+                        user.getEmail() != null ? user.getEmail() : ""
+                    );
                     UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                             userPrincipal,
@@ -109,6 +116,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         private Long companyId;
         private String username;
         private String role;
+        private String fullName;
+        private String email;
 
         @Override
         public boolean isAccountNonExpired() {
