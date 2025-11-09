@@ -141,10 +141,11 @@
                 } catch(_) {}
                 throw new Error(msg);
             }
-            // Optional: store tokens
-            // const data = await response.json();
-            // localStorage.setItem('accessToken', data.data.accessToken);
-            // localStorage.setItem('refreshToken', data.data.refreshToken);
+            // Store tokens for landing page authentication
+            const data = await response.json();
+            localStorage.setItem('jwtToken', data.data.accessToken);
+            localStorage.setItem('refreshToken', data.data.refreshToken);
+            localStorage.setItem('userInfo', JSON.stringify(data.data.userInfo));
             window.location.href = '/';
         })
         .catch(err => {
