@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset - Kiotviet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- External CSS -->
+    <link rel="stylesheet" th:href="@{/modules/auth/css/reset.css}">
+</head>
+<body>
+<div class="reset-wrapper">
+    <div class="reset-card">
+        <!-- Header -->
+        <div class="reset-header">
+            <h3>
+                <i class="fas fa-key"></i>
+                <span th:text="${token} != null ? 'Set New Password' : 'Forgot Password'"></span>
+            </h3>
+        </div>
+
+        <!-- Alert -->
+        <div id="alert" class="alert d-none" role="alert"></div>
+
+        <!-- Forgot Password Form -->
+        <form id="forgotForm" th:if="${token} == null">
+            <div class="form-group">
+                <div class="input-icon"><i class="fas fa-user"></i></div>
+                <input type="text" class="form-control" id="fpUsername" placeholder="Username or Email" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-paper-plane"></i> Send Reset Link
+            </button>
+            <div class="text-center mt-3">
+                <a th:href="@{/auth/login}" class="text-link">
+                    <i class="fas fa-arrow-left"></i> Back to Login
+                </a>
+            </div>
+        </form>
+
+        <!-- Reset Password Form -->
+        <form id="resetForm" th:if="${token} != null">
+            <input type="hidden" id="rpToken" th:value="${token}">
+            <div class="form-group">
+                <div class="input-icon"><i class="fas fa-lock"></i></div>
+                <input type="password" class="form-control" id="rpPassword" placeholder="New Password" required>
+            </div>
+            <div class="form-group">
+                <div class="input-icon"><i class="fas fa-lock"></i></div>
+                <input type="password" class="form-control" id="rpConfirm" placeholder="Confirm Password" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">
+                <i class="fas fa-check"></i> Reset Password
+            </button>
+            <div class="text-center mt-3">
+                <a th:href="@{/auth/login}" class="text-link">
+                    <i class="fas fa-arrow-left"></i> Back to Login
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- External JS -->
+<script th:src="@{/modules/auth/js/reset.js}"></script>
+</body>
+</html>
+

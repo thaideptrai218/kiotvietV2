@@ -46,16 +46,23 @@ spring:
                     max-active: 8
                     max-idle: 8
                     min-idle: 0
+    mail:
+        host: smtp.gmail.com
+        port: 587
+        username: dmanhtien104@gmail.com
+        password: pqsk qfez nfpy gglm
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
 server:
     port: 8080
 
 app:
     jwt:
-<<<<<<< HEAD
-        secret: thaidinh
-=======
         secret: KiotvietSecureJwtSecretKey2025!ForDevelopmentOnly!GenerateNewForProduction$MustBe64BytesOrMoreForHS512
->>>>>>> 2f23d2d45b55e15334ba7d5d8626d35865178fb1
         expiration: 900 # 15 minutes in seconds
         refresh-expiration: 604800 # 7 days in seconds
     include-stack-trace: true
@@ -65,3 +72,5 @@ logging:
         root: INFO
         "[org.flywaydb]": INFO
         "[fa.academy.kiotviet]": DEBUG
+
+ 
