@@ -93,7 +93,7 @@ public class AuthApiController {
 
     @PostMapping("/forgot")
     public SuccessResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
-            HttpServletRequest httpRequest) {
+                                                HttpServletRequest httpRequest) {
         passwordResetService.requestReset(request, httpRequest);
         return ResponseFactory.success(null, "If the account exists, a reset link has been sent");
     }
@@ -130,4 +130,5 @@ public class AuthApiController {
 
         return ResponseEntity.ok(ResponseFactory.success(userInfo, "User retrieved successfully"));
     }
+
 }
