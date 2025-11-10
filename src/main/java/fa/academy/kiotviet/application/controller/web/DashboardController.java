@@ -1,14 +1,15 @@
 package fa.academy.kiotviet.application.controller.web;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.Model;
 
 /**
- * Controller for dashboard access from the landing page.
- * Handles authentication checks and redirects appropriately.
+ * Controller for dashboard access.
+ * Spring Security handles authentication automatically.
  */
 @Controller
 @RequestMapping("/dashboard")
@@ -16,44 +17,27 @@ public class DashboardController {
 
     /**
      * Main dashboard endpoint.
-     * Checks authentication and provides appropriate response.
+     * Spring Security will automatically redirect unauthenticated users to login.
      *
-     * @return Dashboard template or redirect to login
+     * @return Dashboard template
      */
     @GetMapping
-    public String dashboard() {
+    public String dashboard(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Check if user is authenticated
-        if (authentication == null || !authentication.isAuthenticated() ||
-            "anonymousUser".equals(authentication.getPrincipal())) {
-            // User is not authenticated, redirect to login
-            return "redirect:/login?redirect=/dashboard";
+        // Add user information to the model
+        if (authentication != null && authentication.isAuthenticated() &&
+            !"anonymousUser".equals(authentication.getPrincipal())) {
+
+            // Add user details to the model if available
+            model.addAttribute("username", authentication.getName());
+
+            // If the authentication contains more user details, add them too
+            if (authentication.getPrincipal() != null) {
+                model.addAttribute("userDetails", authentication.getPrincipal());
+            }
         }
 
-        // User is authenticated, show dashboard
-        // This will be implemented in future weeks
-        return "modules/dashboard/dashboard"; // Future implementation
-    }
-
-    /**
-     * Dashboard access from landing page.
-     * Handles the specific "Go to Dashboard" functionality.
-     *
-     * @return Dashboard template or redirect to login
-     */
-    @GetMapping("/access")
-    public String accessDashboard() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Check if user is authenticated
-        if (authentication == null || !authentication.isAuthenticated() ||
-            "anonymousUser".equals(authentication.getPrincipal())) {
-            // User is not authenticated, redirect to login with return URL
-            return "redirect:/login?redirect=/dashboard&from=landing";
-        }
-
-        // User is authenticated, redirect to main dashboard
-        return "redirect:/dashboard";
+        return "modules/dashboard/dashboard";
     }
 }

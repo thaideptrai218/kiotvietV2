@@ -50,6 +50,7 @@ public class SecurityConfig {
     /**
      * Configures HTTP security for the application.
      * JWT authentication is required for most API endpoints.
+     * Form-based authentication with redirects for web pages.
      *
      * @param http HttpSecurity builder
      * @return SecurityFilterChain configuration
@@ -61,11 +62,12 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for JWT stateless APIs
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Stateless sessions
+                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Allow sessions for web pages
             )
             .authorizeHttpRequests(authz -> authz
                 // Allow preflight requests
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 // Permit authentication endpoints
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
@@ -73,30 +75,65 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/auth/forgot").permitAll()
                 .requestMatchers("/api/auth/reset").permitAll()
+                .requestMatchers("/api/auth/logout").permitAll()
 
-                // Permit static resources and web pages
+                // Permit static resources
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
-                .requestMatchers("/", "/login", "/register").permitAll()
+
+                // Permit public web pages
+                .requestMatchers("/", "/home", "/about", "/landing").permitAll()
+                .requestMatchers("/login", "/auth/login", "/register", "/auth/register").permitAll()
+                .requestMatchers("/auth/reset").permitAll()
 
                 // Health check endpoint
                 .requestMatchers("/actuator/health").permitAll()
 
+                // Protect dashboard and other authenticated pages
+                .requestMatchers("/dashboard/**", "/dashboard").authenticated()
+                .requestMatchers("/profile/**", "/profile").authenticated()
+                .requestMatchers("/settings/**", "/settings").authenticated()
+
                 // All other API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
 
-                // Allow other requests for now (web pages, etc.)
+                // Allow other requests for now (will be secured later)
                 .anyRequest().permitAll()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login-process") // Custom processing URL to avoid conflicts
+                .defaultSuccessUrl("/dashboard", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
+                .deleteCookies("JSESSIONID")
+                .permitAll()
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                    // For API requests, return JSON error
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                    } else {
+                        // For web requests, redirect to login page
+                        response.sendRedirect("/login");
+                    }
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"Access denied\"}");
+                    // For API requests, return JSON error
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"Access denied\"}");
+                    } else {
+                        // For web requests, redirect to login page
+                        response.sendRedirect("/login");
+                    }
                 })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

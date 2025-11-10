@@ -35,6 +35,17 @@ public class LandingPageController {
     }
 
     /**
+     * Login endpoint that redirects to the actual login page.
+     * Provides convenient route for users accessing /login directly
+     *
+     * @return Redirect to auth login page
+     */
+    @GetMapping("/login")
+    public String login() {
+        return "redirect:/auth/login";
+    }
+
+    /**
      * About page endpoint.
      * Shows company information and story.
      *

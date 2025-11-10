@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/modules/auth/css/login.css}">
+    <!-- Shared Authentication JS -->
+    <script th:src="@{/core/js/auth.js}"></script>
 </head>
 <body>
 <div class="login-wrapper">
@@ -107,59 +109,54 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Wait for auth manager to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if user is already logged in
+        if (kiotVietAuth.getToken()) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+            window.location.href = redirectUrl || '/dashboard';
+            return;
+        }
 
-        const form = e.target;
-        const btn = document.getElementById('submitBtn');
-        const errorAlert = document.getElementById('errorAlert');
-        const errorMessage = document.getElementById('errorMessage');
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-        errorAlert.style.display = 'none';
-        btn.classList.add('loading');
-        btn.disabled = true;
+            const form = e.target;
+            const btn = document.getElementById('submitBtn');
+            const errorAlert = document.getElementById('errorAlert');
+            const errorMessage = document.getElementById('errorMessage');
 
-        const payload = {
-            username: document.getElementById('username').value.trim(),
-            password: document.getElementById('password').value
-        };
+            errorAlert.style.display = 'none';
+            btn.classList.add('loading');
+            btn.disabled = true;
 
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(async response => {
-            if (!response.ok) {
-                let msg = 'Login failed';
-                try {
-                    const err = await response.json();
-                    if (err && (err.message || err.error)) msg = err.message || err.error;
-                } catch(_) {}
-                throw new Error(msg);
+            const payload = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value
+            };
+
+            // Use shared auth manager for login
+            const result = await kiotVietAuth.handleLogin(payload);
+
+            if (result.success) {
+                // Check if there's a redirect URL from query parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectUrl = urlParams.get('redirect');
+                window.location.href = redirectUrl || '/dashboard';
+            } else {
+                console.error('Login failed:', result.error);
+                errorMessage.textContent = result.error || 'Invalid username or password. Please try again.';
+                errorAlert.style.display = 'flex';
+                btn.classList.remove('loading');
+                btn.disabled = false;
             }
-            // Store tokens for landing page authentication
-            const data = await response.json();
-            localStorage.setItem('jwtToken', data.data.accessToken);
-            localStorage.setItem('refreshToken', data.data.refreshToken);
-            localStorage.setItem('userInfo', JSON.stringify(data.data.userInfo));
-            window.location.href = '/';
-        })
-        .catch(err => {
-            console.error(err);
-            errorMessage.textContent = 'Invalid username or password. Please try again.';
-            errorAlert.style.display = 'flex';
-            btn.classList.remove('loading');
-            btn.disabled = false;
         });
-    });
 
-    ['username', 'password'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => {
-            document.getElementById('errorAlert').style.display = 'none';
+        ['username', 'password'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                document.getElementById('errorAlert').style.display = 'none';
+            });
         });
     });
 </script>

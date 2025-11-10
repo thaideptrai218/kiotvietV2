@@ -823,6 +823,8 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Shared Authentication JS -->
+    <script th:src="@{/core/js/auth.js}"></script>
 
     <script>
         // Initialize AOS
@@ -934,136 +936,20 @@
         // Dashboard Access Handler
         function handleDashboardAccess() {
             // Redirect to login page with dashboard redirect
-            window.location.href = '/auth/login?redirect=/dashboard&from=landing';
+            window.location.href = '/login?redirect=/dashboard&from=landing';
         }
 
-        // Check authentication status on page load
-        async function checkAuthStatus() {
-            const token = localStorage.getItem('jwtToken');
-
-            if (!token) {
-                console.log('No JWT token found - user not logged in');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/me', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('User is authenticated:', data.data);
-
-                    // Update UI for authenticated user
-                    updateUIForAuthenticatedUser(data.data);
-                } else {
-                    console.log('JWT token invalid or expired');
-                    // Remove invalid token
-                    localStorage.removeItem('jwtToken');
-                    localStorage.removeItem('refreshToken');
-                    localStorage.removeItem('userInfo');
-                }
-            } catch (error) {
-                console.error('Error checking authentication status:', error);
-            }
-        }
-
-        // Update UI elements when user is authenticated
-        function updateUIForAuthenticatedUser(userInfo) {
-            // Update navbar buttons
-            const navbarAuth = document.querySelector('.navbar-nav:last-child');
-            if (navbarAuth) {
-                navbarAuth.innerHTML = `
-                    <div class="dropdown">
-                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-2"></i>${userInfo.username}
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/dashboard">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="/profile">
-                                <i class="fas fa-user-cog me-2"></i>Profile
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="logout()">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a></li>
-                        </ul>
-                    </div>
-                `;
-            }
-
-            // Update hero section CTAs
-            const heroCTA = document.querySelector('.hero-content .d-flex');
-            if (heroCTA) {
-                heroCTA.innerHTML = `
-                    <button class="btn btn-light btn-lg px-4 py-3" onclick="goToDashboard()">
-                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
-                    </button>
-                    <button class="btn btn-outline-light btn-lg px-4 py-3" onclick="openDemoModal()">
-                        <i class="fas fa-play me-2"></i>Watch Demo
-                    </button>
-                `;
-            }
-
-            // Update trust indicators
-            const trustIndicators = document.querySelector('.hero-content .mt-4 small');
-            if (trustIndicators) {
-                trustIndicators.innerHTML = `
-                    <i class="fas fa-check-circle me-2"></i>Welcome back, ${userInfo.username}!
-                    <i class="fas fa-check-circle ms-3 me-2"></i>${userInfo.companyName}
-                    <i class="fas fa-check-circle ms-3 me-2"></i>Role: ${userInfo.role}
-                `;
-            }
-
-            // Update dashboard section button
-            const dashboardBtn = document.querySelector('#dashboardAccess button');
-            if (dashboardBtn) {
-                dashboardBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Enter Dashboard';
-                dashboardBtn.onclick = goToDashboard;
-            }
-        }
+        // Note: Authentication is now handled by the shared auth manager (auth.js)
+        // The auth manager automatically checks authentication and updates UI on page load
 
         // Go to dashboard
         function goToDashboard() {
             window.location.href = '/dashboard';
         }
 
-        // Logout function
-        async function logout() {
-            const token = localStorage.getItem('jwtToken');
-
-            try {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    }
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-
-            // Clear local storage
-            localStorage.removeItem('jwtToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userInfo');
-
-            // Reload page
-            window.location.reload();
-        }
-
-        // Initialize particles and check auth on page load
+        // Initialize particles on page load
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
-            checkAuthStatus();
         });
 
         // Parallax effect on scroll (fixed height)
