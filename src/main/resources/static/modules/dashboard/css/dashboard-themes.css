@@ -1,0 +1,95 @@
+/* Dashboard Theme Variables - Multi-Theme Support */
+
+/* Default Theme Variables */
+:root {
+    --primary-color: #4f46e5;
+    --secondary-color: #10b981;
+    --accent-color: #f59e0b;
+    --dark-color: #1f2937;
+    --light-bg: #f9fafb;
+    --white: #ffffff;
+    --border-color: #e5e7eb;
+    --text-muted: #6b7280;
+    --header-bg: var(--white);
+    --navbar-bg: var(--white);
+    --card-bg: var(--white);
+}
+
+/* Ocean Theme */
+[data-theme="ocean"] {
+    --primary-color: #0891b2;
+    --secondary-color: #0e7490;
+    --accent-color: #06b6d4;
+    --dark-color: #0c4a6e;
+}
+
+/* Forest Theme */
+[data-theme="forest"] {
+    --primary-color: #059669;
+    --secondary-color: #047857;
+    --accent-color: #10b981;
+    --dark-color: #064e3b;
+}
+
+/* Sunset Theme */
+[data-theme="sunset"] {
+    --primary-color: #dc2626;
+    --secondary-color: #b91c1c;
+    --accent-color: #f59e0b;
+    --dark-color: #7f1d1d;
+}
+
+/* Purple Theme */
+[data-theme="purple"] {
+    --primary-color: #7c3aed;
+    --secondary-color: #6d28d9;
+    --accent-color: #a855f7;
+    --dark-color: #4c1d95;
+}
+
+/* Midnight Theme */
+[data-theme="midnight"] {
+    --primary-color: #1e293b;
+    --secondary-color: #334155;
+    --accent-color: #475569;
+    --dark-color: #0f172a;
+    --light-bg: #f1f5f9;
+    --header-bg: #1e293b;
+    --navbar-bg: #334155;
+    --card-bg: #ffffff;
+}
+
+/* Rose Theme */
+[data-theme="rose"] {
+    --primary-color: #e11d48;
+    --secondary-color: #be123c;
+    --accent-color: #f43f5e;
+    --dark-color: #881337;
+}
+
+/* Emerald Theme */
+[data-theme="emerald"] {
+    --primary-color: #047857;
+    --secondary-color: #065f46;
+    --accent-color: #10b981;
+    --dark-color: #064e3b;
+}
+
+/* Amber Theme */
+[data-theme="amber"] {
+    --primary-color: #d97706;
+    --secondary-color: #b45309;
+    --accent-color: #f59e0b;
+    --dark-color: #78350f;
+}
+
+/* Theme transition for smooth switching */
+body {
+    transition: all 0.3s ease;
+}
+
+/* Active theme indicator styles */
+.theme-option.active {
+    border-color: var(--dark-color) !important;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1) !important;
+}

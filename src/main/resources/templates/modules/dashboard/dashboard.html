@@ -5,505 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - KiotViet</title>
 
-    <!-- Bootstrap 5.3 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- External CSS Files -->
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-themes.css}">
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-core.css}">
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-components.css}">
+
     <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        /* Theme Variables */
-        :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #10b981;
-            --accent-color: #f59e0b;
-            --dark-color: #1f2937;
-            --light-bg: #f9fafb;
-            --white: #ffffff;
-            --border-color: #e5e7eb;
-            --text-muted: #6b7280;
-            --header-bg: var(--white);
-            --navbar-bg: var(--white);
-            --card-bg: var(--white);
-        }
-
-        /* Theme Definitions */
-        [data-theme="ocean"] {
-            --primary-color: #0891b2;
-            --secondary-color: #0e7490;
-            --accent-color: #06b6d4;
-            --dark-color: #0c4a6e;
-        }
-
-        [data-theme="forest"] {
-            --primary-color: #059669;
-            --secondary-color: #047857;
-            --accent-color: #10b981;
-            --dark-color: #064e3b;
-        }
-
-        [data-theme="sunset"] {
-            --primary-color: #dc2626;
-            --secondary-color: #b91c1c;
-            --accent-color: #f59e0b;
-            --dark-color: #7f1d1d;
-        }
-
-        [data-theme="purple"] {
-            --primary-color: #7c3aed;
-            --secondary-color: #6d28d9;
-            --accent-color: #a855f7;
-            --dark-color: #4c1d95;
-        }
-
-        [data-theme="midnight"] {
-            --primary-color: #1e293b;
-            --secondary-color: #334155;
-            --accent-color: #475569;
-            --dark-color: #0f172a;
-            --light-bg: #f1f5f9;
-            --header-bg: #1e293b;
-            --navbar-bg: #334155;
-            --card-bg: #ffffff;
-        }
-
-        [data-theme="rose"] {
-            --primary-color: #e11d48;
-            --secondary-color: #be123c;
-            --accent-color: #f43f5e;
-            --dark-color: #881337;
-        }
-
-        [data-theme="emerald"] {
-            --primary-color: #047857;
-            --secondary-color: #065f46;
-            --accent-color: #10b981;
-            --dark-color: #064e3b;
-        }
-
-        [data-theme="amber"] {
-            --primary-color: #d97706;
-            --secondary-color: #b45309;
-            --accent-color: #f59e0b;
-            --dark-color: #78350f;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--light-bg);
-            color: var(--dark-color);
-            transition: all 0.3s ease;
-        }
-
-        /* Header Styles */
-        .dashboard-header {
-            background: var(--header-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-section i {
-            color: var(--primary-color);
-            font-size: 1.75rem;
-        }
-
-        .logo-text {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin: 0;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .header-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--dark-color);
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .header-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #ef4444;
-            color: white;
-            font-size: 0.625rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.5rem 1rem;
-            background: var(--light-bg);
-            border-radius: 2rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .user-section:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        /* Navbar Styles */
-        .dashboard-navbar {
-            background: var(--navbar-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0;
-            position: sticky;
-            top: 73px;
-            z-index: 1020;
-        }
-
-        .navbar-nav {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
-        .nav-item {
-            position: relative;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            color: var(--dark-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            border-bottom: 3px solid transparent;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: var(--light-bg);
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-
-        .nav-link i {
-            margin-right: 0.5rem;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            min-width: 200px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease;
-        }
-
-        .nav-item:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-item {
-            display: block;
-            padding: 0.75rem 1.5rem;
-            color: var(--dark-color);
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .dropdown-item:hover {
-            background: var(--light-bg);
-            color: var(--primary-color);
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            min-width: 280px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease;
-            margin-top: 0.5rem;
-        }
-
-        .user-section:hover .user-dropdown {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .user-dropdown-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .user-dropdown-body {
-            padding: 0.5rem;
-        }
-
-        .user-dropdown-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            color: var(--dark-color);
-            text-decoration: none;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .user-dropdown-item:hover {
-            background: var(--light-bg);
-            color: var(--primary-color);
-        }
-
-        .user-dropdown-item i {
-            width: 20px;
-            margin-right: 0.75rem;
-        }
-
-        /* Main Content */
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .dashboard-card {
-            background: var(--card-bg);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-        }
-
-        .dashboard-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            color: white;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        /* Theme Switcher */
-        .theme-switcher {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            background: var(--card-bg);
-            border-radius: 1rem;
-            padding: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-        }
-
-        .theme-option {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin: 0.25rem 0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-        }
-
-        .theme-option:hover {
-            transform: scale(1.1);
-            border-color: var(--dark-color);
-        }
-
-        .theme-option.active {
-            border-color: var(--dark-color);
-            box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
-        }
-
-        /* Notification Dropdown */
-        .notification-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 350px;
-            max-height: 400px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease;
-            margin-top: 0.5rem;
-        }
-
-        .header-btn:hover .notification-dropdown {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .notification-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 600;
-        }
-
-        .notification-item {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            transition: all 0.2s ease;
-        }
-
-        .notification-item:hover {
-            background: var(--light-bg);
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        /* Feedback Modal */
-        .feedback-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .feedback-modal.show {
-            display: flex;
-        }
-
-        .feedback-content {
-            background: var(--card-bg);
-            border-radius: 1rem;
-            padding: 2rem;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .welcome-section {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-radius: 1rem;
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-        }
-    </style>
 </head>
 <body>
     <!-- Dashboard Header -->
@@ -519,17 +27,26 @@
                 <!-- Header Actions -->
                 <div class="header-actions">
                     <!-- Theme Switcher -->
-                    <button class="header-btn" onclick="toggleThemeSwitcher()" title="Switch Theme">
+                    <button class="header-btn header-btn-text" aria-label="Switch theme">
                         <i class="fas fa-palette"></i>
+                        <span>Theme</span>
+
+                        <!-- Theme Dropdown -->
+                        <div class="theme-switcher" aria-hidden="true">
+                            <div class="theme-options">
+                                <!-- Theme options will be dynamically generated -->
+                            </div>
+                        </div>
                     </button>
 
                     <!-- Notifications -->
-                    <button class="header-btn" title="Notifications">
+                    <button class="header-btn header-btn-text" aria-label="Notifications">
                         <i class="fas fa-bell"></i>
+                        <span>Notifications</span>
                         <span class="notification-badge">3</span>
 
                         <!-- Notification Dropdown -->
-                        <div class="notification-dropdown">
+                        <div class="notification-dropdown" aria-hidden="true">
                             <div class="notification-header">
                                 Notifications
                             </div>
@@ -552,28 +69,29 @@
                     </button>
 
                     <!-- Settings -->
-                    <button class="header-btn" onclick="openUserSettings()" title="Settings">
+                    <button class="header-btn header-btn-text" onclick="openUserSettings()" aria-label="Settings">
                         <i class="fas fa-cog"></i>
+                        <span>Settings</span>
                     </button>
 
                     <!-- Feedback -->
-                    <button class="header-btn" onclick="openFeedbackModal()" title="Send Feedback">
+                    <button class="header-btn header-btn-text" onclick="openFeedbackModal()" aria-label="Send Feedback">
                         <i class="fas fa-comment-dots"></i>
+                        <span>Feedback</span>
                     </button>
 
                     <!-- User Section -->
-                    <div class="user-section" onclick="toggleUserDropdown()">
+                    <button class="header-btn header-btn-user" onclick="toggleUserDropdown()" aria-label="User Profile">
                         <div class="user-avatar" id="userAvatar">
                             <i class="fas fa-user"></i>
                         </div>
-                        <div class="d-none d-md-block">
-                            <div class="fw-semibold" id="userName">Loading...</div>
-                            <small class="text-muted" id="userRole">User</small>
+                        <div class="user-info">
+                            <div class="user-name" id="headerUserName">Loading...</div>
+                            <div class="user-email" id="headerUserEmail">Loading...</div>
                         </div>
-                        <i class="fas fa-chevron-down"></i>
 
                         <!-- User Dropdown -->
-                        <div class="user-dropdown">
+                        <div class="user-dropdown" aria-hidden="true">
                             <div class="user-dropdown-header">
                                 <div class="d-flex align-items-center">
                                     <div class="user-avatar me-3">
@@ -606,7 +124,7 @@
                                 </a>
                             </div>
                         </div>
-                    </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -628,7 +146,7 @@
                         Product
                         <i class="fas fa-chevron-down ms-2"></i>
                     </a>
-                    <div class="dropdown-menu">
+                    <div class="dropdown-menu" aria-hidden="true">
                         <a href="#" class="dropdown-item">
                             <i class="fas fa-list me-2"></i>
                             All Products
@@ -802,246 +320,334 @@
         </div>
     </main>
 
-    <!-- Theme Switcher -->
-    <div class="theme-switcher" id="themeSwitcher" style="display: none;">
-        <div class="theme-option active" style="background: #4f46e5;" onclick="setTheme('default')" title="Default"></div>
-        <div class="theme-option" style="background: #0891b2;" onclick="setTheme('ocean')" title="Ocean"></div>
-        <div class="theme-option" style="background: #059669;" onclick="setTheme('forest')" title="Forest"></div>
-        <div class="theme-option" style="background: #dc2626;" onclick="setTheme('sunset')" title="Sunset"></div>
-        <div class="theme-option" style="background: #7c3aed;" onclick="setTheme('purple')" title="Purple"></div>
-        <div class="theme-option" style="background: #1e293b;" onclick="setTheme('midnight')" title="Midnight"></div>
-        <div class="theme-option" style="background: #e11d48;" onclick="setTheme('rose')" title="Rose"></div>
-        <div class="theme-option" style="background: #047857;" onclick="setTheme('emerald')" title="Emerald"></div>
-    </div>
-
     <!-- Feedback Modal -->
     <div class="feedback-modal" id="feedbackModal">
+        <div class="feedback-backdrop" onclick="closeFeedbackModal()"></div>
         <div class="feedback-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0">Send Feedback to KiotViet</h4>
-                <button class="btn btn-sm btn-outline-secondary" onclick="closeFeedbackModal()">
+            <!-- Modal Header -->
+            <div class="feedback-header">
+                <div class="feedback-header-content">
+                    <div class="feedback-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div class="feedback-header-text">
+                        <h3 class="feedback-title">Share Your Feedback</h3>
+                        <p class="feedback-subtitle">Help us improve KiotViet with your valuable insights</p>
+                    </div>
+                </div>
+                <button class="feedback-close" onclick="closeFeedbackModal()" aria-label="Close feedback">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <form onsubmit="submitFeedback(event)">
-                <div class="mb-3">
-                    <label class="form-label">Please select the features you want to provide feedback on</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="layout" id="layout">
-                        <label class="form-check-label" for="layout">New layout</label>
+            <!-- Feedback Form -->
+            <form onsubmit="submitFeedback(event)" class="feedback-form">
+                <!-- Feedback Type Selection -->
+                <div class="feedback-section">
+                    <div class="section-header">
+                        <i class="fas fa-layer-group"></i>
+                        <h4>What would you like to share feedback about?</h4>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="sell-online" id="sell-online">
-                        <label class="form-check-label" for="sell-online">Sell online</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="product-management" id="product-management">
-                        <label class="form-check-label" for="product-management">Product management</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="product-sales" id="product-sales">
-                        <label class="form-check-label" for="product-sales">Product sales</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="inventory-receipt" id="inventory-receipt">
-                        <label class="form-check-label" for="inventory-receipt">Inventory receipt</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="inventory-count" id="inventory-count">
-                        <label class="form-check-label" for="inventory-count">Inventory count</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="report" id="report">
-                        <label class="form-check-label" for="report">Report</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="customer-accounts" id="customer-accounts">
-                        <label class="form-check-label" for="customer-accounts">Customer accounts receivable</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="other" id="other">
-                        <label class="form-check-label" for="other">Other</label>
+                    <div class="feedback-categories">
+                        <div class="category-grid">
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="layout" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-th-large"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">New Layout</span>
+                                        <span class="category-desc">Interface design</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="sell-online" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Sell Online</span>
+                                        <span class="category-desc">E-commerce features</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="product-management" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Product Management</span>
+                                        <span class="category-desc">Product catalog</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="product-sales" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Product Sales</span>
+                                        <span class="category-desc">Sales process</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="inventory-receipt" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Inventory Receipt</span>
+                                        <span class="category-desc">Stock management</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="inventory-count" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Inventory Count</span>
+                                        <span class="category-desc">Stock counting</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="report" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Reports</span>
+                                        <span class="category-desc">Analytics & insights</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="customer-accounts" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Customer Accounts</span>
+                                        <span class="category-desc">Customer management</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="category-item">
+                                <input type="checkbox" name="features" value="other" class="category-input">
+                                <div class="category-card">
+                                    <div class="category-icon">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </div>
+                                    <div class="category-text">
+                                        <span class="category-name">Other</span>
+                                        <span class="category-desc">General feedback</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="feedbackDetail" class="form-label">Your feedback in detail</label>
-                    <textarea class="form-control" id="feedbackDetail" rows="4" required placeholder="Please provide your detailed feedback..."></textarea>
+                <!-- Detailed Feedback -->
+                <div class="feedback-section">
+                    <div class="section-header">
+                        <i class="fas fa-edit"></i>
+                        <h4>Tell us more (optional)</h4>
+                    </div>
+                    <div class="feedback-textarea">
+                        <textarea
+                            id="feedbackDetail"
+                            name="feedbackDetail"
+                            placeholder="Share your thoughts, suggestions, or report issues... Your detailed feedback helps us understand your needs better."
+                            rows="5"
+                        ></textarea>
+                        <div class="character-count">
+                            <span id="charCount">0</span> / 500 characters
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="phoneNumber" class="form-label">Please provide your phone number for further assistance?</label>
-                    <input type="tel" class="form-control" id="phoneNumber" placeholder="Enter phone number">
+                <!-- Contact Information -->
+                <div class="feedback-section">
+                    <div class="section-header">
+                        <i class="fas fa-phone"></i>
+                        <h4>Contact Information (optional)</h4>
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-input">
+                            <i class="fas fa-envelope"></i>
+                            <input
+                                type="email"
+                                id="emailAddress"
+                                name="emailAddress"
+                                placeholder="Email address for follow-up"
+                            >
+                        </div>
+                        <div class="contact-input">
+                            <i class="fas fa-phone"></i>
+                            <input
+                                type="tel"
+                                id="phoneNumber"
+                                name="phoneNumber"
+                                placeholder="Phone number for further assistance"
+                            >
+                        </div>
+                    </div>
                 </div>
 
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    If you need urgent support, please contact 1900 6522
+                <!-- Support Information -->
+                <div class="support-info">
+                    <div class="support-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div class="support-text">
+                        <h5>Need urgent support?</h5>
+                        <p>Contact our support team at <strong>1900 6522</strong> for immediate assistance</p>
+                    </div>
                 </div>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-2"></i>Send Feedback
+                <!-- Form Actions -->
+                <div class="feedback-actions">
+                    <button type="button" class="btn-cancel" onclick="closeFeedbackModal()">
+                        <i class="fas fa-times me-2"></i>Cancel
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="closeFeedbackModal()">
-                        Cancel
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-paper-plane me-2"></i>Send Feedback
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- External JavaScript Files -->
     <!-- Shared Authentication JS -->
     <script th:src="@{/core/js/auth.js}"></script>
+    <script th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
+    <script th:src="@{/modules/dashboard/js/dashboard-theme.js}"></script>
+    <script th:src="@{/modules/dashboard/js/dashboard-ui.js}"></script>
 
     <script>
-        // Initialize user information on page load
+        // Character counter for feedback textarea
         document.addEventListener('DOMContentLoaded', function() {
-            initializeUserInfo();
-            loadSavedTheme();
-        });
+            const feedbackDetail = document.getElementById('feedbackDetail');
+            const charCount = document.getElementById('charCount');
 
-        // Initialize user information from authentication
-        async function initializeUserInfo() {
-            const userInfo = kiotVietAuth.getUserInfo();
-            if (userInfo) {
-                updateUserInfo(userInfo);
-            } else {
-                // Try to get fresh user info
-                if (await kiotVietAuth.isAuthenticated()) {
-                    const freshUserInfo = kiotVietAuth.getUserInfo();
-                    updateUserInfo(freshUserInfo);
-                }
-            }
-        }
+            if (feedbackDetail && charCount) {
+                feedbackDetail.addEventListener('input', function() {
+                    const count = this.value.length;
+                    charCount.textContent = count;
 
-        // Update UI with user information
-        function updateUserInfo(userInfo) {
-            if (!userInfo) return;
-
-            // Update user name
-            const userName = document.getElementById('userName');
-            const dropdownUserName = document.getElementById('dropdownUserName');
-            const welcomeMessage = document.getElementById('welcomeMessage');
-
-            if (userName) userName.textContent = userInfo.username || userInfo.email || 'User';
-            if (dropdownUserName) dropdownUserName.textContent = userInfo.username || userInfo.email || 'User';
-            if (welcomeMessage) welcomeMessage.textContent = `Welcome back, ${userInfo.username || userInfo.email}! 👋`;
-
-            // Update user email
-            const dropdownUserEmail = document.getElementById('dropdownUserEmail');
-            if (dropdownUserEmail) dropdownUserEmail.textContent = userInfo.email || 'No email';
-
-            // Update user role
-            const userRole = document.getElementById('userRole');
-            const dropdownUserRole = document.getElementById('dropdownUserRole');
-            const roleText = userInfo.role || 'User';
-            if (userRole) userRole.textContent = roleText;
-            if (dropdownUserRole) dropdownUserRole.textContent = `Role: ${roleText}`;
-
-            // Update user avatar
-            const userAvatar = document.getElementById('userAvatar');
-            if (userAvatar && userInfo.username) {
-                userAvatar.innerHTML = userInfo.username.charAt(0).toUpperCase();
-            }
-        }
-
-        // Theme Management
-        function toggleThemeSwitcher() {
-            const themeSwitcher = document.getElementById('themeSwitcher');
-            themeSwitcher.style.display = themeSwitcher.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function setTheme(themeName) {
-            document.documentElement.setAttribute('data-theme', themeName);
-            localStorage.setItem('kiotviet-theme', themeName);
-
-            // Update active theme indicator
-            document.querySelectorAll('.theme-option').forEach(option => {
-                option.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        }
-
-        function loadSavedTheme() {
-            const savedTheme = localStorage.getItem('kiotviet-theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                // Update active theme indicator
-                document.querySelectorAll('.theme-option').forEach(option => {
-                    option.classList.remove('active');
-                    if (option.onclick.toString().includes(savedTheme)) {
-                        option.classList.add('active');
+                    if (count > 500) {
+                        charCount.style.color = '#ef4444';
+                        this.value = this.value.substring(0, 500);
+                        charCount.textContent = 500;
+                    } else if (count > 400) {
+                        charCount.style.color = '#f59e0b';
+                    } else {
+                        charCount.style.color = 'var(--text-muted)';
                     }
                 });
             }
-        }
+        });
 
-        // User Dropdown Functions
-        function toggleUserDropdown() {
-            // Handled by CSS hover
-        }
-
-        function openUserProfile() {
-            alert('User Profile - Feature coming soon!');
-        }
-
-        function openTwoFactorSettings() {
-            alert('2FA Settings - Feature coming soon!');
-        }
-
-        function openUserSettings() {
-            alert('User Settings - Feature coming soon!');
-        }
-
-        // Feedback Modal Functions
-        function openFeedbackModal() {
-            document.getElementById('feedbackModal').classList.add('show');
-        }
-
-        function closeFeedbackModal() {
-            document.getElementById('feedbackModal').classList.remove('show');
-        }
-
+        // Feedback form submission
         function submitFeedback(event) {
             event.preventDefault();
+
+            const submitBtn = event.target.querySelector('.btn-submit');
+
+            // Show loading state
+            if (window.dashboardUI) {
+                window.dashboardUI.showButtonLoading(submitBtn);
+            }
 
             const formData = {
                 features: [],
                 detail: document.getElementById('feedbackDetail').value,
-                phoneNumber: document.getElementById('phoneNumber').value
+                phoneNumber: document.getElementById('phoneNumber').value,
+                emailAddress: document.getElementById('emailAddress')?.value || ''
             };
 
             // Collect checked features
-            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+            document.querySelectorAll('input[name="features"]:checked').forEach(checkbox => {
                 formData.features.push(checkbox.value);
             });
 
             console.log('Feedback submitted:', formData);
-            alert('Thank you for your feedback! We will review it and get back to you if needed.');
-            closeFeedbackModal();
 
-            // Reset form
-            event.target.reset();
+            // Simulate API call
+            setTimeout(() => {
+                // Hide loading state
+                if (window.dashboardUI) {
+                    window.dashboardUI.hideButtonLoading(submitBtn);
+                    window.dashboardUI.showSuccess('Thank you for your feedback! We will review it and get back to you if needed.');
+                } else {
+                    alert('Thank you for your feedback! We will review it and get back to you if needed.');
+                }
+
+                closeFeedbackModal();
+
+                // Reset form
+                event.target.reset();
+
+                // Reset character counter
+                const charCount = document.getElementById('charCount');
+                if (charCount) {
+                    charCount.textContent = '0';
+                    charCount.style.color = 'var(--text-muted)';
+                }
+            }, 1500);
         }
-
-        // Close theme switcher when clicking outside
-        document.addEventListener('click', function(event) {
-            const themeSwitcher = document.getElementById('themeSwitcher');
-            const themeButton = event.target.closest('[onclick="toggleThemeSwitcher()"]');
-
-            if (!themeSwitcher.contains(event.target) && !themeButton) {
-                themeSwitcher.style.display = 'none';
-            }
-        });
 
         // Override logout to use shared auth manager
         function logout() {
-            kiotVietAuth.logout();
+            if (typeof kiotVietAuth !== 'undefined') {
+                kiotVietAuth.logout();
+            } else if (window.dashboardCore) {
+                window.dashboardCore.logout();
+            } else {
+                window.location.href = '/login';
+            }
         }
+
+        // Initialize dashboard when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard: DOM ready, checking initialization...');
+
+            // Verify all components are loaded
+            setTimeout(() => {
+                if (window.dashboardCore && window.dashboardTheme && window.dashboardUI) {
+                    console.log('Dashboard: All components loaded successfully');
+                } else {
+                    console.warn('Dashboard: Some components failed to load');
+                    console.log('Core:', !!window.dashboardCore);
+                    console.log('Theme:', !!window.dashboardTheme);
+                    console.log('UI:', !!window.dashboardUI);
+                }
+            }, 500);
+        });
     </script>
 </body>
 </html>
