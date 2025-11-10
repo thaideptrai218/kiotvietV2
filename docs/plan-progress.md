@@ -177,35 +177,35 @@
 **Requirements**: New category system from scratch with sophisticated tree UI
 
 #### Days 8-10: Category Database & Backend
-- [ ] **Create new categories table V6 with materialized path**
-  - [ ] Design Category entity with unlimited hierarchy support
-  - [ ] Write Flyway migration V6 for categories table
-  - [ ] Materialized path field: "/drinks/soft-drinks/coke"
-  - [ ] Add self-referencing foreign key for parent-child
-  - [ ] Add indexes: (company_id, path), (company_id, parent_id), (company_id, is_active)
-  - [ ] Test table creation with sample data
+- [x] **Create new categories table V6 with materialized path**
+  - [x] Design Category entity with unlimited hierarchy support
+  - [x] Write Flyway migration V6 for categories table (implemented as V4)
+  - [x] Materialized path field: "/drinks/soft-drinks/coke"
+  - [x] Add self-referencing foreign key for parent-child
+  - [x] Add indexes: (company_id, path), (company_id, parent_id), (company_id, is_active)
+  - [x] Test table creation with sample data
 
-- [ ] **Implement Category entity and repository**
-  - [ ] Create Category entity with JPA annotations and Lombok
-  - [ ] Create CategoryRepository with account isolation
-  - [ ] Add methods: findByCompanyId, findByParentId, findByPathStartingWith
-  - [ ] Add tree building queries and path manipulation methods
-  - [ ] Add soft delete support with is_active field
+- [x] **Implement Category entity and repository**
+  - [x] Create Category entity with JPA annotations and Lombok
+  - [x] Create CategoryRepository with account isolation
+  - [x] Add methods: findByCompanyId, findByParentId, findByPathStartingWith
+  - [x] Add tree building queries and path manipulation methods
+  - [x] Add soft delete support with is_active field
 
-- [ ] **Create CategoryService with business logic**
-  - [ ] Implement path generation for new categories
-  - [ ] Add parent assignment validation (prevent cycles)
-  - [ ] Create tree building algorithms
-  - [ ] Add category movement logic with path updates
-  - [ ] Add validation rules (name uniqueness per level)
+- [x] **Create CategoryService with business logic**
+  - [x] Implement path generation for new categories
+  - [x] Add parent assignment validation (prevent cycles)
+  - [x] Create tree building algorithms
+  - [x] Add category movement logic with path updates
+  - [x] Add validation rules (name uniqueness per level)
 
-- [ ] **Create Category API endpoints**
-  - [ ] Create CategoryApiController with REST endpoints
-  - [ ] GET /api/categories - Return flat list for tree building
-  - [ ] POST /api/categories - Create new category
-  - [ ] PUT /api/categories/{id} - Update category
-  - [ ] DELETE /api/categories/{id} - Soft delete with validation
-  - [ ] Add ResponseFactory for consistent responses
+- [x] **Create Category API endpoints**
+  - [x] Create CategoryApiController with REST endpoints
+  - [x] GET /api/categories - Return flat list for tree building
+  - [x] POST /api/categories - Create new category
+  - [x] PUT /api/categories/{id} - Update category
+  - [x] DELETE /api/categories/{id} - Soft delete with validation
+  - [x] Add ResponseFactory for consistent responses
 
 #### Days 11-12: Category Frontend with Sophisticated UI
 - [ ] **Build category tree HTML structure**
@@ -230,19 +230,19 @@
   - [ ] Add validation: prevent delete if has children or products
 
 #### Days 13-14: Category Advanced Features & Polish
-- [ ] **Implement advanced search functionality**
-  - [ ] Search with substring matching (case-sensitive)
+- [x] **Implement advanced search functionality**
+  - [x] Search with substring matching (case-sensitive)
   - [ ] Auto-expand branches to reveal matches
   - [ ] Optional text highlighting for matches
   - [ ] Maintain selection state when clearing search
   - [ ] Keep last expanded state option
 
-- [ ] **Add category movement and validation**
-  - [ ] Move category with path updates for all descendants
-  - [ ] Prevent moving under self or descendants
+- [x] **Add category movement and validation**
+  - [x] Move category with path updates for all descendants
+  - [x] Prevent moving under self or descendants
   - [ ] Refresh affected branches after movement
   - [ ] Add animation for tree updates
-  - [ ] Handle sort order within parent levels
+  - [x] Handle sort order within parent levels
 
 - [ ] **Testing and UX improvements**
   - [ ] Test unlimited depth hierarchy with mock data
@@ -1001,7 +1001,7 @@
 
 ## PROGRESS TRACKING
 
-### Overall Progress: 23% (39/168 tasks completed)
+### Overall Progress: 35% (58/168 tasks completed)
 
 **Week 1**: 100% (31/31 tasks completed)
 - ✅ Spring Boot project setup with Maven
@@ -1020,7 +1020,29 @@
 - ✅ User tables creation with proper indexes and constraints
 - ✅ BCrypt password hashing implementation with salt
 
-**Week 2**: 0% (0/20 tasks completed)
+**Week 2**: 45% (9/20 tasks completed)
+- ✅ **Category Management Backend** (8/12 tasks completed)
+  - ✅ Categories table V4 with materialized path and indexes
+  - ✅ Category entity with JPA annotations and Lombok
+  - ✅ CategoryRepository with account isolation
+  - ✅ CategoryService with business logic and validation
+  - ✅ CategoryApiController with complete REST endpoints
+  - ✅ Advanced search functionality with substring matching
+  - ✅ Category movement and validation with path updates
+  - ✅ Sort order handling within parent levels
+- ✅ **Supplier Management Backend** (11/16 tasks completed)
+  - ✅ Suppliers table V3 with contact information
+  - ✅ Supplier entity with JPA annotations
+  - ✅ SupplierRepository with account isolation
+  - ✅ SupplierService with validation
+  - ✅ SupplierApiController with REST endpoints
+  - ✅ Auto-complete service for future integration
+  - ✅ Search functionality with multiple criteria
+  - ✅ Pagination support
+  - ✅ Soft delete support
+  - ✅ Contact information validation
+  - ✅ Unique constraint enforcement
+
 **Week 3**: 0% (0/19 tasks completed)
 **Week 4**: 0% (0/17 tasks completed)
 **Week 5**: 0% (0/17 tasks completed)

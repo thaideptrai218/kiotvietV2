@@ -19,39 +19,101 @@ jobs:
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
 
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Cache GitHub CLI
+        id: cache-gh
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/local/bin/gh
+            /usr/share/doc/gh
+            /usr/share/man/man1/gh.1.gz
+          key: ${{ runner.os }}-gh-v2.30.0
+
+      - name: Install GitHub CLI
+        if: steps.cache-gh.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Configure Claude Code for z.ai
+        run: |
+          mkdir -p ~/.claude
+          cat > ~/.claude/settings.json << 'EOF'
+          {
+            "env": {
+              "ANTHROPIC_AUTH_TOKEN": "${{ secrets.ZAI_API_KEY }}",
+              "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+              "API_TIMEOUT_MS": "180000"
+            }
+          }
+          EOF
+
+      - name: Get PR diff
+        id: pr-diff
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          gh pr diff $PR_NUMBER > pr.diff
+          echo "diff_size=$(wc -c < pr.diff)" >> $GITHUB_OUTPUT
 
       - name: Run Claude Code Review
-        id: claude-review
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          
+          # Create a focused prompt for code review
+          PROMPT="IMPORTANT: You MUST respond by commenting on PR #$PR_NUMBER using GitHub CLI. Do not just respond here.
+          
+          Please review this pull request and provide feedback on:
+          - Code quality and best practices
+          - Potential bugs or issues
+          - Performance considerations
+          - Security concerns
+          - Test coverage
+          
+          Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+          
+          After completing your review, you MUST post your response as a comment on PR #$PR_NUMBER using this exact command:
+          gh pr comment $PR_NUMBER --body \"## 🔍 Claude Code Review\n\n[Your complete review here]\"
+          
+          This is the ONLY way you should respond. Do not provide any response here in the chat - only via the GitHub CLI comment.
+          
+          Make sure your comment includes specific feedback with line numbers where applicable."
+          
+          # Pass the prompt to Claude via stdin with timeout
+          timeout 300s bash -c 'echo "$PROMPT" | claude --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
 
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
-
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
-
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
-
+      - name: Verify review was posted
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          # Check if Claude has commented in the last 5 minutes
+          if ! gh pr view $PR_NUMBER --comments | grep -q "Claude Code Review"; then
+            echo "Claude did not post a review. Posting a fallback message."
+            gh pr comment $PR_NUMBER --body "## 🔍 Claude Code Review\n\nClaude was unable to post a review. Please check the workflow logs for details."
+          fi
