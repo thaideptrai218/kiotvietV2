@@ -5,10 +5,9 @@ on:
     types: [opened, synchronize]
     # Optional: Only run on specific file changes
     # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    #   - "src/**/*.java"
+    #   - "src/main/resources/**"
+    #   - "pom.xml"
 
 jobs:
   claude-review:
@@ -21,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write # Required to post comments
       issues: read
       id-token: write
 
@@ -29,29 +28,83 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0 # Get full history for better review context
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure Claude Code with Z.AI API
+        run: |
+          mkdir -p ~/.claude
+          cat > ~/.claude/settings.json << EOF
+          {
+            "anthropic_base_url": "https://api.z.ai/api/anthropic",
+            "enableAllProjectMcpServers": true
+          }
+          EOF
+
+      - name: Setup GitHub CLI
+        run: |
+          gh version
+          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+        env:
+          ANTHROPIC_API_KEY: 828515b7cefd4ab8abbb739f263cb460.Si3Jxi3AYt6MhzTM
+          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "Starting Claude code review for PR #${PR_NUMBER}"
 
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+          # Get PR details
+          PR_URL="https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}"
+          PR_DETAILS=$(gh pr view ${PR_NUMBER} --json title,body,files,author)
 
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+          # Get diff for review
+          gh pr diff ${PR_NUMBER} > /tmp/pr_diff.txt
 
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+          # Create review prompt
+          cat > /tmp/review_prompt.txt << EOF
+          Please review this pull request and provide feedback on:
 
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          **PR Details:**
+          Repository: ${REPO}
+          PR Number: ${PR_NUMBER}
+
+          **Review Focus Areas:**
+          - Code quality and best practices
+          - Potential bugs or issues
+          - Performance considerations
+          - Security concerns
+          - Test coverage
+          - Adherence to project conventions (see CLAUDE.md)
+
+          **Instructions:**
+          1. Review the code changes carefully
+          2. Provide constructive, helpful feedback
+          3. Use gh pr comment to leave your review as a comment on the PR
+          4. Focus on the most important issues first
+          5. Be specific and actionable in your feedback
+
+          Use the repository's CLAUDE.md for guidance on style and conventions.
+          EOF
+
+          # Run Claude review with the diff and prompt
+          {
+            echo "CLAUDE CODE REVIEW - PR #${PR_NUMBER}"
+            echo "============================================"
+            cat /tmp/review_prompt.txt
+            echo ""
+            echo "PR DIFF:"
+            echo "========"
+            cat /tmp/pr_diff.txt
+          } | claude --verbose --output-format stream-json --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
 

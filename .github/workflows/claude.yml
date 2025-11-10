@@ -30,21 +30,49 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure Claude Code with Z.AI API
+        run: |
+          mkdir -p ~/.claude
+          cat > ~/.claude/settings.json << EOF
+          {
+            "anthropic_base_url": "https://api.z.ai/api/anthropic",
+            "enableAllProjectMcpServers": true
+          }
+          EOF
+
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-
-          # This is an optional setting that allows Claude to read CI results on PRs
-          additional_permissions: |
-            actions: read
-
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
-
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          # claude_args: '--allowed-tools Bash(gh pr:*)'
+        env:
+          ANTHROPIC_API_KEY: 828515b7cefd4ab8abbb739f263cb460.Si3Jxi3AYt6MhzTM
+          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+        run: |
+          echo "Claude configured with Z.AI API"
+          # Extract the comment/issue/pr content based on event type
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            COMMENT_BODY="${{ github.event.comment.body }}"
+            echo "Processing issue comment: $COMMENT_BODY"
+            # Run Claude with the comment content
+            echo "$COMMENT_BODY" | claude --verbose --output-format stream-json
+          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            COMMENT_BODY="${{ github.event.comment.body }}"
+            echo "Processing PR review comment: $COMMENT_BODY"
+            echo "$COMMENT_BODY" | claude --verbose --output-format stream-json
+          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
+            COMMENT_BODY="${{ github.event.review.body }}"
+            echo "Processing PR review: $COMMENT_BODY"
+            echo "$COMMENT_BODY" | claude --verbose --output-format stream-json
+          elif [ "${{ github.event_name }}" = "issues" ]; then
+            ISSUE_BODY="${{ github.event.issue.body }}"
+            ISSUE_TITLE="${{ github.event.issue.title }}"
+            echo "Processing issue: $ISSUE_TITLE - $ISSUE_BODY"
+            echo "$ISSUE_TITLE - $ISSUE_BODY" | claude --verbose --output-format stream-json
+          fi
 
