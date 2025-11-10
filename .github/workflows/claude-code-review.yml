@@ -4,19 +4,14 @@ on:
   pull_request:
     types: [opened, synchronize]
     # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.java"
-    #   - "src/main/resources/**"
-    #   - "pom.xml"
+    paths:
+      - "src/**/*.java"
+      - "src/main/resources/**"
+      - "pom.xml"
+      - "CLAUDE.md"
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,81 +25,35 @@ jobs:
         with:
           fetch-depth: 0 # Get full history for better review context
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@v1
         with:
-          node-version: '18'
+          prompt: |
+            Please review this pull request and provide feedback on:
 
-      - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+            **PR Details:**
+            Repository: ${{ github.repository }}
+            PR Number: ${{ github.event.pull_request.number }}
+            PR Author: ${{ github.event.pull_request.user.login }}
 
-      - name: Configure Claude Code with Z.AI API
-        run: |
-          mkdir -p ~/.claude
-          cat > ~/.claude/settings.json << EOF
-          {
-            "anthropic_base_url": "https://api.z.ai/api/anthropic",
-            "enableAllProjectMcpServers": true
-          }
-          EOF
+            **Review Focus Areas:**
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Security concerns
+            - Test coverage
+            - Adherence to project conventions (see CLAUDE.md)
 
-      - name: Setup GitHub CLI
-        run: |
-          gh version
-          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+            **Instructions:**
+            1. Review the code changes carefully
+            2. Provide constructive, helpful feedback
+            3. Post your review as a comment on the PR
+            4. Focus on the most important issues first
+            5. Be specific and actionable in your feedback
 
-      - name: Run Claude Code Review
-        id: claude-review
+            Use the repository's CLAUDE.md for guidance on style and conventions.
+          claude_args: "--verbose --output-format stream-json"
         env:
-          ANTHROPIC_API_KEY: 828515b7cefd4ab8abbb739f263cb460.Si3Jxi3AYt6MhzTM
-          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          echo "Starting Claude code review for PR #${PR_NUMBER}"
-
-          # Get PR details
-          PR_URL="https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}"
-          PR_DETAILS=$(gh pr view ${PR_NUMBER} --json title,body,files,author)
-
-          # Get diff for review
-          gh pr diff ${PR_NUMBER} > /tmp/pr_diff.txt
-
-          # Create review prompt
-          cat > /tmp/review_prompt.txt << EOF
-          Please review this pull request and provide feedback on:
-
-          **PR Details:**
-          Repository: ${REPO}
-          PR Number: ${PR_NUMBER}
-
-          **Review Focus Areas:**
-          - Code quality and best practices
-          - Potential bugs or issues
-          - Performance considerations
-          - Security concerns
-          - Test coverage
-          - Adherence to project conventions (see CLAUDE.md)
-
-          **Instructions:**
-          1. Review the code changes carefully
-          2. Provide constructive, helpful feedback
-          3. Use gh pr comment to leave your review as a comment on the PR
-          4. Focus on the most important issues first
-          5. Be specific and actionable in your feedback
-
-          Use the repository's CLAUDE.md for guidance on style and conventions.
-          EOF
-
-          # Run Claude review with the diff and prompt
-          {
-            echo "CLAUDE CODE REVIEW - PR #${PR_NUMBER}"
-            echo "============================================"
-            cat /tmp/review_prompt.txt
-            echo ""
-            echo "PR DIFF:"
-            echo "========"
-            cat /tmp/pr_diff.txt
-          } | claude --verbose --output-format stream-json --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
 

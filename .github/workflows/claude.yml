@@ -1,4 +1,4 @@
-name: Claude Code
+name: Claude Code Assistant
 
 on:
   issue_comment:
@@ -20,59 +20,46 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write # Required for commenting
+      issues: write # Required for commenting on issues
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Claude Code Assistant
+        uses: anthropics/claude-code-action@v1
         with:
-          node-version: '18'
+          prompt: |
+            You are Claude Code Assistant helping with this GitHub repository. Please respond to the following:
 
-      - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+            **Context:**
+            Event Type: ${{ github.event_name }}
+            Repository: ${{ github.repository }}
+            Actor: ${{ github.actor }}
 
-      - name: Configure Claude Code with Z.AI API
-        run: |
-          mkdir -p ~/.claude
-          cat > ~/.claude/settings.json << EOF
-          {
-            "anthropic_base_url": "https://api.z.ai/api/anthropic",
-            "enableAllProjectMcpServers": true
-          }
-          EOF
+            **Request:**
+            ${{
+              github.event_name == 'issue_comment' && format('Issue Comment: "{0}" by {1}', github.event.comment.body, github.event.comment.user.login) ||
+              github.event_name == 'pull_request_review_comment' && format('PR Review Comment: "{0}" by {1}', github.event.comment.body, github.event.comment.user.login) ||
+              github.event_name == 'pull_request_review' && format('PR Review: "{0}" by {1}', github.event.review.body, github.event.review.user.login) ||
+              github.event_name == 'issues' && format('Issue: "{0}" - {1}', github.event.issue.title, github.event.issue.body)
+            }}
 
-      - name: Run Claude Code
-        id: claude
+            **Instructions:**
+            1. Analyze the request and provide helpful assistance
+            2. If it's a code question, reference relevant files in the repository
+            3. If it's about project structure, use the CLAUDE.md file for guidance
+            4. Provide actionable solutions or explanations
+            5. Post your response as a comment on the issue/PR
+
+            Focus on being helpful, technical, and solution-oriented.
+          claude_args: "--verbose --output-format stream-json --allowed-tools Bash(gh:*),Read,Grep,Glob"
         env:
-          ANTHROPIC_API_KEY: 828515b7cefd4ab8abbb739f263cb460.Si3Jxi3AYt6MhzTM
-          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
-        run: |
-          echo "Claude configured with Z.AI API"
-          # Extract the comment/issue/pr content based on event type
-          if [ "${{ github.event_name }}" = "issue_comment" ]; then
-            COMMENT_BODY="${{ github.event.comment.body }}"
-            echo "Processing issue comment: $COMMENT_BODY"
-            # Run Claude with the comment content
-            echo "$COMMENT_BODY" | claude --verbose --output-format stream-json
-          elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
-            COMMENT_BODY="${{ github.event.comment.body }}"
-            echo "Processing PR review comment: $COMMENT_BODY"
-            echo "$COMMENT_BODY" | claude --verbose --output-format stream-json
-          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
-            COMMENT_BODY="${{ github.event.review.body }}"
-            echo "Processing PR review: $COMMENT_BODY"
-            echo "$COMMENT_BODY" | claude --verbose --output-format stream-json
-          elif [ "${{ github.event_name }}" = "issues" ]; then
-            ISSUE_BODY="${{ github.event.issue.body }}"
-            ISSUE_TITLE="${{ github.event.issue.title }}"
-            echo "Processing issue: $ISSUE_TITLE - $ISSUE_BODY"
-            echo "$ISSUE_TITLE - $ISSUE_BODY" | claude --verbose --output-format stream-json
-          fi
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
 
