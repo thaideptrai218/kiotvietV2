@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier - Kiotviet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/modules/suppliers/css/supplier.css}">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="fas fa-store me-2"></i> KiotViet
+            </a>
+        </div>
+    </nav>
+    <section class="page-header">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="header-icon"><i class="fas fa-truck"></i></div>
+                <div>
+                    <h1 class="page-title">Suppliers</h1>
+                    <p class="page-subtitle">Manage supplier contacts and relationships</p>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="btnAdd"><i class="fas fa-plus"></i> New Supplier</button>
+        </div>
+    </section>
+
+    <main class="container py-4">
+        <div class="supplier-card card shadow-sm">
+            <div class="card-body p-3 p-md-4">
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                    <div class="input-group input-group-sm search-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                        <input id="q" type="text" class="form-control" placeholder="Search by name or contact...">
+                    </div>
+                    <div class="ms-auto d-flex gap-2">
+                        <select id="active" class="form-select form-select-sm" style="width: 160px;">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnRefresh"><i class="fas fa-rotate"></i>
+                            Refresh</button>
+                    </div>
+                </div>
+
+                <div id="alert" class="alert d-none" role="alert"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle table-modern" id="tbl">
+                        <thead>
+                            <tr>
+                                <th style="width:38px"></th>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th style="width:120px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div id="pageInfo" class="text-muted small"></div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagi"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Create/Update -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header modal-gradient">
+                    <h5 class="modal-title" id="modalTitle">New Supplier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="frm">
+                        <input type="hidden" id="supplierId">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Name <span class="text-danger">*</span></label>
+                                <input id="name" class="form-control" maxlength="255" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contact Person</label>
+                                <input id="contactPerson" class="form-control" maxlength="255">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input id="phone" class="form-control" maxlength="20">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input id="email" type="email" class="form-control" maxlength="255">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <textarea id="address" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="modalErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="btnSave">
+                        <span class="default-text"><i class="fas fa-save"></i> Save</span>
+                        <span class="loading-text d-none"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/modules/suppliers/js/supplier.js}"></script>
+</body>
+
+</html>
