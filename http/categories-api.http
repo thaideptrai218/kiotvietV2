@@ -1,0 +1,313 @@
+### KiotViet Categories API Testing
+### Authentication required - replace YOUR_JWT_TOKEN with actual token
+
+# Set authentication token (replace with actual token after login)
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiVGhhaWhidm4yMTgiLCJjb21wYW55SWQiOjEsInJvbGUiOiJhZG1pbiIsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyNzYwNjg4LCJleHAiOjE3NjI3NjE1ODh9.vyqUrEzJut0AkM5TJb3_OZ510v1WSsvoDN4uOEiJzwT-DO-6i2AeTPH3eq-moponNGBKUEhGvFO8y8cSe0OLow
+@baseUrl = http://localhost:8080
+
+### ===== Authentication Setup =====
+### First, login to get JWT token
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Thaihbvn218",
+  "password": "Thaihbvn218@"
+}
+
+### ===== Categories API Tests =====
+
+### 1. Get all categories (flat list for tree building)
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+
+###
+
+### 2. Get root categories only
+GET {{baseUrl}}/api/categories/root
+Authorization: Bearer {{authToken}}
+
+###
+
+### 3. Create a root category
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Electronics",
+  "description": "Electronic devices and accessories",
+  "color": "#007bff",
+  "icon": "fas fa-laptop"
+}
+
+###
+
+### 4. Create another root category
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Beverages",
+  "description": "Drinks and liquid products",
+  "color": "#28a745",
+  "icon": "fas fa-glass-water"
+}
+
+###
+
+### 5. Create subcategories under Electronics
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Mobile Phones",
+  "description": "Smartphones and mobile devices",
+  "color": "#dc3545",
+  "icon": "fas fa-mobile-alt",
+  "parentId": 1
+}
+
+###
+
+### 6. Create another subcategory under Electronics
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Computers",
+  "description": "Laptops and desktop computers",
+  "color": "#6f42c1",
+  "icon": "fas fa-desktop",
+  "parentId": 1
+}
+
+###
+
+### 7. Create sub-subcategory under Mobile Phones
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Smartphones",
+  "description": "Modern smartphones",
+  "color": "#fd7e14",
+  "icon": "fas fa-mobile",
+  "parentId": 3
+}
+
+###
+
+### 8. Create beverages subcategories
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Soft Drinks",
+  "description": "Carbonated beverages",
+  "color": "#20c997",
+  "icon": "fas fa-crate-apple",
+  "parentId": 2
+}
+
+###
+
+### 9. Get all categories again to see hierarchy
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+
+###
+
+### 10. Get children of Electronics category
+GET {{baseUrl}}/api/categories/1/children
+Authorization: Bearer {{authToken}}
+
+###
+
+### 11. Get descendants of Electronics category (should include Mobile Phones, Computers, and Smartphones)
+GET {{baseUrl}}/api/categories/1/descendants
+Authorization: Bearer {{authToken}}
+
+###
+
+### 12. Get single category details
+GET {{baseUrl}}/api/categories/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### 13. Search categories by name
+GET {{baseUrl}}/api/categories/search?query=phone
+Authorization: Bearer {{authToken}}
+
+###
+
+### 14. Update a category
+PUT {{baseUrl}}/api/categories/3
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Mobile Phones & Tablets",
+  "description": "Smartphones, tablets and mobile devices",
+  "color": "#e83e8c"
+}
+
+###
+
+### 15. Move Smartphones from Mobile Phones to Computers
+PUT {{baseUrl}}/api/categories/5/move
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "newParentId": 4
+}
+
+###
+
+### 16. Get all categories to see move result
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+
+###
+
+### 17. Create another subcategory under Soft Drinks
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Cola",
+  "description": "Cola-flavored soft drinks",
+  "color": "#6c757d",
+  "icon": "fas fa-cube",
+  "parentId": 6
+}
+
+###
+
+### 18. Reorder categories under Electronics (Computers first, then Mobile Phones)
+PUT {{baseUrl}}/api/categories/reorder
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "categoryIds": [4, 3]
+}
+
+###
+
+### 19. Test error handling - Try to create category with duplicate name
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Electronics",
+  "description": "This should fail"
+}
+
+###
+
+### 20. Test error handling - Try to move category under itself (should fail)
+PUT {{baseUrl}}/api/categories/1/move
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "newParentId": 1
+}
+
+###
+
+### 21. Soft delete a category
+DELETE {{baseUrl}}/api/categories/5
+Authorization: Bearer {{authToken}}
+
+###
+
+### 22. Get all categories to see deletion effect
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+
+###
+
+### 23. Restore deleted category
+PUT {{baseUrl}}/api/categories/5/restore
+Authorization: Bearer {{authToken}}
+
+###
+
+### 24. Final categories check
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+
+###
+
+### ===== Additional Edge Cases =====
+
+### 25. Try to create category with very long name (should fail validation)
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "This is a very long category name that exceeds the maximum allowed length of 255 characters and should trigger a validation error because it's way too long for the system to handle properly and maintain data integrity according to the business rules specified in the requirements"
+}
+
+###
+
+### 26. Try to create category with invalid color (should fail validation)
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Test Category",
+  "color": "invalid-color"
+}
+
+###
+
+### 27. Try to access non-existent category (should return 404)
+GET {{baseUrl}}/api/categories/99999
+Authorization: Bearer {{authToken}}
+
+###
+
+### 28. Try to move category to non-existent parent (should return 404)
+PUT {{baseUrl}}/api/categories/1/move
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "newParentId": 99999
+}
+
+###
+
+### 29. Test without authentication (should return 401)
+GET {{baseUrl}}/api/categories
+
+###
+
+### 30. Test with invalid token (should return 401)
+GET {{baseUrl}}/api/categories
+Authorization: Bearer invalid-token-here
+
+### ===== Success Indicators =====
+### Expected Results:
+# - Category creation should return proper CategoryDto with IDs
+# - Hierarchy relationships should be correctly maintained
+# - Path generation should work: /electronics, /electronics/mobile-phones, /electronics/mobile-phones/smartphones
+# - Search should find matching categories
+# - Move operations should update paths correctly
+# - Soft delete should cascade to descendants
+# - Restore should work when parent is active
+# - Validation should prevent invalid operations
