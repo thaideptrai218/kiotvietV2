@@ -101,7 +101,7 @@ public class AuthApiController {
         passwordResetService.resetPassword(request);
         return ResponseFactory.success(null, "Password has been reset successfully");
     }
-}
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         // Get current authenticated user from security context
@@ -127,4 +127,5 @@ public class AuthApiController {
 
         return ResponseEntity.ok(ResponseFactory.success(userInfo, "User retrieved successfully"));
     }
+
 }
