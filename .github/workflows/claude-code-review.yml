@@ -54,6 +54,6 @@ jobs:
             Use the repository's CLAUDE.md for guidance on style and conventions.
           claude_args: "--verbose --output-format stream-json"
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          ANTHROPIC_API_KEY: 828515b7cefd4ab8abbb739f263cb460.Si3Jxi3AYt6MhzTM
+          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
 
