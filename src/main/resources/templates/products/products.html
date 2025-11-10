@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Kiotviet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/modules/products/css/products.css}">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="fas fa-store me-2"></i> KiotViet
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span id="userDisplayName">Loading...</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="header-icon"><i class="fas fa-box"></i></div>
+                <div>
+                    <h1 class="page-title">Products</h1>
+                    <p class="page-subtitle">Manage your product catalog and inventory</p>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="btnAddProduct">
+                <i class="fas fa-plus"></i> New Product
+            </button>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container-fluid">
+        <div class="row">
+            <!-- Left Filter Rail -->
+            <aside class="col-lg-3 col-xl-2 filter-rail">
+                <div class="filter-card">
+                    <div class="filter-header">
+                        <h6><i class="fas fa-filter me-2"></i>Filters</h6>
+                        <button class="btn btn-sm btn-link text-muted p-0" id="btnClearFilters">Clear all</button>
+                    </div>
+
+                    <div class="filter-body">
+                        <!-- Keyword Search (Secondary) -->
+                        <div class="filter-section">
+                            <label class="form-label">Keyword</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="filterKeyword" placeholder="Search in name, description...">
+                            </div>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="filter-section">
+                            <label class="form-label">Status</label>
+                            <select class="form-select form-select-sm" id="filterStatus">
+                                <option value="">All Status</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="INACTIVE">Inactive</option>
+                            </select>
+                        </div>
+
+                        <!-- Category Filter -->
+                        <div class="filter-section">
+                            <label class="form-label">Category</label>
+                            <div class="category-picker-container">
+                                <input type="text" class="form-control form-control-sm" id="filterCategoryDisplay" readonly placeholder="Select categories">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" id="btnCategoryPicker">
+                                    <i class="fas fa-folder-tree"></i>
+                                </button>
+                            </div>
+                            <div class="selected-categories mt-2" id="selectedCategories"></div>
+                        </div>
+
+                        <!-- Price Range Filter -->
+                        <div class="filter-section">
+                            <label class="form-label">Price Range</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text">From</span>
+                                <input type="number" class="form-control" id="filterPriceFrom" placeholder="0" min="0" step="0.01">
+                                <span class="input-group-text">To</span>
+                                <input type="number" class="form-control" id="filterPriceTo" placeholder="999999" min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <!-- Stock Range Filter -->
+                        <div class="filter-section">
+                            <label class="form-label">Stock Range</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text">From</span>
+                                <input type="number" class="form-control" id="filterStockFrom" placeholder="0" min="0">
+                                <span class="input-group-text">To</span>
+                                <input type="number" class="form-control" id="filterStockTo" placeholder="999999" min="0">
+                            </div>
+                        </div>
+
+                        <!-- Supplier Filter -->
+                        <div class="filter-section">
+                            <label class="form-label">Supplier</label>
+                            <select class="form-select form-select-sm" id="filterSupplier">
+                                <option value="">All Suppliers</option>
+                            </select>
+                        </div>
+
+                        <!-- Apply Filters Button -->
+                        <button class="btn btn-primary btn-sm w-100 mt-3" id="btnApplyFilters">
+                            <i class="fas fa-check me-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="col-lg-9 col-xl-10">
+                <!-- Header Bar -->
+                <div class="products-header">
+                    <!-- Normal Mode -->
+                    <div class="header-normal" id="headerNormal">
+                        <div class="search-container">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="mainSearch" placeholder="Search by barcode, SKU, name...">
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-columns me-2"></i>Columns
+                                </button>
+                                <ul class="dropdown-menu" id="columnSettingsDropdown">
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="barcode"> Barcode</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="sku"> SKU</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="name"> Product Name</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="category"> Category</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="supplier"> Supplier</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="price"> Price</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="stock"> Stock</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" checked data-column="status"> Status</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" data-column="createdAt"> Created At</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" data-column="updatedAt"> Updated At</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" data-column="unit"> Unit</label></li>
+                                    <li><label class="dropdown-item"><input type="checkbox" data-column="brand"> Brand</label></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" id="resetColumns">Reset to default</a></li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-outline-secondary" id="btnRefresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Selection Mode -->
+                    <div class="header-bulk d-none" id="headerBulk">
+                        <div class="bulk-info">
+                            <span class="bulk-count" id="bulkCount">0</span> selected
+                            <button class="btn btn-sm btn-link text-muted" id="btnClearSelection">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                        <div class="bulk-actions">
+                            <button class="btn btn-outline-danger" id="btnBulkDelete">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Filter Chips -->
+                    <div class="active-filters" id="activeFilters"></div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover products-table" id="productsTable">
+                            <thead class="table-light sticky-header">
+                                <tr>
+                                    <th class="column-select">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th class="column-barcode sortable" data-sort="barcode">
+                                        Barcode <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-sku sortable" data-sort="sku">
+                                        SKU <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-name sortable" data-sort="name">
+                                        Product Name <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-category sortable" data-sort="category">
+                                        Category <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-supplier sortable" data-sort="supplier">
+                                        Supplier <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-price sortable text-end" data-sort="price">
+                                        Price <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-stock sortable text-end" data-sort="stock">
+                                        Stock <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-status sortable" data-sort="status">
+                                        Status <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-createdAt d-none sortable" data-sort="createdAt">
+                                        Created <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-updatedAt d-none sortable" data-sort="updatedAt">
+                                        Updated <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th class="column-unit d-none">Unit</th>
+                                    <th class="column-brand d-none">Brand</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <!-- Products will be loaded here via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="loading-container d-none" id="loadingState">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Loading products...</p>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-container d-none" id="emptyState">
+                        <div class="text-center py-5">
+                            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No products found</h5>
+                            <p class="text-muted">Get started by creating your first product</p>
+                            <button class="btn btn-primary" id="btnEmptyAddProduct">
+                                <i class="fas fa-plus me-2"></i>New Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <nav aria-label="Products pagination">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Pagination will be rendered here via JavaScript -->
+                        </ul>
+                    </nav>
+                    <div class="pagination-info">
+                        Showing <span id="showingFrom">0</span> to <span id="showingTo">0</span> of <span id="totalItems">0</span> products
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Product Create/Edit Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalLabel">New Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productName" class="form-label">Product Name *</label>
+                                    <input type="text" class="form-control" id="productName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productBarcode" class="form-label">Barcode</label>
+                                    <input type="text" class="form-control" id="productBarcode">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productSku" class="form-label">SKU</label>
+                                    <input type="text" class="form-control" id="productSku">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productUnit" class="form-label">Unit</label>
+                                    <input type="text" class="form-control" id="productUnit" placeholder="e.g., pcs, kg, l">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="productDescription" rows="3"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productCategory" class="form-label">Category</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="productCategoryDisplay" readonly placeholder="Select category">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnProductCategoryPicker">
+                                            <i class="fas fa-folder-tree"></i>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="productCategoryId">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productSupplier" class="form-label">Supplier</label>
+                                    <select class="form-select" id="productSupplier">
+                                        <option value="">Select Supplier</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="productPrice" class="form-label">Selling Price</label>
+                                    <input type="number" class="form-control" id="productPrice" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="productCostPrice" class="form-label">Cost Price</label>
+                                    <input type="number" class="form-control" id="productCostPrice" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="productStock" class="form-label">Stock</label>
+                                    <input type="number" class="form-control" id="productStock" min="0" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="productMinStock" class="form-label">Min Stock</label>
+                                    <input type="number" class="form-control" id="productMinStock" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productBrand" class="form-label">Brand</label>
+                                    <input type="text" class="form-control" id="productBrand">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productTags" class="form-label">Tags</label>
+                                    <input type="text" class="form-control" id="productTags" placeholder="Separate with commas">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="productTaxable">
+                                        <label class="form-check-label" for="productTaxable">
+                                            Taxable
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="productStatus">
+                                        <option value="ACTIVE">Active</option>
+                                        <option value="INACTIVE">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="productId">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveProduct">
+                        <i class="fas fa-save me-2"></i>Save Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Picker Modal -->
+    <div class="modal fade" id="categoryPickerModal" tabindex="-1" aria-labelledby="categoryPickerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryPickerModalLabel">Select Categories</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="categorySearchInput" placeholder="Search categories...">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-sm btn-outline-primary" id="btnExpandAll">Expand All</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="btnCollapseAll">Collapse All</button>
+                        </div>
+                    </div>
+                    <div class="category-tree" id="categoryTree">
+                        <!-- Category tree will be rendered here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnApplyCategorySelection">Apply Selection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/core/js/auth.js}"></script>
+    <script th:src="@{/modules/products/js/products.js}"></script>
+    <script th:src="@{/modules/products/js/products-pagination.js}"></script>
+</body>
+</html>

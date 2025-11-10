@@ -1,0 +1,432 @@
+### KiotViet Product Management API Testing
+### This file contains HTTP requests for testing all product, category, and supplier endpoints
+### Use with VS Code REST Client extension or similar tools
+
+# Variables - Update these values before testing
+@baseUrl = http://localhost:8080
+@jwtToken = eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiYWRtaW4iLCJjb21wYW55SWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJ1c2VySWQiOjIsInN1YiI6InRlc3R1c2VyIiwiaWF0IjoxNzYyNzg5MDg3LCJleHAiOjE3NjI3ODk5ODd9.tx-tD9NkyEQafYGBdw8ZBuWkp0H6jrMbwdaVkhqTh5M7PcNHK02jhnPkDCa1j7gsifmozB76QP7UY6BZoSFBpw
+@companyId = 2
+
+# ==============================
+# AUTHENTICATION ENDPOINTS
+# ==============================
+
+### Register new company/user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "Test Company Ltd",
+  "email": "test@company.com",
+  "username": "testuser",
+  "password": "TestPass123!",
+  "firstName": "Test",
+  "lastName": "User",
+  "phone": "+1234567890"
+}
+
+### Login to get JWT token
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPass123!"
+}
+
+# ==============================
+# CATEGORY API ENDPOINTS
+# ==============================
+
+### Get all categories (with hierarchy)
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{jwtToken}}
+
+### Get root categories only
+GET {{baseUrl}}/api/categories/root
+Authorization: Bearer {{jwtToken}}
+
+### Get children of a specific category
+GET {{baseUrl}}/api/categories/1/children
+Authorization: Bearer {{jwtToken}}
+
+### Get all descendants of a category
+GET {{baseUrl}}/api/categories/1/descendants
+Authorization: Bearer {{jwtToken}}
+
+### Get single category by ID
+GET {{baseUrl}}/api/categories/1
+Authorization: Bearer {{jwtToken}}
+
+### Create root category
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Electronics",
+  "description": "Electronic devices and accessories",
+  "color": "#3b82f6",
+  "icon": "laptop"
+}
+
+### Create subcategory
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Mobile Phones",
+  "description": "Smartphones and mobile devices",
+  "parentId": 1,
+  "color": "#10b981",
+  "icon": "smartphone"
+}
+
+### Update category
+PUT {{baseUrl}}/api/categories/1
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Electronics & Computers",
+  "description": "Electronic devices, computers, and accessories",
+  "color": "#6366f1",
+  "icon": "computer"
+}
+
+### Move category to new parent
+PUT {{baseUrl}}/api/categories/2/move
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "newParentId": 3
+}
+
+### Search categories
+GET {{baseUrl}}/api/categories/search?query=phone
+Authorization: Bearer {{jwtToken}}
+
+### Reorder categories
+PUT {{baseUrl}}/api/categories/reorder
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "categoryIds": [1, 3, 2, 4]
+}
+
+### Soft delete category
+DELETE {{baseUrl}}/api/categories/1
+Authorization: Bearer {{jwtToken}}
+
+### Restore deleted category
+PUT {{baseUrl}}/api/categories/1/restore
+Authorization: Bearer {{jwtToken}}
+
+# ==============================
+# SUPPLIER API ENDPOINTS
+# ==============================
+
+### List all suppliers
+GET {{baseUrl}}/api/suppliers
+Authorization: Bearer {{jwtToken}}
+
+### Search suppliers
+GET {{baseUrl}}/api/suppliers/search?search=electronics&active=true&page=0&size=10
+Authorization: Bearer {{jwtToken}}
+
+### Get supplier by ID
+GET {{baseUrl}}/api/suppliers/1
+Authorization: Bearer {{jwtToken}}
+
+### Create new supplier
+POST {{baseUrl}}/api/suppliers
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Tech Supply Co",
+  "contactPerson": "John Smith",
+  "email": "contact@techsupply.com",
+  "phone": "+1234567890",
+  "address": "123 Tech Street, Silicon Valley, CA 94000",
+  "taxCode": "123456789",
+  "paymentTerms": "NET 30",
+  "notes": "Primary electronics supplier"
+}
+
+### Update supplier
+PUT {{baseUrl}}/api/suppliers/1
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Tech Supply Co Ltd",
+  "contactPerson": "Jane Smith",
+  "email": "updated@techsupply.com",
+  "phone": "+1234567891",
+  "address": "456 New Tech Ave, Silicon Valley, CA 94001",
+  "taxCode": "123456789",
+  "paymentTerms": "NET 45",
+  "notes": "Updated primary electronics supplier"
+}
+
+### Get supplier autocomplete suggestions
+GET {{baseUrl}}/api/suppliers/autocomplete?query=tech&limit=5
+Authorization: Bearer {{jwtToken}}
+
+### Soft delete supplier
+DELETE {{baseUrl}}/api/suppliers/1
+Authorization: Bearer {{jwtToken}}
+
+# ==============================
+# PRODUCT API ENDPOINTS
+# ==============================
+
+### List products with pagination and filters
+GET {{baseUrl}}/api/products?page=0&size=20&sortBy=name&sortDir=asc
+Authorization: Bearer {{jwtToken}}
+
+### Search products
+GET {{baseUrl}}/api/products?search=phone&category=1&supplier=1&status=ACTIVE&page=0&size=10
+Authorization: Bearer {{jwtToken}}
+
+### Get product by ID
+GET {{baseUrl}}/api/products/1
+Authorization: Bearer {{jwtToken}}
+
+### Create new product
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro",
+  "description": "Latest iPhone with advanced features",
+  "barcode": "1234567890123",
+  "sku": "IP15P-128GB-BLK",
+  "categoryId": 1,
+  "supplierId": 1,
+  "price": 999.99,
+  "costPrice": 799.99,
+  "stock": 50,
+  "minStock": 10,
+  "unit": "pcs",
+  "brand": "Apple",
+  "tags": "smartphone,iphone,apple,premium",
+  "taxable": true,
+  "status": "ACTIVE"
+}
+
+### Update product
+PUT {{baseUrl}}/api/products/1
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro 128GB",
+  "description": "Latest iPhone with advanced features - updated model",
+  "barcode": "1234567890123",
+  "sku": "IP15P-128GB-BLK-V2",
+  "categoryId": 1,
+  "supplierId": 1,
+  "price": 949.99,
+  "costPrice": 749.99,
+  "stock": 45,
+  "minStock": 15,
+  "unit": "pcs",
+  "brand": "Apple",
+  "tags": "smartphone,iphone,apple,premium,updated",
+  "taxable": true,
+  "status": "ACTIVE"
+}
+
+### Update product status
+PUT {{baseUrl}}/api/products/1/status
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "status": "INACTIVE"
+}
+
+### Bulk delete products
+POST {{baseUrl}}/api/products/bulk/delete
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "productIds": [1, 2, 3]
+}
+
+### Get product statistics
+GET {{baseUrl}}/api/products/stats
+Authorization: Bearer {{jwtToken}}
+
+### Get product autocomplete suggestions
+GET {{baseUrl}}/api/products/autocomplete?query=iphone&limit=10
+Authorization: Bearer {{jwtToken}}
+
+### Get low stock products
+GET {{baseUrl}}/api/products/low-stock?threshold=10
+Authorization: Bearer {{jwtToken}}
+
+# ==============================
+# BULK OPERATIONS
+# ==============================
+
+### Bulk update product status
+POST {{baseUrl}}/api/products/bulk/status
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "productIds": [1, 2, 3],
+  "status": "INACTIVE"
+}
+
+### Bulk update category
+POST {{baseUrl}}/api/products/bulk/category
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "productIds": [1, 2, 3],
+  "categoryId": 2
+}
+
+### Bulk update supplier
+POST {{baseUrl}}/api/products/bulk/supplier
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "productIds": [1, 2, 3],
+  "supplierId": 2
+}
+
+# ==============================
+# FILTERING AND SORTING TESTS
+# ==============================
+
+### Filter by category only
+GET {{baseUrl}}/api/products?categoryId=1&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Filter by supplier only
+GET {{baseUrl}}/api/products?supplierId=1&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Filter by status only
+GET {{baseUrl}}/api/products?status=ACTIVE&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Filter by stock status
+GET {{baseUrl}}/api/products?stockStatus=LOW&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Sort by price (high to low)
+GET {{baseUrl}}/api/products?sortBy=price&sortDir=desc&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Sort by stock quantity
+GET {{baseUrl}}/api/products?sortBy=stock&sortDir=asc&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Sort by created date
+GET {{baseUrl}}/api/products?sortBy=createdAt&sortDir=desc&page=0&size=20
+Authorization: Bearer {{jwtToken}}
+
+### Complex filtering with multiple parameters
+GET {{baseUrl}}/api/products?search=phone&categoryId=1&status=ACTIVE&sortBy=price&sortDir=desc&page=0&size=10
+Authorization: Bearer {{jwtToken}}
+
+# ==============================
+# ERROR HANDLING TESTS
+# ==============================
+
+### Test with invalid JWT token
+GET {{baseUrl}}/api/products
+Authorization: Bearer invalid_token_here
+
+### Test without authentication
+GET {{baseUrl}}/api/products
+
+### Test with invalid product ID
+GET {{baseUrl}}/api/products/99999
+Authorization: Bearer {{jwtToken}}
+
+### Test with invalid category ID
+GET {{baseUrl}}/api/products?categoryId=99999
+Authorization: Bearer {{jwtToken}}
+
+### Test validation errors - Create product with missing required fields
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "description": "Product without required fields"
+}
+
+### Test validation errors - Invalid price
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Invalid Product",
+  "price": -50.99,
+  "stock": -10
+}
+
+# ==============================
+# PERFORMANCE TESTS
+# ==============================
+
+### Large page size test
+GET {{baseUrl}}/api/products?page=0&size=100
+Authorization: Bearer {{jwtToken}}
+
+### Complex search test
+GET {{baseUrl}}/api/products?search=phone&categoryId=1&supplierId=1&status=ACTIVE&stockStatus=NORMAL&sortBy=name&sortDir=asc&page=0&size=50
+Authorization: Bearer {{jwtToken}}
+
+### ==============================
+# EXPECTED RESPONSES
+# ==============================
+
+# Successful responses should follow this format:
+# {
+#   "success": true,
+#   "message": "Operation completed successfully",
+#   "data": { ... },
+#   "timestamp": "2025-01-10T10:30:00.000Z"
+# }
+
+# Error responses should follow this format:
+# {
+#   "success": false,
+#   "message": "Error description",
+#   "error": "ERROR_CODE",
+#   "timestamp": "2025-01-10T10:30:00.000Z"
+# }
+
+# Paged responses should follow this format:
+# {
+#   "success": true,
+#   "data": {
+#     "content": [ ... ],
+#     "page": 0,
+#     "size": 20,
+#     "totalElements": 100,
+#     "totalPages": 5,
+#     "first": true,
+#     "last": false,
+#     "hasNext": true,
+#     "hasPrevious": false
+#   },
+#   "message": "Data retrieved successfully"
+# }

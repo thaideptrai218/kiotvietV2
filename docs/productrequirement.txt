@@ -1,0 +1,341 @@
+1) Scope & Principles
+
+In scope
+
+Products list page with: left filters, main header bar, sortable table, expandable rows, pagination.
+
+Actions exist only in expanded row (no per-row action column).
+
+Bulk selection → bulk delete from header.
+
+Category selection uses the Category Picker pattern you showed (tree, search, create/edit).
+
+Out of scope (for now)
+
+Import/Export, multi-branch UI, inventory audits, multi-variant matrix UI.
+
+Guiding principles
+
+Consistent with Suppliers UI rules already defined.
+
+Clear hierarchy, minimal horizontal scroll, sticky table header.
+
+Shareable state via URL; column preferences persist per user/tenant.
+
+2) Information Architecture
+
+Left rail (Advanced Filter)
+
+Keyword: optional secondary search (typically unused; primary search is in header)
+
+Status: Active / Inactive
+
+Category: tree selector (supports multi-select); default collapsed
+
+Price range: From / To
+
+Stock range: From / To
+
+Supplier (optional): typeahead
+
+Created/Updated range (optional)
+
+“Clear all” resets filters only.
+
+Main (centered)
+
+Header bar (normal or bulk mode)
+
+Active filter chips row
+
+Products table (sticky header, sortable, selectable, expandable rows)
+
+Pagination
+
+3) Header Bar Behavior
+
+Normal mode (default)
+
+Search: “Search by barcode, SKU, name…”
+
+Debounce 300ms; Enter commits; sets page=1.
+
+Create: “+ Product” opens Create Product modal/drawer.
+
+Column settings: checkbox list; no drag re-order; “Reset to default”.
+
+Refresh: reload with current state.
+
+Bulk mode (when selectedCount > 0)
+
+Show: “N selected”, Clear (×), Delete (danger, right-aligned).
+
+Hide: Create / Column settings / Refresh.
+
+4) Products Table
+
+Columns (default visible)
+
+[Select] | Barcode | SKU | Product name | Category | Supplier | Price | Stock | Status
+
+Hidden-available: Created at, Updated at, Unit, Brand.
+
+Rules
+
+One active sort key; header cycles: none → asc → desc → none; expose aria-sort.
+
+Header checkbox selects current page only (tooltip clarifies).
+
+Sticky header under global navbar; add subtle shadow on scroll.
+
+Long text ellipsized; full value on hover (title).
+
+Row expansion
+
+Click row (except checkbox) toggles expanded panel beneath it.
+
+Single-expand at a time; changing sort/page collapses.
+
+Expanded footer actions (only place with actions):
+
+Left: Delete
+
+Right: Update (primary), Deactivate/Activate (secondary)
+
+5) Expanded Panel Content
+
+Overview
+
+Primary fields: Image (optional), Barcode, SKU, Name, Status
+
+Pricing: Base price, Cost price (if available), Tax flag (optional)
+
+Inventory summary: On-hand, Committed, Available (if available)
+
+Categorization: Category path, Supplier
+
+Timestamps: Created/Updated
+
+Tabs/links (optional)
+
+Stock movements (navigates to inventory history)
+
+Sales/purchase references (navigate)
+
+Action semantics
+
+Delete: confirm → remove from active list; preserve historical references (best practice).
+
+Deactivate/Activate: server toggle; reflect in status chip; keep row position if possible.
+
+Update: opens Product edit modal/drawer.
+
+6) Create / Edit Product
+
+Mandatory
+
+Product name
+
+Recommended fields
+
+Barcode (unique), SKU (unique), Unit, Category (single), Supplier, Base price, Cost price, Taxable, Status
+
+Validation
+
+Name: non-empty
+
+Barcode/SKU: uniqueness in tenant; length/format per rule
+
+Price: ≥ 0; numeric
+
+Category: existing ID (optional)
+
+Success flow
+
+Toast → close → refresh list, preserving filters/sort/page.
+
+7) Category Picker (embedded pattern)
+
+Use cases
+
+In product filter (multi-select, “Apply” to confirm)
+
+In product Create/Edit (single-select parent)
+
+Behavior
+
+Tree view with expand/collapse; counts shown
+
+Search filters visible nodes
+
+Hover pencil (✎) to Edit category
+
+Create in header opens create modal:
+
+Fields: Category name (required), Parent category (optional)
+
+Edit modal:
+
+Rename, re-parent, Delete
+
+Delete rules: either cascade or block if children exist (decide per backend capability)
+
+Apply returns selected IDs to caller
+
+8) State Model
+
+URL params (shareable)
+
+q, sortBy, sortDir, page(1-based), size, status, categoryIds[], supplierId, priceFrom, priceTo, stockFrom, stockTo, createdFrom, createdTo, updatedFrom, updatedTo
+
+Persistence
+
+Column visibility preferences per user+tenant (local storage or backend profile)
+
+Transient
+
+Selected row IDs
+
+Expanded row ID
+
+Transitions
+
+Search/filter change → page=1, refetch
+
+Sort change → refetch, collapse any expanded
+
+Page/size change → refetch
+
+CRUD success → refresh, keep state
+
+9) Accessibility & UX
+
+Icons: aria-label + tooltip
+
+Table headers: aria-sort
+
+Expanded rows: aria-expanded on the row
+
+Keyboard:
+
+/ or F → focus search
+
+Space → toggle row checkbox
+
+Enter → expand/collapse row
+
+Esc → close modals/popovers
+
+Focus management in modals; first invalid field focused on submit error.
+
+10) Error/Empty States
+
+Empty list (no products yet): illustration + “+ Product” CTA
+
+No results: “No records match your filters.” + “Clear filters”
+
+API error: inline alert with “Retry”
+
+Delete after-effects: adjust pager (if page becomes empty and page>1, go to page-1)
+
+11) Performance & Quality Targets
+
+Search debounce 300ms; cancel in-flight requests on new state
+
+Table smooth for ~100 visible rows
+
+Action→UI update within <200ms after response
+
+Initial load <2s under typical tenant size (~1k products)
+
+12) Security & Multi-tenant Notes
+
+All operations scoped by accountId/tenantId.
+
+Client must not trust visibility lists for authorization; server enforces role (admin/manager/staff).
+
+Use optimistic UI only if server replies quickly and returns authoritative state.
+
+13) Analytics (optional)
+
+Track: search usage, filter usage, create/edit/delete, column settings changes, expand/collapse.
+
+Include user role and tenant (hashed) for funnel analysis.
+
+14) Acceptance Criteria (Definition of Done)
+
+Layout matches pattern: left filter, centered main, sticky header.
+
+Column visibility toggles persist; no drag re-order; hidden sorted column clears sort.
+
+Search, filter, sort, pagination all reflected in URL and reloadable.
+
+Select-all affects current page only; bulk header appears/disappears correctly.
+
+Row actions exist only in expanded panel; no per-row action column.
+
+Category picker works for both filter (multi-select + Apply) and product edit (single-select).
+
+Create/Edit validates required fields and uniqueness; success refreshes list in place.
+
+Delete + Deactivate flows confirmed; pager adjusts if page emptied.
+
+A11y basics implemented (aria roles/labels, keyboard behaviors).
+
+All specified empty/error states are implemented.
+
+15) Data Contracts (abstract, backend-flex)
+
+List Products
+
+GET /api/products
+  ?q=&sortBy=&sortDir=&page=&size=
+  &status=&categoryIds=&supplierId=
+  &priceFrom=&priceTo=&stockFrom=&stockTo=
+  &createdFrom=&createdTo=&updatedFrom=&updatedTo=
+→ {
+  content: [{
+    id, barcode, sku, name, categoryPath, supplierName,
+    price, stock, status, createdAt, updatedAt
+  }],
+  page, size, totalElements, totalPages
+}
+
+
+Create / Update Product
+
+POST /api/products
+PUT  /api/products/{id}
+Body: { barcode?, sku?, name, unit?, categoryId?, supplierId?,
+        price?, costPrice?, taxable?, status? }
+→ 200 { ...product }
+
+
+Toggle Status
+
+POST /api/products/{id}/status { status: 'ACTIVE'|'INACTIVE' }
+
+
+Delete (single / bulk)
+
+DELETE /api/products/{id}
+POST   /api/products/bulk/status { ids:[], status:'INACTIVE' }  // soft delete, if preferred
+
+
+Categories (for picker)
+
+GET /api/categories?tree=true&q=
+POST /api/categories
+PUT  /api/categories/{id}
+DELETE /api/categories/{id}
+
+
+Frontend should adapt to missing fields/endpoints: hide unsupported filters, tabs, or actions.
+
+16) Risks & Decisions
+
+Delete semantics (soft vs hard) must be confirmed; spec assumes “preserve historical references”.
+
+Inventory fields (committed/available) optional; hide if backend not ready.
+
+Supplier filter optional; include only if supplier endpoint is present.
