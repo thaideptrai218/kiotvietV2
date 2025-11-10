@@ -1,3 +1,40 @@
+# Code Review Response Guidelines
+
+## Core Principle
+Actions speak louder than words. Let the code show you heard the feedback.
+
+## When Feedback is Correct
+
+### ✅ DO:
+- "Fixed. [Brief description of what changed]"
+- "Good catch - [specific issue]. Fixed in [location]."
+- Just fix it and show the change in the code
+
+### ❌ DON'T:
+- Use gratitude expressions ("Thanks!", "Great point!", "You're right!")
+- Write generic acknowledgments
+- Over-explain or be overly apologetic
+
+### Key Rule:
+**If you're about to write "Thanks" → DELETE IT. State the fix instead.**
+
+## When You Pushed Back and Were Wrong
+
+### ✅ DO:
+- "You were right - I checked [X] and it does [Y]. Implementing now."
+- "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
+
+### ❌ DON'T:
+- Write long apologies
+- Defend why you pushed back
+- Over-explain the situation
+
+### Key Rule:
+**State the correction factually and move on.**
+
+## Why This Matters
+The code itself demonstrates you received and acted on feedback. Professional communication is concise, action-oriented, and ego-free.
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -12,7 +49,7 @@ This is a Kiotviet-style multi-tenant product management system for large retail
 -   **Progress**: Database schema simplified and documented for MVP
 -   **Timeline**: November 5 - December 17, 2025
 -   **Target**: Production-ready MVP for pilot testing
--   **Latest Update**: MVP database schema simplifications completed (2025-11-05)
+-   **Latest Update**: JWT-based authentication system with shared JavaScript implemented (2025-11-10)
 
 ### Business Model & Scale
 
@@ -601,6 +638,193 @@ class AuthApiControllerTest {
 - **Requirements**: Domain-specific business rules
 - **Validation**: Review DTO structures and business logic
 - **User Stories**: Feature specifications and acceptance criteria
+
+## Authentication System (JWT-Based Client-Side Architecture)
+
+### Authentication Architecture Decision
+
+#### Decision: Client-Side JWT Authentication with Shared JavaScript Manager
+- **Rationale**: Avoid mixing JWT authentication with Spring Security form authentication
+- **Benefits**: Simplified security config, consistent authentication state across all pages, automatic redirect handling
+- **Implementation**: Centralized JavaScript authentication manager with localStorage token storage
+- **Key Principle**: "authentication based on the JWT. Please focus on it. dont rely too much in spring security"
+
+### Core Authentication Components
+
+#### 1. Shared Authentication JavaScript (`/static/core/js/auth.js`)
+**Location**: `src/main/resources/static/core/js/auth.js`
+**Purpose**: Centralized authentication management for all pages
+**Key Features**:
+- JWT token storage and management (localStorage)
+- Automatic authentication status checking
+- Protected page access control with redirects
+- UI updates based on authentication state
+- Token refresh handling
+- Centralized logout functionality
+
+**Core Class**: `KiotVietAuth`
+```javascript
+class KiotVietAuth {
+    constructor() {
+        this.tokenKey = 'jwtToken';
+        this.refreshTokenKey = 'refreshToken';
+        this.userInfoKey = 'userInfo';
+        this.apiBaseUrl = '/api/auth';
+    }
+
+    // Key methods:
+    async isAuthenticated()     // Validates stored token via /api/auth/me
+    async requireAuth()        // Redirects to login if not authenticated
+    async handleLogin(data)    // Processes login response and stores tokens
+    async logout()            // Clears tokens and redirects to login
+    updateUIForAuthenticatedUser(userInfo) // Updates UI elements
+}
+```
+
+#### 2. Automatic Authentication Flow
+**Page Load Process**:
+1. DOM ready → `kiotVietAuth.init()` called automatically
+2. Check if current page requires authentication (`isProtectedPage()`)
+3. If protected → `requireAuth()` validates token via `/api/auth/me`
+4. If invalid/missing → redirect to `/login?redirect={currentUrl}`
+5. If valid → update UI with user information
+
+**Protected Routes**: `/dashboard`, `/profile`, `/settings`
+**Authentication Check**: Calls `/api/auth/me` with Bearer token to validate
+
+#### 3. Login and Registration Integration
+**Login Form** (`/auth/login`):
+- Uses shared auth manager for form submission
+- Handles login success with automatic redirect to dashboard
+- Supports redirect parameter for post-login navigation
+- Stores JWT tokens in localStorage on successful authentication
+
+**Registration Form**:
+- Similar integration with shared auth manager
+- Automatic login after successful registration
+- Token storage and UI updates handled centrally
+
+#### 4. UI Update System
+**Dynamic UI Elements**:
+- **Navbar**: Shows user dropdown with username when authenticated
+- **Hero Section**: Updates CTAs for authenticated users
+- **Trust Indicators**: Displays welcome message and user role
+- **Dashboard Access**: Shows "Enter Dashboard" button for authenticated users
+
+**UI Update Methods**:
+```javascript
+updateNavbarForAuthenticatedUser(userInfo)     // User dropdown in navbar
+updateHeroSectionForAuthenticatedUser(userInfo) // Dashboard CTA in hero
+updateTrustIndicators(userInfo)                // Welcome message and role
+updateDashboardAccessButton(userInfo)          // Dashboard entry button
+```
+
+### Authentication Workflow Examples
+
+#### User Login Flow
+1. User navigates to `/login` → redirected to `/auth/login`
+2. User submits credentials → AJAX to `/api/auth/login`
+3. Success response → tokens stored in localStorage
+4. UI updated with user information
+5. Automatic redirect to dashboard (or original destination)
+
+#### Protected Page Access
+1. User navigates to `/dashboard`
+2. `kiotVietAuth.init()` → calls `requireAuth()`
+3. `isAuthenticated()` → validates token via `/api/auth/me`
+4. If valid → page loads with personalized UI
+5. If invalid → redirect to login with return URL
+
+#### Automatic Token Management
+1. Token stored with key: `jwtToken`
+2. Refresh token stored with key: `refreshToken`
+3. User info cached with key: `userInfo`
+4. All tokens cleared on logout
+5. Authentication state persists across browser sessions
+
+### Integration Guidelines for Developers
+
+#### Adding New Pages
+1. **Include Auth Script**: Ensure `/core/js/auth.js` is loaded
+2. **Protected Pages**: Add route to `isProtectedPage()` if authentication required
+3. **UI Updates**: Use `kiotVietAuth.updateUIIfAuthenticated()` for dynamic content
+4. **API Calls**: Use `kiotVietAuth.authenticatedFetch()` for authenticated requests
+
+#### Example Page Integration
+```html
+<!-- In template head -->
+<script th:src="@{/core/js/auth.js}"></script>
+
+<!-- In page content -->
+<div id="userSection">
+    <!-- Will be updated by auth manager -->
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Auth manager auto-initializes
+    // Add custom auth logic here if needed
+});
+</script>
+```
+
+#### API Integration
+```javascript
+// Making authenticated API calls
+const response = await kiotVietAuth.authenticatedFetch('/api/products', {
+    method: 'GET'
+});
+
+// Manual authentication check
+if (await kiotVietAuth.isAuthenticated()) {
+    // User is authenticated
+} else {
+    // Redirect to login
+}
+```
+
+### Security Considerations
+
+#### Token Storage
+- **Location**: Browser localStorage (client-side storage)
+- **Access Token**: 15-minute expiration
+- **Refresh Token**: 7-day expiration
+- **Auto-clear**: Tokens cleared on logout and authentication failures
+
+#### Route Protection
+- **Server-side**: Spring Security permits dashboard access
+- **Client-side**: JavaScript authentication manager validates tokens
+- **Automatic Redirects**: Unauthenticated users redirected to login
+- **Protected Routes**: Defined in `isProtectedPage()` method
+
+#### API Security
+- **JWT Validation**: `/api/auth/me` endpoint validates stored tokens
+- **Automatic Invalidation**: Failed validation clears invalid tokens
+- **Bearer Tokens**: All authenticated API calls use Authorization header
+- **Error Handling**: Authentication failures trigger automatic logout
+
+### Troubleshooting Authentication Issues
+
+#### Common Issues and Solutions
+
+**Issue: User stuck in login redirect loop**
+- **Cause**: Invalid token stored, authentication check failing
+- **Solution**: Clear localStorage tokens, check `/api/auth/me` endpoint
+
+**Issue: UI not updating after login**
+- **Cause**: Auth manager not properly initialized or integrated
+- **Solution**: Ensure auth script loaded, check `updateUIForAuthenticatedUser()` calls
+
+**Issue: Protected pages accessible without authentication**
+- **Cause**: Client-side check bypassed, server-side permits access
+- **Solution**: Verify `isProtectedPage()` includes route, check Spring Security config
+
+**Debugging Steps**:
+1. Check browser console for authentication errors
+2. Verify localStorage contains valid tokens
+3. Test `/api/auth/me` endpoint directly
+4. Confirm auth script is loaded on page
+5. Check for JavaScript errors blocking auth manager initialization
 
 Less code is better than more code.
 
