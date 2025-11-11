@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - KiotViet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}">
+  <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
+  <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
+  </head>
+<body>
+    <!-- Header Component -->
+    <div th:replace="~{common/header :: dashboardHeader}"></div>
+
+    <!-- Navigation Component -->
+    <div th:replace="~{common/navigation :: dashboardNav('dashboard')}"></div>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-content" th:attr="data-username=${username}">
+        <div class="welcome-section">
+            <h1>Welcome to KiotViet Dashboard</h1>
+            <p th:text="'Hello, ' + ${username} + '!'">Hello, User!</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Total Products</p>
+            </div>
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Categories</p>
+            </div>
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Suppliers</p>
+            </div>
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Inventory Items</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Dashboard initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard loaded');
+            loadUserInfo();
+        });
+
+        // User Dropdown functionality
+        function toggleUserDropdown() {
+            const dropdown = document.querySelector('.userDropdown');
+            if (dropdown) {
+                const isHidden = dropdown.style.display === 'none';
+                dropdown.style.display = isHidden ? 'block' : 'none';
+                dropdown.setAttribute('aria-hidden', !isHidden);
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.userDropdown');
+            const avatarButton = document.querySelector('.avatarButton');
+
+            if (dropdown && avatarButton &&
+                !dropdown.contains(event.target) &&
+                !avatarButton.contains(event.target)) {
+                dropdown.style.display = 'none';
+                dropdown.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        // Load user information
+        function loadUserInfo() {
+            // Try to get username from the page first (passed from controller)
+            const usernameElement = document.querySelector('[data-username]');
+            const username = usernameElement ? usernameElement.getAttribute('data-username') : null;
+
+            // For now, use a simple approach since we're using form-based authentication
+            updateUserInfo({
+                username: username || 'Demo User',
+                email: 'demo@kiotviet.com',
+                role: 'ADMIN'
+            });
+        }
+
+        // Update user information in the dropdown
+        function updateUserInfo(user) {
+            const userName = document.getElementById('dropdownUserName');
+            const userEmail = document.getElementById('dropdownUserEmail');
+            const userRole = document.getElementById('dropdownUserRole');
+
+            if (userName) userName.textContent = user.username || user.fullName || 'User';
+            if (userEmail) userEmail.textContent = user.email || 'No email';
+            if (userRole) userRole.textContent = `Role: ${user.role || 'USER'}`;
+        }
+
+        // Helper function to get cookies
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Placeholder functions for dropdown actions
+        function openUserProfile() {
+            window.location.href = '/profile';
+        }
+
+        function openTwoFactorSettings() {
+            alert('2FA Settings - Coming soon!');
+            toggleUserDropdown();
+        }
+
+        function openUserSettings() {
+            alert('User Settings - Coming soon!');
+            toggleUserDropdown();
+        }
+
+        function openFeedbackModal() {
+            alert('Feedback - Coming soon!');
+        }
+
+        function logout() {
+            // Use Spring Security logout endpoint
+            window.location.href = '/logout';
+        }
+    </script>
+</body>
+</html>

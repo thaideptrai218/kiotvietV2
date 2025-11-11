@@ -1,0 +1,80 @@
+<!-- Dashboard Navigation Fragment -->
+<nav class="moduleNav" th:fragment="dashboardNav(activeLink)">
+    <div class="moduleNavInner">
+        <ul class="tabList" role="tablist">
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'dashboard'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'dashboard'} ? 'active' : ''"
+                   href="/dashboard">
+                    Dashboard
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'orders'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'orders'} ? 'active' : ''"
+                   href="/orders">
+                    Orders
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'products'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'products'} ? 'active' : ''"
+                   href="/products">
+                    Products
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'customers'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'customers'} ? 'active' : ''"
+                   href="/customers">
+                    Customers
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'tax'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'tax'} ? 'active' : ''"
+                   href="/tax">
+                    Tax & Accounting
+                    <span class="newBadge">New</span>
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'crm'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'crm'} ? 'active' : ''"
+                   href="/crm">
+                    CRM
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'reports'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'reports'} ? 'active' : ''"
+                   href="/reports">
+                    Reports
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
+                   aria-selected="${activeLink == 'employees'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'employees'} ? 'active' : ''"
+                   href="/employees">
+                    Employees
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>

@@ -38,6 +38,6 @@ public class DashboardController {
             }
         }
 
-        return "modules/dashboard/dashboard";
+        return "dashboard/dashboard";
     }
 }

@@ -16,7 +16,7 @@ public class ProfilePageController {
      */
     @GetMapping
     public String profilePage() {
-        return "modules/profile/profile";
+        return "profile/profile";
     }
 }
 
