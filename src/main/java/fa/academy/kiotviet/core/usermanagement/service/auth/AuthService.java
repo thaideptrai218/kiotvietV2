@@ -2,6 +2,7 @@ package fa.academy.kiotviet.core.usermanagement.service.auth;
 
 import fa.academy.kiotviet.application.dto.auth.request.LoginRequest;
 import fa.academy.kiotviet.application.dto.auth.response.AuthResponse;
+import fa.academy.kiotviet.application.dto.auth.response.LoginResult;
 import fa.academy.kiotviet.core.usermanagement.domain.UserAuth;
 import fa.academy.kiotviet.core.usermanagement.domain.UserInfo;
 import fa.academy.kiotviet.core.usermanagement.domain.UserToken;
@@ -35,6 +36,7 @@ public class AuthService {
     private final UserTokenRepository userTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final TwoFactorService twoFactorService;
 
     /**
      * Authenticate user with username and password.
@@ -43,7 +45,7 @@ public class AuthService {
      * @return Authentication response with tokens
      */
     @Transactional
-    public AuthResponse login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         // Find user by username
         UserInfo user = userInfoRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
@@ -69,8 +71,18 @@ public class AuthService {
         // Reset failed attempts on successful login
         resetFailedAttempts(userAuth);
 
-        // Generate and save tokens
-        return generateAuthResponse(user, "Login");
+        // If 2FA enabled: start login challenge and return MFA_REQUIRED
+        if (Boolean.TRUE.equals(userAuth.getTwoFactorEnabled())) {
+            String challengeId = twoFactorService.startLoginChallenge(user.getId());
+            if (challengeId == null) {
+                // Fallback: if cannot send code, fail login gracefully
+                throw new IllegalArgumentException("Unable to initiate 2FA challenge");
+            }
+            return LoginResult.mfa(challengeId);
+        }
+
+        // Otherwise, issue tokens
+        return LoginResult.success(generateAuthResponse(user, "Login"));
     }
 
     /**
@@ -205,6 +217,13 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, "Bearer", jwtUtil.getAccessTokenExpiration(), userInfo);
     }
 
+    @Transactional
+    public AuthResponse completeLoginAfterMfa(Long userId) {
+        UserInfo user = userInfoRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return generateAuthResponse(user, "Login (MFA)");
+    }
+
     /**
      * Hashes refresh token using SHA-256 for secure storage.
      */
@@ -217,4 +236,11 @@ public class AuthService {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }
     }
+
+
+    // Expose for controller MFA verify step
+    public TwoFactorService getTwoFactorService() {
+        return twoFactorService;
+    }
 }
+

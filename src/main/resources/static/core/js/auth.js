@@ -17,6 +17,8 @@ class KiotVietAuth {
         this.refreshTokenKey = 'refreshToken';
         this.userInfoKey = 'userInfo';
         this.apiBaseUrl = '/api/auth';
+        this._mfaModal = null;
+        this._mfaChallengeId = null;
     }
 
     /**
@@ -252,6 +254,15 @@ class KiotVietAuth {
                 body: JSON.stringify(loginData)
             });
 
+            // MFA required path (HTTP 202)
+            if (response.status === 202) {
+                const mfa = await response.json().catch(() => ({}));
+                const challengeId = mfa?.data?.challengeId || mfa?.challengeId;
+                if (!challengeId) throw new Error('MFA challenge missing');
+                const verified = await this._handleMfaViaModal(challengeId);
+                return { success: true, data: verified };
+            }
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || errorData.error || 'Login failed');
@@ -271,6 +282,95 @@ class KiotVietAuth {
             console.error('Login failed:', error);
             return { success: false, error: error.message };
         }
+    }
+
+    _handleMfaViaModal(challengeId) {
+        this._mfaChallengeId = challengeId;
+        return new Promise((resolve, reject) => {
+            const modalEl = document.getElementById('mfaModal');
+            const codeInput = document.getElementById('mfaCodeInput');
+            const verifyBtn = document.getElementById('mfaVerifyBtn');
+            const cancelBtn = document.getElementById('mfaCancelBtn');
+            const alertEl = document.getElementById('mfaAlert');
+            if (!modalEl || !codeInput || !verifyBtn) {
+                reject(new Error('MFA UI not available'));
+                return;
+            }
+
+            // Bootstrap modal with static backdrop to prevent accidental close
+            const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+            this._mfaModal = modal;
+            alertEl?.classList.add('d-none');
+            codeInput.value = '';
+            modal.show();
+            setTimeout(() => codeInput.focus(), 200);
+
+            const cleanup = () => {
+                modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                verifyBtn.removeEventListener('click', onVerify);
+                cancelBtn?.removeEventListener('click', onCancel);
+                codeInput.removeEventListener('keydown', onKey);
+                this._mfaModal = null;
+                this._mfaChallengeId = null;
+            };
+
+            const onHidden = () => {
+                cleanup();
+                reject(new Error('Two-factor verification cancelled'));
+            };
+
+            const onCancel = () => {
+                modal.hide();
+            };
+
+            const onKey = (e) => {
+                if (e.key === 'Enter') onVerify();
+            };
+
+            const onVerify = async () => {
+                const code = String(codeInput.value || '').trim();
+                if (code.length !== 6) {
+                    alertEl.className = 'alert alert-danger';
+                    alertEl.textContent = 'Please enter the 6-digit code.';
+                    alertEl.classList.remove('d-none');
+                    return;
+                }
+                alertEl.classList.add('d-none');
+                verifyBtn.disabled = true;
+                try {
+                    const verifyRes = await fetch(`${this.apiBaseUrl}/mfa/verify`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ challengeId, code })
+                    });
+                    const body = await verifyRes.json().catch(() => ({}));
+                    if (!verifyRes.ok) {
+                        alertEl.className = 'alert alert-danger';
+                        alertEl.textContent = body.message || body.error || 'Invalid or expired code';
+                        alertEl.classList.remove('d-none');
+                        verifyBtn.disabled = false;
+                        return;
+                    }
+                    this.setTokens(body.data.accessToken, body.data.refreshToken, body.data.userInfo);
+                    modal.hide();
+                    cleanup();
+                    resolve(body.data);
+                } catch (err) {
+                    alertEl.className = 'alert alert-danger';
+                    alertEl.textContent = 'Network error. Please try again.';
+                    alertEl.classList.remove('d-none');
+                    verifyBtn.disabled = false;
+                }
+            };
+
+            modalEl.addEventListener('hidden.bs.modal', onHidden);
+            verifyBtn.addEventListener('click', onVerify);
+            cancelBtn?.addEventListener('click', onCancel);
+            codeInput.addEventListener('keydown', onKey);
+        });
     }
 
     /**
