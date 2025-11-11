@@ -1,0 +1,32 @@
+<!-- Page Toolbar Fragment -->
+<section class="pageToolbar" th:fragment="pageToolbar" aria-labelledby="page-title">
+    <div class="pageToolbarInner">
+        <h1 id="page-title" class="pageTitle">
+            Products
+        </h1>
+        <div class="pageActions">
+            <div class="primaryActions">
+                <button type="button" class="secondaryButton" onclick="importProducts()" title="Import products from file">
+                    <i class="fas fa-upload" aria-hidden="true"></i>
+                    <span>Import file</span>
+                </button>
+                <button type="button" class="secondaryButton" onclick="exportProducts()" title="Export products to file">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    <span>Export file</span>
+                </button>
+                <button type="button" class="primaryButton" onclick="createProduct()" title="Create new product">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>Create</span>
+                </button>
+            </div>
+            <div class="iconActions">
+                <button type="button" class="iconButton" aria-label="Settings" onclick="openProductSettings()" title="Product settings">
+                    <i class="fas fa-cog" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="iconButton" aria-label="Help" onclick="openProductHelp()" title="Get help with products">
+                    <i class="fas fa-question-circle" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>

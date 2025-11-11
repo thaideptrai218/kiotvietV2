@@ -91,6 +91,8 @@ public class SecurityConfig {
 
                 // Protect dashboard and other authenticated pages
                 .requestMatchers("/dashboard/**", "/dashboard").authenticated()
+                .requestMatchers("/products/**", "/products").authenticated()
+                .requestMatchers("/suppliers/**", "/suppliers").authenticated()
                 .requestMatchers("/profile/**", "/profile").authenticated()
                 .requestMatchers("/settings/**", "/settings").authenticated()
 

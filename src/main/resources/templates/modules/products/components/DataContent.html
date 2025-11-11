@@ -1,0 +1,179 @@
+<!-- Data Content Fragment -->
+<section class="contentCard" th:fragment="dataContent">
+    <div class="tableToolbar">
+        <div class="tableSearch">
+            <i class="fas fa-search tableSearchIcon" aria-hidden="true"></i>
+            <input
+                type="search"
+                placeholder="Search products"
+                aria-label="Search products"
+                id="productSearch"
+                onkeyup="searchProducts(this.value)"
+            />
+        </div>
+        <div class="tableToolbarRight">
+            <div class="tablePageSize">
+                <label for="page-size" class="tablePageSizeLabel">
+                    Show
+                </label>
+                <select id="page-size" class="selectInputSmall" onchange="changePageSize(this.value)" value="15">
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="tablePageSizeSuffix">per page</span>
+            </div>
+            <div class="tableViewOptions">
+                <button type="button" aria-label="Table settings" onclick="openTableSettings()">
+                    <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                </button>
+                <button type="button" aria-label="List view" onclick="setViewMode('list')" class="viewButton active">
+                    <i class="fas fa-list" aria-hidden="true"></i>
+                </button>
+                <button type="button" aria-label="Grid view" onclick="setViewMode('grid')" class="viewButton">
+                    <i class="fas fa-th" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <table class="dataTable" id="productsTable">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" aria-label="Select all" id="selectAll" onchange="toggleSelectAll()">
+                </th>
+                <th aria-label="Product thumbnail" />
+                <th>Product</th>
+                <th>Status</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Supplier</th>
+                <th>
+                    <span class="sortableHeader" onclick="sortProducts('onHand')">
+                        On hand
+                        <i class="fas fa-sort" aria-hidden="true"></i>
+                    </span>
+                </th>
+                <th>Committed</th>
+                <th>Incoming</th>
+                <th>Sale price</th>
+            </tr>
+        </thead>
+        <tbody id="productsTableBody">
+            <!-- Sample product rows - these will be dynamically loaded -->
+            <tr data-product-id="1">
+                <td>
+                    <input type="checkbox" aria-label="Select Bánh mì Staff chà bông" class="product-checkbox">
+                </td>
+                <td>
+                    <img
+                        src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=80&q=80"
+                        alt="Bánh mì Staff chà bông"
+                        class="productThumbnail"
+                    />
+                </td>
+                <td>
+                    <div class="productCell">
+                        <strong>Bánh mì Staff chà bông</strong>
+                        <span class="productTag">In stock</span>
+                    </div>
+                </td>
+                <td><span class="statusBadge statusInStock">In stock</span></td>
+                <td>SKU-001</td>
+                <td>Bakery</td>
+                <td>Alpha Foods</td>
+                <td>128</td>
+                <td>16</td>
+                <td>40</td>
+                <td>$5.80</td>
+            </tr>
+            <tr data-product-id="2">
+                <td>
+                    <input type="checkbox" aria-label="Select Trà sữa trân châu" class="product-checkbox">
+                </td>
+                <td>
+                    <img
+                        src="https://images.unsplash.com/photo-1576566588028-4147f384776f?auto=format&fit=crop&w=80&q=80"
+                        alt="Trà sữa trân châu"
+                        class="productThumbnail"
+                    />
+                </td>
+                <td>
+                    <div class="productCell">
+                        <strong>Trà sữa trân châu</strong>
+                        <span class="productTag">Low stock</span>
+                    </div>
+                </td>
+                <td><span class="statusBadge statusLowStock">Low stock</span></td>
+                <td>SKU-104</td>
+                <td>Beverages</td>
+                <td>Beta Supplies</td>
+                <td>32</td>
+                <td>20</td>
+                <td>12</td>
+                <td>$3.40</td>
+            </tr>
+            <tr data-product-id="3">
+                <td>
+                    <input type="checkbox" aria-label="Select Phở bò đặc biệt" class="product-checkbox">
+                </td>
+                <td>
+                    <img
+                        src="https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?auto=format&fit=crop&w=80&q=80"
+                        alt="Phở bò đặc biệt"
+                        class="productThumbnail"
+                    />
+                </td>
+                <td>
+                    <div class="productCell">
+                        <strong>Phở bò đặc biệt</strong>
+                        <span class="productTag">In stock</span>
+                    </div>
+                </td>
+                <td><span class="statusBadge statusInStock">In stock</span></td>
+                <td>SKU-256</td>
+                <td>Noodles</td>
+                <td>Gamma Traders</td>
+                <td>210</td>
+                <td>45</td>
+                <td>60</td>
+                <td>$7.20</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <footer class="paginationFooter">
+        <span id="paginationInfo">Showing 1-3 of 120 items</span>
+        <nav class="paginationControls" aria-label="Pagination">
+            <ul class="paginationList">
+                <li>
+                    <button type="button" class="paginationButton" disabled id="prevPage" onclick="changePage('prev')">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="paginationButton paginationButtonActive" aria-current="page" onclick="changePage(1)">
+                        1
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="paginationButton" onclick="changePage(2)">
+                        2
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="paginationButton" onclick="changePage(3)">
+                        3
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="paginationButton" id="nextPage" onclick="changePage('next')">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </footer>
+</section>

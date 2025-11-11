@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - KiotViet</title>
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}">
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
+    <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
+
+    <!-- Products Module CSS -->
+    <link rel="stylesheet" th:href="@{/modules/products/css/products.css}">
+</head>
+<body>
+    <!-- Header Component -->
+    <div th:replace="~{common/header :: dashboardHeader}"></div>
+
+    <!-- Navigation Component -->
+    <div th:replace="~{common/navigation :: dashboardNav('products')}"></div>
+
+    <!-- Main Products Content -->
+    <main class="dashboard-content">
+        <!-- Page Toolbar -->
+        <div th:replace="~{modules/products/components/PageToolbar :: pageToolbar}"></div>
+
+        <!-- Content Area -->
+        <div class="productsContentArea">
+            <!-- Filter Sidebar -->
+            <div th:replace="~{modules/products/components/FilterSidebar :: filterSidebar}"></div>
+
+            <!-- Data Content -->
+            <div th:replace="~{modules/products/components/DataContent :: dataContent}"></div>
+        </div>
+    </main>
+
+    <!-- Sticky Navigation Script -->
+    <script th:src="@{/js/sticky-nav.js}"></script>
+
+    <!-- Authentication Scripts -->
+    <script th:src="@{/core/js/auth.js}"></script>
+
+    <!-- Products Module JavaScript -->
+    <script th:src="@{/modules/products/js/products.js}"></script>
+
+    <script>
+        // User Dropdown functionality
+        function toggleUserDropdown() {
+            const dropdown = document.querySelector('.userDropdown');
+            if (dropdown) {
+                const isHidden = dropdown.style.display === 'none';
+                dropdown.style.display = isHidden ? 'block' : 'none';
+                dropdown.setAttribute('aria-hidden', !isHidden);
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.userDropdown');
+            const avatarButton = document.querySelector('.avatarButton');
+
+            if (dropdown && avatarButton &&
+                !dropdown.contains(event.target) &&
+                !avatarButton.contains(event.target)) {
+                dropdown.style.display = 'none';
+                dropdown.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        // Load user information
+        function loadUserInfo() {
+            // For now, use a simple approach since we're using form-based authentication
+            updateUserInfo({
+                username: 'Demo User',
+                email: 'demo@kiotviet.com',
+                role: 'ADMIN'
+            });
+        }
+
+        // Update user information in the dropdown
+        function updateUserInfo(user) {
+            const userName = document.getElementById('dropdownUserName');
+            const userEmail = document.getElementById('dropdownUserEmail');
+            const userRole = document.getElementById('dropdownUserRole');
+
+            if (userName) userName.textContent = user.username || user.fullName || 'User';
+            if (userEmail) userEmail.textContent = user.email || 'No email';
+            if (userRole) userRole.textContent = `Role: ${user.role || 'USER'}`;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Products page loaded');
+            loadUserInfo();
+        });
+    </script>
+</body>
+</html>

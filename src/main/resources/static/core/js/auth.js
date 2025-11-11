@@ -38,7 +38,7 @@ class KiotVietAuth {
      * Check if current page requires authentication
      */
     isProtectedPage() {
-        const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+        const protectedRoutes = ['/dashboard', '/profile', '/settings', '/products', '/suppliers'];
         const currentPath = window.location.pathname;
 
         return protectedRoutes.some(route => currentPath.startsWith(route));

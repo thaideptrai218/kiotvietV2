@@ -173,9 +173,17 @@
 
 /* Module Navigation Styles */
 .moduleNav {
+    position: sticky;
+    top: 72px; /* Height of header */
     width: 100%;
     background-color: #0c63ff;
     border-bottom: 1px solid #0946b3;
+    z-index: 999;
+    transition: transform 0.3s ease;
+}
+
+.moduleNav.hidden {
+    transform: translateY(-100%);
 }
 
 .moduleNavInner {
@@ -193,6 +201,7 @@
     padding: 0;
     overflow-x: auto;
     scrollbar-width: thin;
+    justify-content: center;
 }
 
 .tabList::-webkit-scrollbar {

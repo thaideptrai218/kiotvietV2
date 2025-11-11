@@ -1,0 +1,679 @@
+/* Products Page Layout - Override Dashboard Styles */
+.dashboard-content {
+    margin-left: 0 !important; /* Force remove sidebar margin */
+    margin: 0 auto !important; /* Center content */
+    min-height: calc(100vh - 60px); /* Account for header */
+    background-color: #f7f9fc;
+    padding: 0;
+    max-width: none !important; /* Override dashboard max-width */
+}
+
+.productsContentArea {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    padding: 24px;
+    background-color: #f7f9fc;
+    max-width: 1400px; /* Limit width for better centering on large screens */
+    margin: 0 auto; /* Center the content area */
+}
+
+/* Page Toolbar */
+.pageToolbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    margin: 0; /* Remove any margin */
+}
+
+.pageToolbarInner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px; /* Match header/navbar padding */
+    max-width: 1200px; /* Match header max-width */
+    margin: 0 auto; /* Center the toolbar content */
+}
+
+/* Tooltip Styles */
+button[title] {
+    position: relative;
+}
+
+button[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333333;
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+button[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #333333;
+    z-index: 1001;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+button[title]:hover::after,
+button[title]:hover::before {
+    opacity: 1;
+}
+
+.pageTitle {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1f2933;
+}
+
+.pageActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.primaryActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.primaryButton,
+.secondaryButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    text-decoration: none;
+}
+
+.primaryButton i,
+.secondaryButton i {
+    width: 18px;
+    height: 18px;
+}
+
+.primaryButton {
+    background-color: #0c63ff;
+    color: #ffffff;
+}
+
+.primaryButton:hover,
+.primaryButton:focus-visible {
+    background-color: #004fde;
+    outline: none;
+}
+
+.secondaryButton {
+    background-color: #f3f4f6;
+    color: #1f2933;
+    border-color: #e5e7eb;
+}
+
+.secondaryButton:hover,
+.secondaryButton:focus-visible {
+    background-color: #e5e7eb;
+    outline: none;
+}
+
+.iconActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iconButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #4b5563;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+    background-color: rgba(12, 99, 255, 0.08);
+    color: #0c63ff;
+    outline: none;
+}
+
+/* Filter Sidebar */
+.filterSidebar {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+}
+
+.filterForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filterGroupHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.filterGroupLabel {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1f2933;
+}
+
+.searchField {
+    display: flex;
+    gap: 8px;
+}
+
+.searchInput {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.textInput {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.iconOnlyButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background-color: #f9fafb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.iconOnlyButton:hover,
+.iconOnlyButton:focus-visible {
+    background-color: #e5f0ff;
+    border-color: #0c63ff;
+    outline: none;
+}
+
+.customDateRange {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dateInput {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.dateSeparator {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.selectInput {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+}
+
+.toggleGroup {
+    display: flex;
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.toggleButton {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4b5563;
+    background-color: #f3f4f6;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.toggleButton:hover,
+.toggleButton:focus-visible {
+    background-color: #e5e7eb;
+    outline: none;
+}
+
+.toggleButtonActive {
+    background-color: #0c63ff;
+    color: #ffffff;
+}
+
+/* Content Card */
+.contentCard {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+}
+
+.tableToolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tableSearch {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+}
+
+.tableSearch input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.tableSearchIcon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.tableViewOptions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tablePageSize {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tablePageSize select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background-color: #ffffff;
+}
+
+.tableToolbarRight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.tableViewOptions button {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.selectInputSmall {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background-color: #ffffff;
+}
+
+.tablePageSizeLabel,
+.tablePageSizeSuffix {
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.tableViewOptions button:hover,
+.tableViewOptions button:focus-visible {
+    background-color: #e5f0ff;
+    border-color: #0c63ff;
+    outline: none;
+}
+
+.tableViewOptions button.active {
+    background-color: #0c63ff;
+    color: white;
+    border-color: #0c63ff;
+}
+
+/* Data Table */
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dataTable thead {
+    background-color: #f9fafb;
+}
+
+.dataTable th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sortableHeader {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #1f2933;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.sortableHeader:hover {
+    color: #0c63ff;
+}
+
+.sortableHeader i {
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+}
+
+.dataTable th:first-child,
+.dataTable td:first-child {
+    width: 48px;
+}
+
+.dataTable th:nth-child(2),
+.dataTable td:nth-child(2) {
+    width: 60px;
+}
+
+.dataTable td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f1f3;
+}
+
+.dataTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.productCell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.productCell strong {
+    font-size: 0.95rem;
+    color: #1f2933;
+}
+
+.productTag {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.productThumbnail {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Status Badges */
+.statusBadge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.statusInStock {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.statusLowStock {
+    background-color: #fed7aa;
+    color: #92400e;
+}
+
+.statusOutOfStock {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Pagination */
+.paginationFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.paginationFooter span {
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.paginationControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.paginationList {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 4px;
+}
+
+.paginationButton {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #4b5563;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    padding: 0 8px;
+    gap: 4px;
+}
+
+.paginationButton:hover,
+.paginationButton:focus-visible {
+    background-color: #e5f0ff;
+    border-color: #0c63ff;
+    outline: none;
+}
+
+.paginationButtonActive,
+.paginationButton[aria-current="page"] {
+    background-color: #0c63ff;
+    border-color: #0c63ff;
+    color: #ffffff;
+}
+
+.paginationButton:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    border-color: #d1d5db;
+    cursor: not-allowed;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive Design */
+@media (min-width: 1401px) {
+    .productsContentArea {
+        padding: 32px; /* More padding on very large screens */
+    }
+}
+
+@media (max-width: 1200px) {
+    .pageToolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .pageActions {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .primaryActions {
+        flex: 1;
+    }
+
+    .productsContentArea {
+        grid-template-columns: 1fr;
+        max-width: none; /* Remove max-width on smaller screens */
+        padding: 20px;
+    }
+
+    .filterSidebar {
+        position: static;
+        margin-bottom: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pageToolbar {
+        padding: 20px 16px;
+    }
+
+    .contentCard {
+        padding: 16px;
+        margin: 0 16px 16px;
+    }
+
+    .tableToolbarRight {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .tableToolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tablePageSize {
+        justify-content: flex-start;
+    }
+
+    .paginationFooter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .paginationControls {
+        justify-content: flex-end;
+    }
+
+    .primaryActions {
+        flex-wrap: wrap;
+    }
+
+    .primaryButton,
+    .secondaryButton {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .iconActions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
