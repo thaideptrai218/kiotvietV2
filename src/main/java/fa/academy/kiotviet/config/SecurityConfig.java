@@ -75,6 +75,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/forgot").permitAll()
                 .requestMatchers("/api/auth/reset").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
+                .requestMatchers("/api/auth/mfa/verify").permitAll()
 
                 // Permit static resources
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()

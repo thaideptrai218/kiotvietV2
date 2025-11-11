@@ -1,6 +1,7 @@
 package fa.academy.kiotviet.application.controller.api;
 
 import fa.academy.kiotviet.application.dto.auth.response.AuthResponse;
+import fa.academy.kiotviet.application.dto.auth.response.LoginResult;
 import fa.academy.kiotviet.application.dto.auth.request.LoginRequest;
 import fa.academy.kiotviet.application.dto.auth.request.RegistrationRequest;
 import fa.academy.kiotviet.application.dto.auth.request.ForgotPasswordRequest;
@@ -38,9 +39,34 @@ public class AuthApiController {
     }
 
     @PostMapping("/login")
-    public SuccessResponse<AuthResponse> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
-        AuthResponse authResponse = authService.login(loginRequest);
-        return ResponseFactory.success(authResponse, "Login successful");
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
+        LoginResult result = authService.login(loginRequest);
+        if (result.isMfaRequired()) {
+            java.util.Map<String, Object> payload = java.util.Map.of(
+                    "status", "MFA_REQUIRED",
+                    "challengeId", result.getChallengeId()
+            );
+            return ResponseEntity.status(202).body(ResponseFactory.accepted(payload, "Two-factor code required"));
+        }
+        return ResponseEntity.ok(ResponseFactory.success(result.getAuth(), "Login successful"));
+    }
+
+    public static class MfaVerifyRequest {
+        public String challengeId;
+        public String code;
+    }
+
+    @PostMapping("/mfa/verify")
+    public ResponseEntity<?> verifyMfa(@RequestBody MfaVerifyRequest request) {
+        if (request == null || request.challengeId == null || request.code == null) {
+            return ResponseEntity.badRequest().body(ResponseFactory.error("challengeId and code are required", "INVALID_REQUEST"));
+        }
+        Long userId = authService.getTwoFactorService().verifyLoginCode(request.challengeId, request.code);
+        if (userId == null) {
+            return ResponseEntity.status(400).body(ResponseFactory.error("Invalid or expired code", "INVALID_CODE"));
+        }
+        AuthResponse auth = authService.completeLoginAfterMfa(userId);
+        return ResponseEntity.ok(ResponseFactory.success(auth, "Login successful"));
     }
 
     @PostMapping("/refresh")
