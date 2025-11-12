@@ -88,10 +88,24 @@ CREATE TABLE product_images (
     INDEX idx_company_product (company_id, product_id)
 );
 
--- Insert sample brands for testing (will be removed in production)
-INSERT INTO brands (company_id, name, description, website) VALUES
-(1, 'Apple', 'Technology company known for iPhone and Mac computers', 'https://www.apple.com'),
-(1, 'Samsung', 'South Korean multinational electronics company', 'https://www.samsung.com'),
-(1, 'Sony', 'Japanese multinational conglomerate corporation', 'https://www.sony.com'),
-(1, 'LG', 'South Korean electronics company', 'https://www.lg.com'),
-(1, 'Xiaomi', 'Chinese electronics company', 'https://www.mi.com');
+-- Insert sample data only if companies exist (for testing)
+-- Use a safe approach that won't fail if no companies exist
+INSERT IGNORE INTO brands (company_id, name, description, website)
+SELECT c.id, 'Apple', 'Technology company known for iPhone and Mac computers', 'https://www.apple.com'
+FROM companies c LIMIT 1;
+
+INSERT IGNORE INTO brands (company_id, name, description, website)
+SELECT c.id, 'Samsung', 'South Korean multinational electronics company', 'https://www.samsung.com'
+FROM companies c LIMIT 1;
+
+INSERT IGNORE INTO brands (company_id, name, description, website)
+SELECT c.id, 'Sony', 'Japanese multinational conglomerate corporation', 'https://www.sony.com'
+FROM companies c LIMIT 1;
+
+INSERT IGNORE INTO brands (company_id, name, description, website)
+SELECT c.id, 'LG', 'South Korean electronics company', 'https://www.lg.com'
+FROM companies c LIMIT 1;
+
+INSERT IGNORE INTO brands (company_id, name, description, website)
+SELECT c.id, 'Xiaomi', 'Chinese electronics company', 'https://www.mi.com'
+FROM companies c LIMIT 1;
