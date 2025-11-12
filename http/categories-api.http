@@ -2,7 +2,7 @@
 ### Authentication required - replace YOUR_JWT_TOKEN with actual token
 
 # Set authentication token (replace with actual token after login)
-@authToken = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6IlRoYWloYnZuMjE4IiwidXNlcklkIjoxLCJyb2xlIjoiYWRtaW4iLCJjb21wYW55SWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTI5MjI2LCJleHAiOjE3NjI5MzAxMjZ9.ugyzBK95uslr1nmjhy1jCGgTlCrf1oJ8S-ytjPtlnTqaplfAXrkqxOh1bx0WaNBZUnmva4v6dJ1haz4MaxRYyw
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjEsInVzZXJuYW1lIjoiVGhhaWhidm4yMTgiLCJjb21wYW55SWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTM3MjY4LCJleHAiOjE3NjI5MzgxNjh9.ZfW0DlVQk7Nk6hxmCD768SEwPuN6QyiBk1IDwpF0pg_TcZQCsAqA6ytekek0v9DFgeptdufIu6pfjzi-ze88QQ
 @baseUrl = http://localhost:8080
 
 ### ===== Authentication Setup =====

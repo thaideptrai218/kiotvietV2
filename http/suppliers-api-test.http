@@ -1,0 +1,174 @@
+### Suppliers API Tests
+### Base URL and Auth
+@baseUrl = http://localhost:8080
+
+### Test user credentials (run Register once, then Login)
+@companyName = Suppliers Test Company
+@companyEmail = suppliers_test@example.com
+@companyPhone = 0123456789
+@companyAddress = 123 Test Street, HCMC
+@username = suppliers_user
+@password = SuppliersPass123!
+@email = suppliers_user@example.com
+
+### Paste a token here if scripts are disabled (optional)
+@token = eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjEsInVzZXJuYW1lIjoiVGhhaWhidm4yMTgiLCJjb21wYW55SWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTM3MjY4LCJleHAiOjE3NjI5MzgxNjh9.ZfW0DlVQk7Nk6hxmCD768SEwPuN6QyiBk1IDwpF0pg_TcZQCsAqA6ytekek0v9DFgeptdufIu6pfjzi-ze88QQ
+
+### Paste a refresh token here if scripts are disabled (optional)
+@refreshToken = 
+
+### Alternative id alias (server expects path segment to be numeric; name here is client-only)
+@id = 1
+
+### Optional: Register a test user (RUN ONCE; subsequent runs may conflict on company name/email)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "{{companyName}}",
+  "companyEmail": "{{companyEmail}}",
+  "companyPhone": "{{companyPhone}}",
+  "companyAddress": "{{companyAddress}}",
+  "username": "{{username}}",
+  "email": "{{email}}",
+  "fullName": "Suppliers Tester",
+  "phone": "0909000000",
+  "password": "{{password}}",
+  "role": "admin"
+}
+
+### --------------------------------------------------------------------
+### Obtain token via login (run this first)
+### Expected: 200; sets {{token}} and {{refreshToken}} via script
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+   try {
+     var res = JSON.parse(response.body);
+     if (res && res.data && res.data.accessToken) {
+       client.global.set("token", res.data.accessToken);
+     }
+     if (res && res.data && res.data.refreshToken) {
+       client.global.set("refreshToken", res.data.refreshToken);
+     }
+   } catch (e) { /* ignore */ }
+%}
+
+### --------------------------------------------------------------------
+### Verify authentication context using the token
+### Expected: 200 with user info; if 401, paste @token above
+GET {{baseUrl}}/api/test/auth-info
+Authorization: Bearer {{token}}
+
+### --------------------------------------------------------------------
+### Refresh token to obtain a new access token
+### Expected: 200 with new access token; if 400/401, re-login or paste @refreshToken above
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+   try {
+     var res = JSON.parse(response.body);
+     if (res && res.data && res.data.accessToken) {
+       client.global.set("token", res.data.accessToken);
+     }
+     if (res && res.data && res.data.refreshToken) {
+       client.global.set("refreshToken", res.data.refreshToken);
+     }
+   } catch (e) { /* ignore */ }
+%}
+
+### ====================================================================
+### Create Supplier
+### Expected: 201; saves {{supplierId}} for later steps
+POST {{baseUrl}}/api/suppliers
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Test Supplier Co.",
+  "contactPerson": "Nguyen Van A",
+  "phone": "0909123456",
+  "email": "contact@supplier.vn",
+  "address": "123 Nguyen Trai, HCMC"
+}
+
+> {%
+   try {
+     var res = JSON.parse(response.body);
+     if (res && res.data && res.data.id) {
+       client.global.set("supplierId", res.data.id);
+       client.global.set("id", res.data.id);
+     }
+   } catch (e) { /* ignore */ }
+%}
+
+### ====================================================================
+### List Suppliers (paged, filtered)
+### Expected: 200
+GET {{baseUrl}}/api/suppliers?search=Test&page=0&size=10&sortBy=name&sortDir=asc
+Authorization: Bearer {{token}}
+
+### Negative case: Missing Authorization header should return 401
+### Expected: 401 Unauthorized
+GET {{baseUrl}}/api/suppliers
+
+### ====================================================================
+### Get Supplier by ID
+### Expected: 200
+GET {{baseUrl}}/api/suppliers/{{id}}
+Authorization: Bearer {{token}}
+
+### ====================================================================
+### Update Supplier
+### Expected: 200
+PUT {{baseUrl}}/api/suppliers/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Test Supplier Co. Updated",
+  "contactPerson": "Tran Thi B",
+  "phone": "0918123456",
+  "email": "sales@supplier.vn"
+}
+
+### ====================================================================
+### Soft Delete Supplier
+### Expected: 200
+DELETE {{baseUrl}}/api/suppliers/{{id}}
+Authorization: Bearer {{token}}
+
+### ====================================================================
+### Advanced Search (alias)
+### Expected: 200
+GET {{baseUrl}}/api/suppliers/search?search=Supplier&active=true&page=0&size=10
+Authorization: Bearer {{token}}
+
+### ====================================================================
+### Autocomplete
+### Expected: 200
+GET {{baseUrl}}/api/suppliers/autocomplete?query=Sup&limit=10
+Authorization: Bearer {{token}}
+
+### --------------------------------------------------------------------
+### Logout current user (invalidates refresh tokens)
+### Expected: 200; further refresh should fail and require login
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}
+
+### Troubleshooting
+### - If scripts don’t run in your HTTP client, paste tokens into @token/@refreshToken above.
+### - 401 on /api/** usually means Authorization header missing or access token expired.
+### - 400/401 on /api/auth/refresh usually means refresh token expired/invalid or already used.
+### - After logout, refresh tokens are deactivated — run login again.
