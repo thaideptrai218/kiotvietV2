@@ -12,11 +12,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "suppliers",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_company_name", columnNames = {"company_id", "name"})
+        @UniqueConstraint(name = "uk_company_name", columnNames = {"company_id", "name"}),
+        @UniqueConstraint(name = "uk_company_tax_code", columnNames = {"company_id", "tax_code"})
     },
     indexes = {
         @Index(name = "idx_company_name", columnList = "company_id,name"),
@@ -61,7 +63,25 @@ public class Supplier {
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
-    // MVP per tech spec: basic contact info only
+    @Size(max = 50)
+    @Column(name = "tax_code")
+    private String taxCode;
+
+    @Size(max = 255)
+    @Column(name = "website")
+    private String website;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "outstanding_balance", precision = 15, scale = 2)
+    private BigDecimal outstandingBalance;
+
+    @Column(name = "last_payment_date")
+    private LocalDateTime lastPaymentDate;
+
+    @Column(name = "credit_limit", precision = 15, scale = 2)
+    private BigDecimal creditLimit;
 
     @Column(name = "is_active")
     @Builder.Default

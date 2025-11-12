@@ -31,6 +31,15 @@
             </li>
             <li role="presentation">
                 <a role="tab"
+                   aria-selected="${activeLink == 'suppliers'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'suppliers'} ? 'active' : ''"
+                   href="/suppliers">
+                    Suppliers
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
                    aria-selected="${activeLink == 'customers'} ? 'true' : 'false'"
                    class="tab"
                    th:classappend="${activeLink == 'customers'} ? 'active' : ''"

@@ -11,8 +11,10 @@ import fa.academy.kiotviet.core.suppliers.service.SupplierService;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,31 +30,32 @@ public class SupplierApiController {
     // List suppliers with filters
     @GetMapping
     public SuccessResponse<PagedResponse<SupplierDto>> list(
-        @RequestParam(required = false) String search,
-        @RequestParam(required = false) String contact,
-        @RequestParam(required = false) Boolean active,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size,
-        @RequestParam(required = false) String sortBy,
-        @RequestParam(required = false) String sortDir
-    ) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String contact,
+            @RequestParam(required = false) String taxCode,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDir) {
         Long companyId = currentCompanyId();
-        PagedResponse<SupplierDto> data = supplierService.list(companyId, search, contact, active, page, size, sortBy, sortDir);
+        PagedResponse<SupplierDto> data = supplierService.list(companyId, search, contact, taxCode, active, page, size,
+                sortBy, sortDir);
         return ResponseFactory.success(data, "Suppliers retrieved successfully");
     }
 
     // Advanced search alias
     @GetMapping("/search")
     public SuccessResponse<PagedResponse<SupplierDto>> search(
-        @RequestParam(required = false) String search,
-        @RequestParam(required = false) String contact,
-        @RequestParam(required = false) Boolean active,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size,
-        @RequestParam(required = false) String sortBy,
-        @RequestParam(required = false) String sortDir
-    ) {
-        return list(search, contact, active, page, size, sortBy, sortDir);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String contact,
+            @RequestParam(required = false) String taxCode,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDir) {
+        return list(search, contact, taxCode, active, page, size, sortBy, sortDir);
     }
 
     // Get details
@@ -73,7 +76,8 @@ public class SupplierApiController {
 
     // Update supplier
     @PutMapping("/{id}")
-    public SuccessResponse<SupplierDto> update(@PathVariable Long id, @Valid @RequestBody SupplierUpdateRequest request) {
+    public SuccessResponse<SupplierDto> update(@PathVariable Long id,
+            @Valid @RequestBody SupplierUpdateRequest request) {
         Long companyId = currentCompanyId();
         SupplierDto data = supplierService.update(companyId, id, request);
         return ResponseFactory.success(data, "Supplier updated successfully");
@@ -90,12 +94,22 @@ public class SupplierApiController {
     // Autocomplete endpoint
     @GetMapping("/autocomplete")
     public SuccessResponse<List<SupplierAutocompleteItem>> autocomplete(
-        @RequestParam(name = "query") String query,
-        @RequestParam(name = "limit", defaultValue = "10") int limit
-    ) {
+            @RequestParam(name = "query") String query,
+            @RequestParam(name = "limit", defaultValue = "10") int limit) {
         Long companyId = currentCompanyId();
         List<SupplierAutocompleteItem> items = supplierService.autocomplete(companyId, query, limit);
         return ResponseFactory.success(items, "Suppliers autocomplete retrieved successfully");
+    }
+
+    // Bulk import (CSV/Excel) - MVP handles CSV; Excel can be added later
+    @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SuccessResponse<String> bulkImport(@RequestParam("file") MultipartFile file) {
+        Long companyId = currentCompanyId();
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+        int imported = supplierService.importFromCsv(companyId, file);
+        return ResponseFactory.success("Imported " + imported + " suppliers");
     }
 
     private Long currentCompanyId() {
