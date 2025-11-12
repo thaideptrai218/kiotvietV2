@@ -263,7 +263,8 @@
     if (websiteInput) websiteInput.value = data?.website || '';
     if (notesInput) notesInput.value = data?.notes || '';
     if (isActive) isActive.checked = (data?.isActive ?? true) === true;
-    if (els.btnSaveNew) els.btnSaveNew.classList.toggle('d-none', !!data?.id);
+    if (els.btnSaveNew) els.btnSaveNew.classList.toggle('d-none', !!data?.id); 
+    if (els.btnSave) els.btnSave.classList.toggle('d-none', !data?.id);
     els.modalErr.classList.add('d-none');
     els.modal.show();
   }
