@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -23,4 +24,11 @@ public class SupplierDto {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private String taxCode;
+    private String website;
+    private String notes;
+    private BigDecimal outstandingBalance;
+    private LocalDateTime lastPaymentDate;
+    private BigDecimal creditLimit;
 }
