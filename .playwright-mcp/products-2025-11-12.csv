@@ -1,0 +1,6 @@
+SKU,Name,Category,Brand,Supplier,Selling Price,Stock,Status
+"{{$uuid1}}","concac","Electronics","Apple","Test Supplier Co.","₫49,95","10","ACTIVE"
+"TEST-{{$uuid}}","Test Product {{$uuid}}","Electronics","Apple","Test Supplier Co.","₫49,95","10","ACTIVE"
+"TEST-{{$uuid1}}","Test Product {{$uuid1}}","Electronics","Apple","Test Supplier Co.","₫49,95","10","ACTIVE"
+"TEST-001","Test Product 1","Electronics","Apple","Test Supplier Co.","₫29,99","100","DISCONTINUED"
+"TEST-123e4567-e89b-12d3-a456-426614174000","Test Product 8742","Electronics","Apple","Test Supplier Co.","₫49,95","10","DISCONTINUED"

@@ -59,23 +59,35 @@
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Category</label>
-                        <select id="categoryId" class="kv-select">
-                            <option value="">All Categories</option>
-                        </select>
+                        <div class="kv-autocomplete">
+                            <input id="categoryId" type="text" class="kv-input" placeholder="Search category..." autocomplete="off">
+                            <button type="button" class="kv-autocomplete__clear" aria-label="Clear category" title="Clear category">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="kv-autocomplete__dropdown" id="categoryDropdown"></div>
+                        </div>
                     </div>
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Brand</label>
-                        <select id="brandId" class="kv-select">
-                            <option value="">All Brands</option>
-                        </select>
+                        <div class="kv-autocomplete">
+                            <input id="brandId" type="text" class="kv-input" placeholder="Search brand..." autocomplete="off">
+                            <button type="button" class="kv-autocomplete__clear" aria-label="Clear brand" title="Clear brand">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="kv-autocomplete__dropdown" id="brandDropdown"></div>
+                        </div>
                     </div>
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Supplier</label>
-                        <select id="supplierId" class="kv-select">
-                            <option value="">All Suppliers</option>
-                        </select>
+                        <div class="kv-autocomplete">
+                            <input id="supplierId" type="text" class="kv-input" placeholder="Search supplier..." autocomplete="off">
+                            <button type="button" class="kv-autocomplete__clear" aria-label="Clear supplier" title="Clear supplier">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="kv-autocomplete__dropdown" id="supplierDropdown"></div>
+                        </div>
                     </div>
 
                     <div class="kv-filter__group">
@@ -117,240 +129,235 @@
                         <input id="hdrSearch" type="text" placeholder="Search products..." />
                     </div>
 
-                    <div class="ms-auto d-flex align-items-center gap-2">
+                    <div class="kv-cardbar__right">
                         <div class="dropdown">
-                            <button class="kv-btn kv-btn--ghost kv-btn--sm" type="button" id="dropdownColumns" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-columns" aria-hidden="true"></i><span class="d-none d-md-inline">Columns</span>
+                            <button class="kv-btn kv-btn--ghost kv-btn--sm dropdown-toggle" id="btnColumns"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-table-columns me-1"></i> Columns
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownColumns">
-                                <li><h6 class="dropdown-header">Select Columns</h6></li>
-                                <li><a class="dropdown-item" href="#" data-column="sku"><input type="checkbox" checked> SKU</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="name"><input type="checkbox" checked> Name</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="category"><input type="checkbox" checked> Category</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="brand"><input type="checkbox" checked> Brand</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="supplier"><input type="checkbox" checked> Supplier</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="sellingPrice"><input type="checkbox" checked> Selling Price</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="onHand"><input type="checkbox" checked> Stock</a></li>
-                                <li><a class="dropdown-item" href="#" data-column="status"><input type="checkbox" checked> Status</a></li>
-                            </ul>
+                            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 220px;" id="colMenu">
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colSku"><label class="form-check-label" for="colSku">SKU</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colName" checked><label class="form-check-label" for="colName">Name</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colCategory" checked><label class="form-check-label" for="colCategory">Category</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colBrand" checked><label class="form-check-label" for="colBrand">Brand</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colSupplier" checked><label class="form-check-label" for="colSupplier">Supplier</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colSellingPrice" checked><label class="form-check-label" for="colSellingPrice">Selling Price</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colStock" checked><label class="form-check-label" for="colStock">Stock</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colStatus" checked><label class="form-check-label" for="colStatus">Status</label></div>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item text-danger" id="btnResetColumns"><i
+                                        class="fas fa-rotate-left me-1"></i> Reset to default</button>
+                            </div>
                         </div>
 
-                        <button class="kv-btn kv-btn--ghost kv-btn--sm" type="button" id="btnRefresh" title="Refresh data">
-                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnRefresh">
+                            <i class="fas fa-rotate"></i> Refresh
                         </button>
                     </div>
                 </div>
 
-                <!-- Table container -->
-                <div class="kv-table-container">
-                    <table class="kv-table" id="productsTable">
+                <!-- Bulk mode bar -->
+                <div id="hdrBulk" class="kv-bulkbar d-none">
+                    <div><span id="selCount" class="fw-semibold">0</span> selected</div>
+                    <div class="d-flex gap-2">
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnClearSel">Clear</button>
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete"><i
+                                class="far fa-trash-can me-1"></i>Delete</button>
+                    </div>
+                </div>
+
+                <!-- Active filter chips -->
+                <div id="chips" class="kv-chips"></div>
+
+                <!-- Alerts -->
+                <div id="alert" class="alert d-none" role="alert"></div>
+
+                <!-- Data table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle kv-table" id="tbl">
                         <thead>
                             <tr>
-                                <th data-column="sku" class="sortable" data-sort="sku">SKU <i class="fas fa-sort"></i></th>
-                                <th data-column="name" class="sortable" data-sort="name">Name <i class="fas fa-sort"></i></th>
-                                <th data-column="category" class="sortable" data-sort="category.name">Category <i class="fas fa-sort"></i></th>
-                                <th data-column="brand" class="sortable" data-sort="brand.name">Brand <i class="fas fa-sort"></i></th>
-                                <th data-column="supplier" class="sortable" data-sort="supplier.name">Supplier <i class="fas fa-sort"></i></th>
-                                <th data-column="sellingPrice" class="sortable text-end" data-sort="sellingPrice">Selling Price <i class="fas fa-sort"></i></th>
-                                <th data-column="onHand" class="sortable text-center" data-sort="onHand">Stock <i class="fas fa-sort"></i></th>
-                                <th data-column="status" class="sortable text-center" data-sort="status">Status <i class="fas fa-sort"></i></th>
-                                <th class="text-center kv-sticky-col">Actions</th>
+                                <th style="width:38px"><input type="checkbox" id="chkAll"
+                                        title="Select current page only"></th>
+
+                                <th data-sort="sku" data-col="sku" class="sortable" aria-sort="none">
+                                    <span>SKU <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="name" data-col="name" class="sortable" aria-sort="none">
+                                    <span>Name <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="category" data-col="category" class="sortable" aria-sort="none">
+                                    <span>Category <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="brand" data-col="brand" class="sortable" aria-sort="none">
+                                    <span>Brand <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="supplier" data-col="supplier" class="sortable" aria-sort="none">
+                                    <span>Supplier <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="sellingPrice" data-col="sellingPrice" class="sortable" aria-sort="none">
+                                    <span>Selling Price <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="onHand" data-col="stock" class="sortable" aria-sort="none">
+                                    <span>Stock <i class="sort-icon"></i></span>
+                                </th>
+                                <th data-sort="status" data-col="status" class="sortable" aria-sort="none">
+                                    <span>Status <i class="sort-icon"></i></span>
+                                </th>
                             </tr>
                         </thead>
-                        <tbody id="productsTableBody">
-                            <!-- Products will be loaded here -->
-                        </tbody>
+                        <tbody></tbody>
                     </table>
-
-                    <!-- Loading state -->
-                    <div id="loadingState" class="kv-loading-state text-center py-4" style="display: none;">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <div class="mt-2">Loading products...</div>
-                    </div>
-
-                    <!-- Empty state -->
-                    <div id="emptyState" class="kv-empty-state text-center py-4" style="display: none;">
-                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No products found</h5>
-                        <p class="text-muted">Get started by creating your first product.</p>
-                        <button class="kv-btn kv-btn--primary" id="btnCreateFirst">
-                            <i class="fas fa-plus"></i> Create Product
-                        </button>
-                    </div>
                 </div>
 
-                <!-- Pagination -->
-                <nav class="kv-pagination" aria-label="Products pagination">
-                    <div class="kv-pagination__info">
-                        <span id="paginationInfo">Showing 0-0 of 0 products</span>
+                <!-- Footer: page size + pagination -->
+                <div class="kv-table__footer">
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="sizeSel" class="small text-muted">Show</label>
+                        <select id="sizeSel" class="form-select form-select-sm" style="width: 90px;">
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="small text-muted">per page</span>
+                        <div id="pageInfo" class="text-muted small ms-2"></div>
                     </div>
-                    <ul class="pagination kv-pagination__list" id="paginationList">
-                        <!-- Pagination will be rendered here -->
-                    </ul>
-                </nav>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagi"></ul>
+                    </nav>
+                </div>
             </section>
         </div>
     </main>
 
-    <!-- Product Create/Edit Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <!-- Modal: Create/Update -->
+    <div class="modal fade" id="editModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productModalLabel">Create Product</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="modalTitle">New Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="productForm" novalidate>
-                        <div class="row">
+                    <form id="frm">
+                        <input type="hidden" id="productId">
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productSku" class="form-label">SKU *</label>
-                                    <input type="text" class="form-control" id="productSku" required>
-                                    <div class="invalid-feedback">Please provide a SKU.</div>
-                                </div>
+                                <label class="form-label">SKU *</label>
+                                <input id="productSku" class="form-control" maxlength="50" required>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productBarcode" class="form-label">Barcode</label>
-                                    <input type="text" class="form-control" id="productBarcode">
-                                </div>
+                                <label class="form-label">Barcode</label>
+                                <input id="productBarcode" class="form-control" maxlength="100">
                             </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="productName" class="form-label">Product Name *</label>
-                            <input type="text" class="form-control" id="productName" required>
-                            <div class="invalid-feedback">Please provide a product name.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="productDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="productDescription" rows="3"></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="productCategory" class="form-label">Category</label>
-                                    <select class="form-select" id="productCategory">
-                                        <option value="">Select Category</option>
-                                    </select>
-                                </div>
+                            <div class="col-12">
+                                <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                                <input id="productName" class="form-control" maxlength="255" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea id="productDescription" class="form-control" rows="3"></textarea>
                             </div>
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="productBrand" class="form-label">Brand</label>
-                                    <select class="form-select" id="productBrand">
-                                        <option value="">Select Brand</option>
-                                    </select>
-                                </div>
+                                <label class="form-label">Category</label>
+                                <select id="productCategory" class="form-select">
+                                    <option value="">Select Category</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="productSupplier" class="form-label">Supplier</label>
-                                    <select class="form-select" id="productSupplier">
-                                        <option value="">Select Supplier</option>
-                                    </select>
-                                </div>
+                                <label class="form-label">Brand</label>
+                                <select id="productBrand" class="form-select">
+                                    <option value="">Select Brand</option>
+                                </select>
                             </div>
-                        </div>
-
-                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Supplier</label>
+                                <select id="productSupplier" class="form-select">
+                                    <option value="">Select Supplier</option>
+                                </select>
+                            </div>
                             <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="productSellingPrice" class="form-label">Selling Price *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">₫</span>
-                                        <input type="number" class="form-control" id="productSellingPrice" step="0.01" min="0" required>
-                                    </div>
-                                    <div class="invalid-feedback">Please provide a selling price.</div>
+                                <label class="form-label">Selling Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₫</span>
+                                    <input type="number" id="productSellingPrice" class="form-control" step="0.01" min="0" required>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="productCostPrice" class="form-label">Cost Price *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">₫</span>
-                                        <input type="number" class="form-control" id="productCostPrice" step="0.01" min="0" required>
-                                    </div>
-                                    <div class="invalid-feedback">Please provide a cost price.</div>
+                                <label class="form-label">Cost Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₫</span>
+                                    <input type="number" id="productCostPrice" class="form-control" step="0.01" min="0" required>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label for="productOnHand" class="form-label">Stock</label>
-                                    <input type="number" class="form-control" id="productOnHand" min="0" value="0">
-                                </div>
+                                <label class="form-label">Stock</label>
+                                <input type="number" id="productOnHand" class="form-control" min="0" value="0">
                             </div>
                             <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label for="productMinLevel" class="form-label">Min Level</label>
-                                    <input type="number" class="form-control" id="productMinLevel" min="0" value="0">
-                                </div>
+                                <label class="form-label">Min Level</label>
+                                <input type="number" id="productMinLevel" class="form-control" min="0" value="0">
                             </div>
                             <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label for="productMaxLevel" class="form-label">Max Level</label>
-                                    <input type="number" class="form-control" id="productMaxLevel" min="0" value="0">
-                                </div>
+                                <label class="form-label">Max Level</label>
+                                <input type="number" id="productMaxLevel" class="form-control" min="0" value="0">
                             </div>
-                        </div>
-
-                        <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="productIsTracked" checked>
-                                        <label class="form-check-label" for="productIsTracked">
-                                            Track Inventory
-                                        </label>
-                                    </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="productIsTracked" checked>
+                                    <label class="form-check-label" for="productIsTracked">Track Inventory</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productStatus" class="form-label">Status</label>
-                                    <select class="form-select" id="productStatus">
-                                        <option value="ACTIVE">Active</option>
-                                        <option value="INACTIVE">Inactive</option>
-                                        <option value="DISCONTINUED">Discontinued</option>
-                                    </select>
-                                </div>
+                                <label class="form-label">Status</label>
+                                <select id="productStatus" class="form-select">
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                    <option value="DISCONTINUED">Discontinued</option>
+                                </select>
                             </div>
                         </div>
                     </form>
+                    <div id="modalErr" class="alert alert-danger d-none mt-3"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="btnSaveProduct">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                        <span class="btn-text">Save Product</span>
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--outline" id="btnSaveNew">
+                        <span class="default-text"><i class="fas fa-plus"></i> Create</span>
+                        <span class="loading-text d-none"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Creating...</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <!-- Modal: Import -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="importModalLabel">Import Products from Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete product "<span id="deleteProductName"></span>"?</p>
-                    <p class="text-muted">This will mark the product as discontinued and can be restored later.</p>
+                    <p class="text-muted small">Upload a CSV/Excel file with columns: SKU, Name, Description, Category, Brand, Supplier, Selling Price, Cost Price, Stock.</p>
+                    <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv" class="form-control mb-3" />
+                    <div id="importErr" class="alert alert-danger d-none mt-3"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="btnConfirmDelete">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                        <span class="btn-text">Delete</span>
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--primary" id="btnImportUpload">
+                        <i class="fas fa-upload me-1"></i>Upload
                     </button>
                 </div>
             </div>
