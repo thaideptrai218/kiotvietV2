@@ -143,6 +143,9 @@ public class Category {
      * Example: "Electronics > Mobile > Smartphones"
      */
     public String getFullPathName() {
+        if (path == null || path.trim().isEmpty()) {
+            return name != null ? name : "";
+        }
         return path.replace("/", " > ").substring(2); // Remove leading "/>"
     }
 

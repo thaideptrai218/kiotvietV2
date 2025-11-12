@@ -466,11 +466,14 @@ class KiotVietAuth {
             console.error('Logout API call failed:', error);
         }
 
-        // Clear local storage
+        // Clear local storage FIRST before redirect
         this.clearTokens();
 
-        // Redirect to login page
-        window.location.href = '/login';
+        // Add a small delay to ensure local storage is cleared before redirect
+        setTimeout(() => {
+            // Redirect to login page with logout flag
+            window.location.href = '/login?logout=true';
+        }, 100);
     }
 
     /**

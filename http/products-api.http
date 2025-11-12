@@ -1,0 +1,261 @@
+### Product Management API Tests
+### Replace {{token}} with valid JWT token and {{companyId}} with your company ID
+
+### Variables
+@baseUrl = http://localhost:8080
+@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6IlRoYWloYnZuMjE4IiwiY29tcGFueUlkIjoxLCJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTI5NDM5LCJleHAiOjE3NjI5MzAzMzl9.8KNIaF58shjyAhQbzM7kCzZUHaZg77NXk38ImFYyTfMvo8xVAHbrLoU-dhzU0Ki7A2ZUMxYGnhMkH8cQnGRk_w
+@companyId = 1
+
+### Authentication Header
+@authHeader = Authorization: Bearer {{token}}
+
+### =================== PRODUCT CRUD OPERATIONS ===================
+
+### 1. Create a new Product
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "TEST-001",
+  "name": "Test Product 1",
+  "barcode": "1234567890123",
+  "description": "This is a test product for API testing",
+  "sellingPrice": 29.99,
+  "costPrice": 15.50,
+  "onHand": 100,
+  "minLevel": 10,
+  "maxLevel": 200,
+  "status": "ACTIVE",
+  "isTracked": true,
+  "categoryId": 1,
+  "supplierId": 1,
+  "brandId": 1
+}
+
+### 2. Get all Products (paginated)
+GET {{baseUrl}}/api/products?page=0&size=20&sortBy=name&sortDir=asc
+{{authHeader}}
+
+### 3. Get Products with search and filters
+GET {{baseUrl}}/api/products?search=test&status=ACTIVE&tracked=true&page=0&size=10
+{{authHeader}}
+
+### 4. Get Products by Category
+GET {{baseUrl}}/api/products/category/1?page=0&size=20
+{{authHeader}}
+
+### 5. Get Products by Supplier
+GET {{baseUrl}}/api/products/supplier/1?page=0&size=20
+{{authHeader}}
+
+### 6. Get Products by Brand
+GET {{baseUrl}}/api/products/brand/1?page=0&size=20
+{{authHeader}}
+
+### 7. Get Active Products only
+GET {{baseUrl}}/api/products/active?page=0&size=20
+{{authHeader}}
+
+### 8. Get Products in Price Range
+GET {{baseUrl}}/api/products/price-range?minPrice=10&maxPrice=50
+{{authHeader}}
+
+### 9. Get a specific Product by ID
+GET {{baseUrl}}/api/products/1
+{{authHeader}}
+
+### 10. Update a Product
+PUT {{baseUrl}}/api/products/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Updated Test Product 1",
+  "description": "Updated description for test product",
+  "sellingPrice": 32.99,
+  "costPrice": 16.75,
+  "onHand": 95,
+  "minLevel": 15,
+  "maxLevel": 180,
+  "status": "ACTIVE"
+}
+
+### 11. Update Product Category/Supplier/Brand
+PUT {{baseUrl}}/api/products/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "categoryId": 2,
+  "supplierId": 2,
+  "brandId": 2
+}
+
+### 12. Soft Delete a Product
+DELETE {{baseUrl}}/api/products/1
+{{authHeader}}
+
+### =================== PRODUCT SEARCH & AUTOCOMPLETE ===================
+
+### 13. Product Autocomplete
+GET {{baseUrl}}/api/products/autocomplete?query=test&limit=10
+{{authHeader}}
+
+### 14. Product Search by Name
+GET {{baseUrl}}/api/products?search=product&page=0&size=10
+{{authHeader}}
+
+### 15. Product Search by SKU
+GET {{baseUrl}}/api/products?search=TEST&page=0&size=10
+{{authHeader}}
+
+### 16. Product Search by Barcode
+GET {{baseUrl}}/api/products?search=1234567890&page=0&size=10
+{{authHeader}}
+
+### =================== INVENTORY MANAGEMENT ===================
+
+### 17. Get Low Stock Products
+GET {{baseUrl}}/api/products/low-stock
+{{authHeader}}
+
+### 18. Get Out of Stock Products
+GET {{baseUrl}}/api/products/out-of-stock
+{{authHeader}}
+
+### 19. Get Overstocked Products
+GET {{baseUrl}}/api/products/overstocked
+{{authHeader}}
+
+### 20. Update Product Stock Only
+PUT {{baseUrl}}/api/products/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "onHand": 150,
+  "minLevel": 20,
+  "maxLevel": 250
+}
+
+### =================== BULK OPERATIONS ===================
+
+### 21. Create multiple products (sequential requests)
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "BULK-001",
+  "name": "Bulk Product A",
+  "description": "First bulk test product",
+  "sellingPrice": 19.99,
+  "costPrice": 10.00,
+  "onHand": 50,
+  "minLevel": 5,
+  "maxLevel": 100,
+  "status": "ACTIVE",
+  "isTracked": true
+}
+
+###
+
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "BULK-002",
+  "name": "Bulk Product B",
+  "description": "Second bulk test product",
+  "sellingPrice": 24.99,
+  "costPrice": 12.50,
+  "onHand": 75,
+  "minLevel": 8,
+  "maxLevel": 150,
+  "status": "ACTIVE",
+  "isTracked": true,
+  "categoryId": 1,
+  "brandId": 1
+}
+
+### =================== ERROR TESTING ===================
+
+### 22. Create Product with Invalid Data (should fail)
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "",
+  "name": "",
+  "sellingPrice": -10,
+  "costPrice": 100,
+  "onHand": -5
+}
+
+### 23. Create Product with Duplicate SKU (should fail)
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "TEST-001",
+  "name": "Duplicate SKU Test",
+  "sellingPrice": 29.99,
+  "costPrice": 15.50
+}
+
+### 24. Create Product with Cost > Selling Price (should fail)
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "INVALID-001",
+  "name": "Invalid Pricing Product",
+  "sellingPrice": 10.00,
+  "costPrice": 15.00
+}
+
+### 25. Update Non-existent Product (should fail)
+PUT {{baseUrl}}/api/products/999999
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "This should fail"
+}
+
+### 26. Get Non-existent Product (should fail)
+GET {{baseUrl}}/api/products/999999
+{{authHeader}}
+
+### 27. Delete Non-existent Product (should fail)
+DELETE {{baseUrl}}/api/products/999999
+{{authHeader}}
+
+### =================== UNAUTHORIZED TESTS ===================
+
+### 28. Create Product without Authentication (should fail)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "sku": "NO-AUTH-00111",
+  "name": "No Auth Test",
+  "sellingPrice": 29.99,
+  "costPrice": 15.50
+}
+
+### 29. Get Products without Authentication (should fail)
+GET {{baseUrl}}/api/products
+
+### 30. Update Product without Authentication (should fail)
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "No Auth Update"
+}

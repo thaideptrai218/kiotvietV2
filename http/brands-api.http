@@ -1,0 +1,270 @@
+### Brand Management API Tests
+### Replace {{token}} with valid JWT token and {{companyId}} with your company ID
+
+### Variables
+@baseUrl = http://localhost:8080
+@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6IlRoYWloYnZuMjE4IiwiY29tcGFueUlkIjoxLCJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTE3NTI1LCJleHAiOjE3NjI5MTg0MjV9.rr04_ppoOPmLy-88Bq2o_6IB8N6rjssN7Xb5BfmCLZsNa_ysd0yz7DltugCnQaB1qoEWivlUkZL7voCiwwTDhA
+@companyId = 1
+
+### Authentication Header
+@authHeader = Authorization: Bearer {{token}}
+
+### =================== BRAND CRUD OPERATIONS ===================
+
+### 1. Create a new Brand
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Apple",
+  "description": "Technology company known for iPhone and Mac computers",
+  "website": "https://www.apple.com",
+  "logoUrl": "https://example.com/logos/apple.png",
+  "isActive": true
+}
+
+### 2. Create another Brand
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Dickess",
+  "description": "Fuck you momom",
+  "website": "https://www.samsung.com",
+  "isActive": true
+}
+
+### 3. Create Brand with minimal data
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Generic Brand",
+  "isActive": true
+}
+
+### 4. Get all Brands (paginated)
+GET {{baseUrl}}/api/brands?page=0&size=20&sortBy=name&sortDir=asc
+{{authHeader}}
+
+### 5. Get Brands with search
+GET {{baseUrl}}/api/brands?search=samsung&active=true&page=0&size=10
+{{authHeader}}
+
+### 6. Get Active Brands only
+GET {{baseUrl}}/api/brands?active=true&page=0&size=50
+{{authHeader}}
+
+### 7. Get Inactive Brands only
+GET {{baseUrl}}/api/brands?active=false&page=0&size=20
+{{authHeader}}
+
+### 8. Get all Active Brands (no pagination)
+GET {{baseUrl}}/api/brands/active
+{{authHeader}}
+
+### 9. Get Active Brands List (alternative endpoint)
+GET {{baseUrl}}/api/brands/active/list
+{{authHeader}}
+
+### 10. Get a specific Brand by ID
+GET {{baseUrl}}/api/brands/2
+{{authHeader}}
+
+### 11. Update a Brand
+PUT {{baseUrl}}/api/brands/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Apple Inc.",
+  "description": "Updated description: Apple is an American multinational technology company",
+  "website": "https://www.apple.com/updated",
+  "logoUrl": "https://example.com/logos/apple-updated.png"
+}
+
+### 12. Deactivate a Brand (soft delete)
+PUT {{baseUrl}}/api/brands/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+### 13. Reactivate a Brand
+PUT {{baseUrl}}/api/brands/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "isActive": true
+}
+
+### 14. Soft Delete a Brand
+DELETE {{baseUrl}}/api/brands/2
+{{authHeader}}
+
+### =================== BRAND SEARCH & AUTOCOMPLETE ===================
+
+### 15. Brand Autocomplete
+GET {{baseUrl}}/api/brands/autocomplete?query=sam&limit=10
+{{authHeader}}
+
+### 16. Brand Autocomplete with short query
+GET {{baseUrl}}/api/brands/autocomplete?query=a&limit=5
+{{authHeader}}
+
+### 17. Brand Search by Name
+GET {{baseUrl}}/api/brands?search=apple&page=0&size=10
+{{authHeader}}
+
+### 18. Brand Search by Description
+GET {{baseUrl}}/api/brands?search=technology&page=0&size=10
+{{authHeader}}
+
+### =================== BRAND FILTERING ===================
+
+### 19. Get Brands with Website
+GET {{baseUrl}}/api/brands/with-website
+{{authHeader}}
+
+### 20. Get Brands with Logo
+GET {{baseUrl}}/api/brands/with-logo
+{{authHeader}}
+
+### 21. Get Brands sorted by name descending
+GET {{baseUrl}}/api/brands?sortBy=name&sortDir=desc&page=0&size=10
+{{authHeader}}
+
+### 22. Get Brands sorted by creation date
+GET {{baseUrl}}/api/brands?sortBy=createdAt&sortDir=desc&page=0&size=10
+{{authHeader}}
+
+### =================== BULK OPERATIONS ===================
+
+### 23. Create multiple brands for testing
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Sony",
+  "description": "Japanese multinational conglomerate corporation",
+  "website": "https://www.sony.com",
+  "isActive": true
+}
+
+###
+
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "LG",
+  "description": "South Korean electronics company",
+  "website": "https://www.lg.com",
+  "isActive": true
+}
+
+###
+
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Xiaomi",
+  "description": "Chinese electronics company",
+  "website": "https://www.mi.com",
+  "isActive": true
+}
+
+###
+
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "OnePlus",
+  "description": "Chinese smartphone manufacturer",
+  "website": "https://www.oneplus.com",
+  "isActive": true
+}
+
+### =================== ERROR TESTING ===================
+
+### 24. Create Brand with Invalid URL (should fail)
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Invalid URL Brand",
+  "website": "not-a-valid-url"
+}
+
+### 25. Create Brand with Empty Name (should fail)
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "description": "Brand with empty name"
+}
+
+### 26. Create Brand with Duplicate Name (should fail)
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Apple",
+  "description": "Duplicate brand name test"
+}
+
+### 27. Update Non-existent Brand (should fail)
+PUT {{baseUrl}}/api/brands/999999
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "This should fail"
+}
+
+### 28. Get Non-existent Brand (should fail)
+GET {{baseUrl}}/api/brands/999999
+{{authHeader}}
+
+### 29. Delete Non-existent Brand (should fail)
+DELETE {{baseUrl}}/api/brands/999999
+{{authHeader}}
+
+### =================== UNAUTHORIZED TESTS ===================
+
+### 30. Create Brand without Authentication (should fail)
+POST {{baseUrl}}/api/brands
+Content-Type: application/json
+
+{
+  "name": "No Auth Brand",
+  "description": "This should fail without authentication"
+}
+
+### 31. Get Brands without Authentication (should fail)
+GET {{baseUrl}}/api/brands
+
+### 32. Update Brand without Authentication (should fail)
+PUT {{baseUrl}}/api/brands/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "No Auth Update"
+}

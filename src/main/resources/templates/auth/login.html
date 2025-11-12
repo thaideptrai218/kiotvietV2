@@ -36,6 +36,12 @@
                 Registration successful! Please log in.
             </div>
 
+            <!-- Logout Success Message -->
+            <div th:if="${param.logout}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                You have been successfully logged out.
+            </div>
+
             <!-- Flash Message -->
             <div th:if="${message}" class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
@@ -132,9 +138,11 @@
 <script>
     // Wait for auth manager to be ready
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if user is already logged in
-        if (kiotVietAuth.getToken()) {
-            const urlParams = new URLSearchParams(window.location.search);
+        // Check if user is already logged in, but not if they just logged out
+        const urlParams = new URLSearchParams(window.location.search);
+        const justLoggedOut = urlParams.get('logout') === 'true';
+
+        if (!justLoggedOut && kiotVietAuth.getToken()) {
             const redirectUrl = urlParams.get('redirect');
             window.location.href = redirectUrl || '/dashboard';
             return;

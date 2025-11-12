@@ -126,33 +126,49 @@ class DashboardCore {
      * Bind logout functionality
      */
     bindLogout() {
-        const logoutButtons = document.querySelectorAll('[onclick*="logout"]');
-
-        logoutButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
+        // Simple - just bind to the logout link by ID
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', async (e) => {
                 e.preventDefault();
-                this.logout();
+                await this.performLogout();
             });
-        });
+        }
     }
 
     /**
-     * Handle user logout
+     * Perform simple logout
      */
-    async logout() {
+    async performLogout() {
         try {
-            console.log('Dashboard Core: Logging out...');
+            console.log('Logging out...');
 
-            if (typeof kiotVietAuth !== 'undefined') {
-                await kiotVietAuth.logout();
-            } else {
-                // Fallback redirect
-                window.location.href = '/login';
+            // Call API first
+            const token = localStorage.getItem('jwtToken');
+            if (token) {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
             }
+
+            // Clear storage
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userInfo');
+
+            // Redirect to login
+            window.location.href = '/login?logout=true';
         } catch (error) {
-            console.error('Dashboard Core: Logout failed', error);
-            // Fallback redirect
-            window.location.href = '/login';
+            console.error('Logout failed:', error);
+            // Still clear and redirect on error
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userInfo');
+            window.location.href = '/login?logout=true';
         }
     }
 
