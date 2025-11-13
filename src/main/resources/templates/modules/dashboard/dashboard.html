@@ -68,11 +68,11 @@
                         </div>
                     </button>
 
-                    <!-- Settings -->
-                    <button class="header-btn header-btn-text" onclick="openUserSettings()" aria-label="Settings">
+              <!-- Thay thế button bằng link -->
+                    <a th:href="@{/setting}" class="header-btn header-btn-text" aria-label="Settings">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
-                    </button>
+                    </a>
 
                     <!-- Feedback -->
                     <button class="header-btn header-btn-text" onclick="openFeedbackModal()" aria-label="Send Feedback">
@@ -109,10 +109,10 @@
                                     <i class="fas fa-user-edit"></i>
                                     Edit Profile
                                 </a> 
-                                <a href="#" class="user-dropdown-item" onclick="openUserSettings()">
-                                    <i class="fas fa-cog"></i>
-                                    Settings
-                                </a>
+                                  <a th:href="@{/setting}" class="header-btn header-btn-text" aria-label="Settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
                                 <hr class="my-2">
                                 <a href="#" class="user-dropdown-item text-danger" onclick="logout()">
                                     <i class="fas fa-sign-out-alt"></i>
