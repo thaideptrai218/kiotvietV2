@@ -188,8 +188,11 @@ public class ProductService {
             Long companyId,
             String search,
             Long categoryId,
+            List<Long> categoryIds,
             Long supplierId,
+            List<Long> supplierIds,
             Long brandId,
+            List<Long> brandIds,
             Product.ProductStatus status,
             Boolean tracked,
             Integer page,
@@ -203,9 +206,9 @@ public class ProductService {
 
         Specification<Product> spec = Specification.where(byCompany(companyId))
                 .and(likeSearch(search))
-                .and(eqCategory(categoryId))
-                .and(eqSupplier(supplierId))
-                .and(eqBrand(brandId))
+                .and(eqCategoryOrCategories(categoryId, categoryIds))
+                .and(eqSupplierOrSuppliers(supplierId, supplierIds))
+                .and(eqBrandOrBrands(brandId, brandIds))
                 .and(eqStatus(status))
                 .and(eqTracked(tracked));
 
@@ -364,5 +367,35 @@ public class ProductService {
     private Specification<Product> eqTracked(Boolean tracked) {
         if (tracked == null) return null;
         return (root, query, cb) -> cb.equal(root.get("isTracked"), tracked);
+    }
+
+    private Specification<Product> eqCategoryOrCategories(Long categoryId, List<Long> categoryIds) {
+        if (categoryId != null) {
+            return eqCategory(categoryId);
+        }
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return null;
+        }
+        return (root, query, cb) -> root.get("category").get("id").in(categoryIds);
+    }
+
+    private Specification<Product> eqSupplierOrSuppliers(Long supplierId, List<Long> supplierIds) {
+        if (supplierId != null) {
+            return eqSupplier(supplierId);
+        }
+        if (supplierIds == null || supplierIds.isEmpty()) {
+            return null;
+        }
+        return (root, query, cb) -> root.get("supplier").get("id").in(supplierIds);
+    }
+
+    private Specification<Product> eqBrandOrBrands(Long brandId, List<Long> brandIds) {
+        if (brandId != null) {
+            return eqBrand(brandId);
+        }
+        if (brandIds == null || brandIds.isEmpty()) {
+            return null;
+        }
+        return (root, query, cb) -> root.get("brand").get("id").in(brandIds);
     }
 }

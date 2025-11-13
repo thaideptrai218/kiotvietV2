@@ -165,7 +165,7 @@
     flex-direction: column;
     gap: 12px;
     height: 100%;
-    overflow: scroll;
+    overflow: hidden;
 }
 
 .kv-card-content {
@@ -229,7 +229,15 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
-    height: 100%;
+}
+
+.kv-table tbody tr {
+    height: auto;
+    min-height: 60px;
+}
+
+.kv-table tbody tr.expanded {
+    height: auto;
 }
 
 /* Make columns fill available space when Actions column is removed */
@@ -440,12 +448,218 @@ th.sortable.active.desc .sort-icon::before {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #e2e8f0;
-    border-radius: 999px;
     padding: 4px 10px;
-    font-size: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--chip);
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.kv-chips .chip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(12, 99, 255, 0.1), transparent);
+    transition: left 0.3s ease;
+}
+
+.kv-chips .chip:hover::before {
+    left: 100%;
+}
+
+.kv-chips .chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--blue);
+}
+
+.kv-chips .chip .text-muted {
+    opacity: 0.9;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 0 0 4px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    opacity: 0.9;
+}
+
+.kv-chips .chip button:hover {
+    background: var(--danger);
+    color: white;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Category chips - Primary blue */
+.kv-chips .chip[data-type="category"] {
+    background: var(--blue);
+    color: white;
+    border-color: var(--blue-600);
+}
+
+.kv-chips .chip[data-type="category"]:hover {
+    background: var(--blue-600);
+    border-color: var(--blue);
+}
+
+.kv-chips .chip[data-type="category"] .text-muted {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="category"] button {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="category"] button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Brand chips - Purple accent */
+.kv-chips .chip[data-type="brand"] {
+    background: #8b5cf6;
+    color: white;
+    border-color: #7c3aed;
+}
+
+.kv-chips .chip[data-type="brand"]:hover {
+    background: #7c3aed;
+    border-color: #6d28d9;
+}
+
+.kv-chips .chip[data-type="brand"] .text-muted {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="brand"] button {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="brand"] button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Supplier chips - Green success */
+.kv-chips .chip[data-type="supplier"] {
+    background: var(--success);
+    color: white;
+    border-color: #059669;
+}
+
+.kv-chips .chip[data-type="supplier"]:hover {
+    background: #059669;
+    border-color: #047857;
+}
+
+.kv-chips .chip[data-type="supplier"] .text-muted {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="supplier"] button {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="supplier"] button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Status chips - Orange warning */
+.kv-chips .chip[data-type="status"] {
+    background: #f59e0b;
+    color: white;
+    border-color: #d97706;
+}
+
+.kv-chips .chip[data-type="status"]:hover {
+    background: #d97706;
+    border-color: #b45309;
+}
+
+.kv-chips .chip[data-type="status"] .text-muted {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="status"] button {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="status"] button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Tracked chips - Teal info */
+.kv-chips .chip[data-type="tracked"] {
+    background: #14b8a6;
+    color: white;
+    border-color: #0d9488;
+}
+
+.kv-chips .chip[data-type="tracked"]:hover {
+    background: #0d9488;
+    border-color: #0f766e;
+}
+
+.kv-chips .chip[data-type="tracked"] .text-muted {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="tracked"] button {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="tracked"] button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Search chips - Muted gray */
+.kv-chips .chip[data-type="search"] {
+    background: var(--muted);
+    color: white;
+    border-color: #4b5563;
+}
+
+.kv-chips .chip[data-type="search"]:hover {
+    background: #4b5563;
+    border-color: #374151;
+}
+
+.kv-chips .chip[data-type="search"] .text-muted {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="search"] button {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.kv-chips .chip[data-type="search"] button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 /* Dropdown Menus */
@@ -1274,6 +1488,47 @@ th.sortable.active.desc .sort-icon::before {
 .px-4 {
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
+}
+
+/* Multi-select Components */
+.kv-multiselect {
+    position: relative;
+    width: 100%;
+}
+
+.kv-multiselect__selected {
+    min-height: 32px;
+    padding: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.kv-multiselect__selected:empty {
+    display: none;
+}
+
+.kv-multiselect__selected .kv-chip {
+    margin: 0;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 12px;
+}
+
+.kv-multiselect__selected .kv-chip button {
+    color: white;
+    opacity: 0.8;
+}
+
+.kv-multiselect__selected .kv-chip button:hover {
+    opacity: 1;
 }
 
 /* Autocomplete Components */

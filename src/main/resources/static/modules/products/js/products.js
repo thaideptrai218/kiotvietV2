@@ -17,6 +17,7 @@
     status: document.getElementById('status'),
     tracked: document.getElementById('tracked'),
 
+    
     // Autocomplete elements
     categoryAutocomplete: document.getElementById('categoryId'),
     categoryDropdown: document.getElementById('categoryDropdown'),
@@ -40,9 +41,7 @@
     colSellingPrice: document.getElementById('colSellingPrice'),
     colStock: document.getElementById('colStock'),
     colStatus: document.getElementById('colStatus'),
-    btnApplyFilters: document.getElementById('btnApplyFilters'),
-    btnClearFilters: document.getElementById('btnClearFilters'),
-    btnToggleFilter: document.getElementById('btnToggleFilter'),
+      btnToggleFilter: document.getElementById('btnToggleFilter'),
     btnCollapseFilter: document.getElementById('btnCollapseFilter'),
     filterPanel: document.getElementById('filterPanel'),
     tblBody: document.querySelector('#tbl tbody'),
@@ -88,7 +87,7 @@
     importErr: document.getElementById('importErr')
   };
 
-  const state = { page: 0, size: 15, sortBy: 'name', sortDir: 'asc', loading: false, selected: new Set(), expanded: new Set(), columns: { sku: true, name: true, category: true, brand: true, supplier: true, sellingPrice: true, stock: true, status: true }, lookupData: { categories: [], brands: [], suppliers: [] }, selectedCategories: [], autocomplete: { category: { selectedIndex: -1, suggestions: [], isOpen: false }, brand: { selectedIndex: -1, suggestions: [], isOpen: false }, supplier: { selectedIndex: -1, suggestions: [], isOpen: false } } };
+  const state = { page: 0, size: 15, sortBy: 'name', sortDir: 'asc', loading: false, selected: new Set(), expanded: new Set(), columns: { sku: true, name: true, category: true, brand: true, supplier: true, sellingPrice: true, stock: true, status: true }, lookupData: { categories: [], brands: [], suppliers: [] }, selectedCategories: new Map(), selectedBrands: new Map(), selectedSuppliers: new Map(), autocomplete: { category: { selectedIndex: -1, suggestions: [], isOpen: false }, brand: { selectedIndex: -1, suggestions: [], isOpen: false }, supplier: { selectedIndex: -1, suggestions: [], isOpen: false } } };
   let currentAbort = null;
 
   const storageKey = () => {
@@ -195,23 +194,20 @@
     const params = new URLSearchParams();
     if (els.q.value.trim()) params.set('search', els.q.value.trim());
 
-    // Use dataset.selectedValue for autocomplete filters to get the ID instead of display name
-    if (els.categoryAutocomplete && els.categoryAutocomplete.dataset.selectedValue) {
-      params.set('categoryId', els.categoryAutocomplete.dataset.selectedValue);
-    } else if (els.categoryId.value) {
-      params.set('categoryId', els.categoryId.value);
+    // Use multiple selected items for filters
+    if (state.selectedCategories.size > 0) {
+      const categoryIds = Array.from(state.selectedCategories.keys());
+      categoryIds.forEach(id => params.append('categoryIds', id));
     }
 
-    if (els.brandAutocomplete && els.brandAutocomplete.dataset.selectedValue) {
-      params.set('brandId', els.brandAutocomplete.dataset.selectedValue);
-    } else if (els.brandId.value) {
-      params.set('brandId', els.brandId.value);
+    if (state.selectedBrands.size > 0) {
+      const brandIds = Array.from(state.selectedBrands.keys());
+      brandIds.forEach(id => params.append('brandIds', id));
     }
 
-    if (els.supplierAutocomplete && els.supplierAutocomplete.dataset.selectedValue) {
-      params.set('supplierId', els.supplierAutocomplete.dataset.selectedValue);
-    } else if (els.supplierId.value) {
-      params.set('supplierId', els.supplierId.value);
+    if (state.selectedSuppliers.size > 0) {
+      const supplierIds = Array.from(state.selectedSuppliers.keys());
+      supplierIds.forEach(id => params.append('supplierIds', id));
     }
 
     if (els.status.value !== '') params.set('status', els.status.value);
@@ -395,14 +391,14 @@
                           </div>
                           <div class="col-6 col-lg-3">
                             <div class="field-item">
-                              <div class="field-label">Unit</div>
-                              <div class="field-value">${fmt(p.unit)}</div>
+                              <div class="field-label">Barcode</div>
+                              <div class="field-value">${fmt(p.barcode)}</div>
                             </div>
                           </div>
                           <div class="col-6 col-lg-3">
                             <div class="field-item">
-                              <div class="field-label">Barcode</div>
-                              <div class="field-value">${fmt(p.barcode)}</div>
+                              <div class="field-label">Selling Price</div>
+                              <div class="field-value">${p.sellingPrice ? `₫${Number(p.sellingPrice).toLocaleString('vi-VN')}` : 'Not set'}</div>
                             </div>
                           </div>
                           <div class="col-6 col-lg-3">
@@ -663,7 +659,22 @@
     els.productMaxLevel.value = data?.maxLevel || '0';
     els.productIsTracked.checked = (data?.isTracked ?? true) === true;
     els.productStatus.value = data?.status || 'ACTIVE';
-    if (els.btnSaveNew) els.btnSaveNew.classList.toggle('d-none', !!data?.id);
+
+    // Show/hide appropriate buttons based on edit vs create mode
+    const isEdit = !!data?.id;
+    if (els.btnSave) {
+      els.btnSave.classList.toggle('d-none', !isEdit);
+      els.btnSave.disabled = false;
+    }
+    if (els.btnSaveNew) {
+      els.btnSaveNew.classList.toggle('d-none', isEdit);
+      // Reset loading state for create button
+      const defaultText = els.btnSaveNew.querySelector('.default-text');
+      const loadingText = els.btnSaveNew.querySelector('.loading-text');
+      if (defaultText) defaultText.classList.remove('d-none');
+      if (loadingText) loadingText.classList.add('d-none');
+    }
+
     els.modalErr.classList.add('d-none');
     els.modal.show();
   }
@@ -732,51 +743,53 @@
 
   function renderChips() {
     const chips = [];
-    if (els.q.value.trim()) chips.push(chip('Search', els.q.value.trim(), () => { els.q.value = ''; fetchList(); }));
 
-    // Use stored display names for chips, fall back to input value if not available
-    if (els.categoryAutocomplete && els.categoryAutocomplete.value.trim()) {
-      const displayName = els.categoryAutocomplete.dataset.displayName || els.categoryAutocomplete.value.trim();
-      chips.push(chip('Category', displayName, () => {
-        els.categoryAutocomplete.value = '';
-        els.categoryAutocomplete.dataset.selectedValue = '';
-        els.categoryAutocomplete.dataset.displayName = '';
-        els.categoryId.value = '';
-        updateClearButton(els.categoryAutocomplete.parentElement, '');
-        fetchList();
-      }));
+    // Search chip
+    if (els.q.value.trim()) {
+      chips.push(chip('search', 'Search', els.q.value.trim(), () => { els.q.value = ''; fetchList(); }));
     }
 
-    if (els.brandAutocomplete && els.brandAutocomplete.value.trim()) {
-      const displayName = els.brandAutocomplete.dataset.displayName || els.brandAutocomplete.value.trim();
-      chips.push(chip('Brand', displayName, () => {
-        els.brandAutocomplete.value = '';
-        els.brandAutocomplete.dataset.selectedValue = '';
-        els.brandAutocomplete.dataset.displayName = '';
-        els.brandId.value = '';
-        updateClearButton(els.brandAutocomplete.parentElement, '');
+    // Category chips from selectedCategories Map
+    state.selectedCategories.forEach((item, id) => {
+      chips.push(chip('category', 'Category', item.name, () => {
+        state.selectedCategories.delete(id);
+        renderChips();
         fetchList();
       }));
-    }
+    });
 
-    if (els.supplierAutocomplete && els.supplierAutocomplete.value.trim()) {
-      const displayName = els.supplierAutocomplete.dataset.displayName || els.supplierAutocomplete.value.trim();
-      chips.push(chip('Supplier', displayName, () => {
-        els.supplierAutocomplete.value = '';
-        els.supplierAutocomplete.dataset.selectedValue = '';
-        els.supplierAutocomplete.dataset.displayName = '';
-        els.supplierId.value = '';
-        updateClearButton(els.supplierAutocomplete.parentElement, '');
+    // Brand chips from selectedBrands Map
+    state.selectedBrands.forEach((item, id) => {
+      chips.push(chip('brand', 'Brand', item.name, () => {
+        state.selectedBrands.delete(id);
+        renderChips();
         fetchList();
       }));
+    });
+
+    // Supplier chips from selectedSuppliers Map
+    state.selectedSuppliers.forEach((item, id) => {
+      chips.push(chip('supplier', 'Supplier', item.name, () => {
+        state.selectedSuppliers.delete(id);
+        renderChips();
+        fetchList();
+      }));
+    });
+
+    // Status chip
+    if (els.status.value !== '') {
+      chips.push(chip('status', 'Status', els.status.value, () => { els.status.value = ''; renderChips(); fetchList(); }));
     }
 
-    if (els.status.value !== '') chips.push(chip('Status', els.status.value, () => { els.status.value = ''; fetchList(); }));
-    if (els.tracked.value !== '') chips.push(chip('Tracked', els.tracked.value === 'true' ? 'Yes' : 'No', () => { els.tracked.value = ''; fetchList(); }));
+    // Tracked chip
+    if (els.tracked.value !== '') {
+      chips.push(chip('tracked', 'Tracked', els.tracked.value === 'true' ? 'Yes' : 'No', () => { els.tracked.value = ''; renderChips(); fetchList(); }));
+    }
+
     els.chips.innerHTML = chips.join('');
   }
 
-  function chip(label, value, onRemove) { const id = `chip_${Math.random().toString(36).slice(2)}`; setTimeout(() => { const btn = document.getElementById(id); if (btn) btn.addEventListener('click', onRemove); }, 0); return `<span class="chip"><span class="text-muted">${label}:</span> ${value} <button id="${id}" aria-label="Remove"><i class="fas fa-times"></i></button></span>`; }
+  function chip(type, label, value, onRemove) { const id = `chip_${Math.random().toString(36).slice(2)}`; setTimeout(() => { const btn = document.getElementById(id); if (btn) btn.addEventListener('click', onRemove); }, 0); return `<span class="chip" data-type="${type}"><span class="text-muted">${label}:</span> ${value} <button id="${id}" aria-label="Remove"><i class="fas fa-times"></i></button></span>`; }
 
   // API functions to fetch lookup data
   async function fetchCategories() {
@@ -785,7 +798,7 @@
       const body = await resp.json();
       console.log('Categories API response:', body);
 
-      // Handle the actual response structure: data.categories
+      // Handle the response structure based on SuccessResponse wrapper
       let categories = [];
       if (body.data && body.data.categories && Array.isArray(body.data.categories)) {
         categories = body.data.categories;
@@ -813,16 +826,17 @@
 
   async function fetchBrands() {
     try {
-      const resp = await fetch('/api/brands', { headers: api.headers() }).then(authGuard);
+      // Use autocomplete endpoint for brands as it's more appropriate for filter functionality
+      const resp = await fetch('/api/brands/autocomplete?query=&limit=1000', { headers: api.headers() }).then(authGuard);
       const body = await resp.json();
       console.log('Brands API response:', body);
 
-      // Handle the actual response structure: data.content
+      // Handle the response structure based on SuccessResponse wrapper
       let brands = [];
-      if (body.data && body.data.content && Array.isArray(body.data.content)) {
-        brands = body.data.content;
-      } else if (body.data && Array.isArray(body.data)) {
+      if (body.data && Array.isArray(body.data)) {
         brands = body.data;
+      } else if (body.data && body.data.content && Array.isArray(body.data.content)) {
+        brands = body.data.content;
       } else if (body.content && Array.isArray(body.content)) {
         brands = body.content;
       } else if (body.items && Array.isArray(body.items)) {
@@ -843,16 +857,17 @@
 
   async function fetchSuppliers() {
     try {
-      const resp = await fetch('/api/suppliers', { headers: api.headers() }).then(authGuard);
+      // Use autocomplete endpoint for suppliers as it's more appropriate for filter functionality
+      const resp = await fetch('/api/suppliers/autocomplete?query=&limit=1000', { headers: api.headers() }).then(authGuard);
       const body = await resp.json();
       console.log('Suppliers API response:', body);
 
-      // Handle the actual response structure: data.content
+      // Handle the response structure based on SuccessResponse wrapper
       let suppliers = [];
-      if (body.data && body.data.content && Array.isArray(body.data.content)) {
-        suppliers = body.data.content;
-      } else if (body.data && Array.isArray(body.data)) {
+      if (body.data && Array.isArray(body.data)) {
         suppliers = body.data;
+      } else if (body.data && body.data.content && Array.isArray(body.data.content)) {
+        suppliers = body.data.content;
       } else if (body.content && Array.isArray(body.content)) {
         suppliers = body.content;
       } else if (body.items && Array.isArray(body.items)) {
@@ -1012,9 +1027,10 @@
     const dropdown = getDropdown(type);
     const data = getLookupData(type);
 
-    // Filter suggestions based on query
+    // Filter suggestions based on query (check both name and displayName for suppliers)
     const suggestions = data.filter(item =>
-      item.name && item.name.toLowerCase().includes(query.toLowerCase())
+      (item.name && item.name.toLowerCase().includes(query.toLowerCase())) ||
+      (item.displayName && item.displayName.toLowerCase().includes(query.toLowerCase()))
     );
 
     state.autocomplete[type].suggestions = suggestions;
@@ -1043,7 +1059,7 @@
     const dropdown = getDropdown(type);
     dropdown.innerHTML = suggestions.map((item, index) => `
       <div class="kv-autocomplete__item" data-value="${item.id || ''}" data-index="${index}">
-        ${item.name}
+        ${item.name || item.displayName || item.id}
       </div>
     `).join('');
   }
@@ -1112,15 +1128,25 @@
   }
 
   function selectAutocompleteValue(input, type, value, text) {
-    input.value = text;
-    input.dataset.selectedValue = value;
-    input.dataset.displayName = text; // Store display name for chip rendering
+    // Check if already selected
+    const selectedMap = getSelectedMap(type);
+    if (selectedMap.has(value)) {
+      // Already selected, do nothing
+      return;
+    }
 
-    // Don't overwrite the autocomplete input with the ID - keep the display name
-    // The fetchList will use the dataset.selectedValue for filtering
+    // Get the display name from the suggestion data
+    const suggestions = state.autocomplete[type].suggestions;
+    const selectedItem = suggestions.find(item => item.id == value);
+    const displayName = selectedItem ? (selectedItem.name || selectedItem.displayName || text) : text;
 
-    updateClearButton(input.parentElement, text);
-    hideSuggestions(type);
+    // Add to selected items
+    selectedMap.set(value, { id: value, name: displayName });
+
+    // Clear input for next selection
+    input.value = '';
+    input.dataset.selectedValue = '';
+    input.dataset.displayName = '';
 
     // Trigger filter update
     state.page = 0;
@@ -1128,19 +1154,16 @@
   }
 
   function clearAutocomplete(input, type) {
+    // Clear the input
     input.value = '';
     input.dataset.selectedValue = '';
-    input.dataset.displayName = ''; // Clear display name
+    input.dataset.displayName = '';
 
-    // Clear the original select element
-    if (type === 'category') {
-      els.categoryId.value = '';
-    } else if (type === 'brand') {
-      els.brandId.value = '';
-    } else if (type === 'supplier') {
-      els.supplierId.value = '';
-    }
+    // Clear all selected items for this type
+    const selectedMap = getSelectedMap(type);
+    selectedMap.clear();
 
+    // Update UI
     updateClearButton(input.parentElement, '');
     hideSuggestions(type);
 
@@ -1172,6 +1195,16 @@
     }
   }
 
+  function getSelectedMap(type) {
+    switch (type) {
+      case 'category': return state.selectedCategories;
+      case 'brand': return state.selectedBrands;
+      case 'supplier': return state.selectedSuppliers;
+      default: return new Map();
+    }
+  }
+
+  
   // Initialize lookup data
   async function initializeLookupData() {
     await Promise.all([
@@ -1238,37 +1271,6 @@
   }
   els.status?.addEventListener('change', () => { state.page = 0; fetchList(); });
   els.tracked?.addEventListener('change', () => { state.page = 0; fetchList(); });
-  els.btnApplyFilters?.addEventListener('click', () => { state.page = 0; fetchList(); });
-  els.btnClearFilters?.addEventListener('click', () => {
-    els.q.value = '';
-    // Clear autocomplete inputs
-    if (els.categoryAutocomplete) {
-      els.categoryAutocomplete.value = '';
-      els.categoryAutocomplete.dataset.selectedValue = '';
-      els.categoryAutocomplete.dataset.displayName = '';
-      updateClearButton(els.categoryAutocomplete.parentElement, '');
-    }
-    if (els.brandAutocomplete) {
-      els.brandAutocomplete.value = '';
-      els.brandAutocomplete.dataset.selectedValue = '';
-      els.brandAutocomplete.dataset.displayName = '';
-      updateClearButton(els.brandAutocomplete.parentElement, '');
-    }
-    if (els.supplierAutocomplete) {
-      els.supplierAutocomplete.value = '';
-      els.supplierAutocomplete.dataset.selectedValue = '';
-      els.supplierAutocomplete.dataset.displayName = '';
-      updateClearButton(els.supplierAutocomplete.parentElement, '');
-    }
-    // Clear hidden select elements
-    els.categoryId.value = '';
-    els.brandId.value = '';
-    els.supplierId.value = '';
-    els.status.value = '';
-    els.tracked.value = '';
-    state.page = 0;
-    fetchList();
-  });
   els.btnToggleFilter?.addEventListener('click', () => els.filterPanel.classList.toggle('collapsed'));
   els.btnCollapseFilter?.addEventListener('click', () => els.filterPanel.classList.toggle('collapsed'));
   els.pagi?.addEventListener('click', (e) => { const a = e.target.closest('a.page-link'); if (!a) return; const p = parseInt(a.dataset.page, 10); if (isNaN(p) || p < 0) return; state.page = p; state.selected.clear(); state.expanded.clear(); fetchList(); });

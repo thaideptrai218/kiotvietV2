@@ -109,14 +109,6 @@
                         </select>
                     </div>
 
-                    <div class="kv-filter__group">
-                        <div class="d-grid gap-2">
-                            <button type="button" class="kv-btn kv-btn--primary" id="btnApplyFilters">
-                                <i class="fas fa-filter me-1"></i>Apply
-                            </button>
-                            <button type="button" class="kv-btn kv-btn--ghost" id="btnClearFilters">Clear</button>
-                        </div>
-                    </div>
                 </form>
             </aside>
 
@@ -333,6 +325,11 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--primary d-none" id="btnSave" disabled>
+                        <span class="default-text"><i class="fas fa-save"></i> Update</span>
+                        <span class="loading-text d-none"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Updating...</span>
+                    </button>
                     <button class="kv-btn kv-btn--outline" id="btnSaveNew">
                         <span class="default-text"><i class="fas fa-plus"></i> Create</span>
                         <span class="loading-text d-none"><span

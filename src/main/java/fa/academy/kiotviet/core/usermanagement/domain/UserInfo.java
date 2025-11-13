@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+import java.util.Arrays;
 import lombok.Data;
 
 @Entity
@@ -44,10 +46,21 @@ public class UserInfo {
     @Column(name = "phone")
     private String phone;
 
+    @Column(name = "birthday")
+    private LocalDate birthday;
+
+    @Size(max = 1000, message = "Address must not exceed 1000 characters")
+    @Column(name = "address", columnDefinition = "TEXT")
+    private String address;
+
+    @Size(max = 2000, message = "Note must not exceed 2000 characters")
+    @Column(name = "note", columnDefinition = "TEXT")
+    private String note;
+
     @NotNull(message = "Role is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
-    private UserRole role = UserRole.manager;
+    private UserRole role = UserRole.user;
 
     @NotNull(message = "Active status is required")
     @Column(name = "is_active", nullable = false)
@@ -71,6 +84,32 @@ public class UserInfo {
     }
 
     public enum UserRole {
-        admin, manager, staff
+        admin("Admin", "Full system access"),
+        manager("Manager", "Shop management access"),
+        user("User", "Standard operational access");
+
+        private final String displayName;
+        private final String description;
+
+        UserRole(String displayName, String description) {
+            this.displayName = displayName;
+            this.description = description;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public static UserRole fromValue(String value) {
+            return Arrays.stream(values())
+                .filter(role -> role.name().equalsIgnoreCase(value)
+                    || role.displayName.equalsIgnoreCase(value))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + value));
+        }
     }
 }

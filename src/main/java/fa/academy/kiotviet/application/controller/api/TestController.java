@@ -72,7 +72,7 @@ public class TestController {
         roleInfo.put("role", userPrincipal.getRole());
         roleInfo.put("isAdmin", "ADMIN".equals(userPrincipal.getRole()));
         roleInfo.put("isManager", "MANAGER".equals(userPrincipal.getRole()));
-        roleInfo.put("isStaff", "STAFF".equals(userPrincipal.getRole()));
+        roleInfo.put("isUser", "USER".equals(userPrincipal.getRole()));
 
         return ResponseFactory.success(roleInfo, "Role information retrieved successfully");
     }
