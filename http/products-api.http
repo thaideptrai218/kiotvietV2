@@ -3,7 +3,7 @@
 
 ### Variables
 @baseUrl = http://localhost:8080
-@token = eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiYWRtaW4iLCJjb21wYW55SWQiOjEsInVzZXJuYW1lIjoiVGhhaWhidm4yMTgiLCJ1c2VySWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTQwMzUzLCJleHAiOjE3NjI5NDEyNTN9.FMG6GFi7Vm0ZeI349YEk70tazivePJE_3_pW34spz-8Lnui9_63N3RMutpfaLiTNpcDfxyrNPvzkJKGfg2sEpA
+@token = eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiYWRtaW4iLCJjb21wYW55SWQiOjEsInVzZXJuYW1lIjoiVGhhaWhidm4yMTgiLCJ1c2VySWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYzMDAwNzQ3LCJleHAiOjE3NjMwMDE2NDd9.ZTlqRnlaqO-Q6QtrLum-bd4eVaj40qTfUhZlpF6gDNP78p6-M--91dJJDitlyr5evvhxWiQDNaLxNzyV5zHmNw
 @companyId = 1
 
 ### Authentication Header
@@ -17,10 +17,10 @@ POST {{baseUrl}}/api/products
 Content-Type: application/json
 
 {
-  "sku": "TEST-{{$uuid}}",
-  "name": "Test Product 8742",
-  "barcode": "0123456789012",
-  "description": "This is a test product for API testing",
+  "sku": "TES33333132312312312312333",
+  "name": "Test3 3 13233",
+  "barcode": "3333333",
+  "description": "333333333",
   "sellingPrice": "49.95",
   "costPrice": "25.50",
   "onHand": 10,

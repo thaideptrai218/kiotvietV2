@@ -88,7 +88,7 @@
     importErr: document.getElementById('importErr')
   };
 
-  const state = { page: 0, size: 15, sortBy: 'name', sortDir: 'asc', loading: false, selected: new Set(), expanded: new Set(), columns: { sku: true, name: true, category: true, brand: true, supplier: true, sellingPrice: true, stock: true, status: true }, lookupData: { categories: [], brands: [], suppliers: [] }, autocomplete: { category: { selectedIndex: -1, suggestions: [], isOpen: false }, brand: { selectedIndex: -1, suggestions: [], isOpen: false }, supplier: { selectedIndex: -1, suggestions: [], isOpen: false } } };
+  const state = { page: 0, size: 15, sortBy: 'name', sortDir: 'asc', loading: false, selected: new Set(), expanded: new Set(), columns: { sku: true, name: true, category: true, brand: true, supplier: true, sellingPrice: true, stock: true, status: true }, lookupData: { categories: [], brands: [], suppliers: [] }, selectedCategories: [], autocomplete: { category: { selectedIndex: -1, suggestions: [], isOpen: false }, brand: { selectedIndex: -1, suggestions: [], isOpen: false }, supplier: { selectedIndex: -1, suggestions: [], isOpen: false } } };
   let currentAbort = null;
 
   const storageKey = () => {
@@ -167,9 +167,15 @@
     if (state.sortBy) { p.set('sortBy', state.sortBy); p.set('sortDir', state.sortDir); }
     p.set('page', String(state.page + 1));
     p.set('size', String(state.size));
-    if (els.categoryId.value.trim()) p.set('categoryId', els.categoryId.value.trim());
-    if (els.brandId.value.trim()) p.set('brandId', els.brandId.value.trim());
-    if (els.supplierId.value.trim()) p.set('supplierId', els.supplierId.value.trim());
+
+    // Use dataset.selectedValue for autocomplete filters
+    const categoryId = els.categoryAutocomplete?.dataset.selectedValue || els.categoryId.value;
+    const brandId = els.brandAutocomplete?.dataset.selectedValue || els.brandId.value;
+    const supplierId = els.supplierAutocomplete?.dataset.selectedValue || els.supplierId.value;
+
+    if (categoryId) p.set('categoryId', categoryId.trim());
+    if (brandId) p.set('brandId', brandId.trim());
+    if (supplierId) p.set('supplierId', supplierId.trim());
     if (els.status.value !== '') p.set('status', els.status.value);
     if (els.tracked.value !== '') p.set('tracked', els.tracked.value);
     const url = `${location.pathname}?${p.toString()}`;
@@ -188,9 +194,26 @@
     state.loading = true;
     const params = new URLSearchParams();
     if (els.q.value.trim()) params.set('search', els.q.value.trim());
-    if (els.categoryId.value) params.set('categoryId', els.categoryId.value);
-    if (els.brandId.value) params.set('brandId', els.brandId.value);
-    if (els.supplierId.value) params.set('supplierId', els.supplierId.value);
+
+    // Use dataset.selectedValue for autocomplete filters to get the ID instead of display name
+    if (els.categoryAutocomplete && els.categoryAutocomplete.dataset.selectedValue) {
+      params.set('categoryId', els.categoryAutocomplete.dataset.selectedValue);
+    } else if (els.categoryId.value) {
+      params.set('categoryId', els.categoryId.value);
+    }
+
+    if (els.brandAutocomplete && els.brandAutocomplete.dataset.selectedValue) {
+      params.set('brandId', els.brandAutocomplete.dataset.selectedValue);
+    } else if (els.brandId.value) {
+      params.set('brandId', els.brandId.value);
+    }
+
+    if (els.supplierAutocomplete && els.supplierAutocomplete.dataset.selectedValue) {
+      params.set('supplierId', els.supplierAutocomplete.dataset.selectedValue);
+    } else if (els.supplierId.value) {
+      params.set('supplierId', els.supplierId.value);
+    }
+
     if (els.status.value !== '') params.set('status', els.status.value);
     if (els.tracked.value !== '') params.set('tracked', els.tracked.value);
     params.set('page', state.page);
@@ -282,32 +305,325 @@
 
   function expandedRow(p) {
     const toggleLabel = p.status === 'ACTIVE' ? 'Deactivate' : 'Activate';
+    const categoryPath = p.category ? buildCategoryPath(p.category) : 'Uncategorized';
+    const createdDate = p.createdAt ? new Date(p.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+    const updatedDate = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('vi-VN') : 'N/A';
+    const stockStatus = getStockStatus(p.onHand, p.minLevel);
+
     return `
       <tr class="expanded-row" data-id="${p.id}-exp">
-        <td></td>
-        <td colspan="8">
-          <div class="expanded-content">
-            <div class="row g-3 align-items-start">
-              <div class="col-md-8 text-muted small">
-                <div><span class="fw-semibold">SKU:</span> ${fmt(p.sku)}</div>
-                <div><span class="fw-semibold">Barcode:</span> ${fmt(p.barcode)}</div>
-                <div><span class="fw-semibold">Description:</span> ${fmt(p.description)}</div>
-                <div><span class="fw-semibold">Cost Price:</span> ${p.costPrice ? `₫${Number(p.costPrice).toLocaleString('vi-VN')}` : ''}</div>
-                <div><span class="fw-semibold">Min Level:</span> ${fmt(p.minLevel)}</div>
-                <div><span class="fw-semibold">Max Level:</span> ${fmt(p.maxLevel)}</div>
-                <div><span class="fw-semibold">Tracked:</span> ${p.isTracked ? 'Yes' : 'No'}</div>
-              </div>
-              <div class="col-md-4 d-flex justify-content-between">
-                <button class="btn btn-outline-danger btn-sm" data-act="delete"><i class="far fa-trash-can me-1"></i>Delete</button>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-primary btn-sm" data-act="edit"><i class="far fa-pen-to-square me-1"></i>Update</button>
-                  <button class="btn btn-outline-secondary btn-sm" data-act="toggleStatus">${toggleLabel}</button>
+        <td colspan="9">
+          <div class="expanded-wrapper">
+            <!-- Tab Navigation -->
+            <ul class="nav nav-tabs" id="productTabs-${p.id}" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="details-tab-${p.id}" data-bs-toggle="tab"
+                        data-bs-target="#details-${p.id}" type="button" role="tab"
+                        aria-controls="details-${p.id}" aria-selected="true">
+                  <i class="fas fa-info-circle me-2"></i>Details
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="description-tab-${p.id}" data-bs-toggle="tab"
+                        data-bs-target="#description-${p.id}" type="button" role="tab"
+                        aria-controls="description-${p.id}" aria-selected="false">
+                  <i class="fas fa-align-left me-2"></i>Description
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inventory-tab-${p.id}" data-bs-toggle="tab"
+                        data-bs-target="#inventory-${p.id}" type="button" role="tab"
+                        aria-controls="inventory-${p.id}" aria-selected="false">
+                  <i class="fas fa-boxes me-2"></i>Inventory
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pricing-tab-${p.id}" data-bs-toggle="tab"
+                        data-bs-target="#pricing-${p.id}" type="button" role="tab"
+                        aria-controls="pricing-${p.id}" aria-selected="false">
+                  <i class="fas fa-tag me-2"></i>Pricing
+                </button>
+              </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="productTabsContent-${p.id}">
+              <!-- Details Tab -->
+              <div class="tab-pane fade show active" id="details-${p.id}" role="tabpanel"
+                   aria-labelledby="details-tab-${p.id}">
+                <div class="tab-content-wrapper">
+                  <div class="row g-4">
+                    <!-- Product Image -->
+                    <div class="col-md-3">
+                      <div class="product-image-container">
+                        <div class="product-image-placeholder d-flex align-items-center justify-content-center bg-light border rounded"
+                             style="width: 120px; height: 120px;">
+                          <i class="fas fa-image text-muted fa-2x"></i>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Product Information -->
+                    <div class="col-md-9">
+                      <div class="product-header mb-3">
+                        <h4 class="product-title mb-1">${fmt(p.name)}</h4>
+                        <p class="category-path text-muted mb-2">
+                          <i class="fas fa-folder-tree me-1"></i>${categoryPath}
+                        </p>
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="badge badge-status ${p.status === 'ACTIVE' ? 'active' : 'inactive'}">${fmt(p.status)}</span>
+                          <span class="badge bg-light text-dark">
+                            <i class="fas fa-cube me-1"></i>${p.isTracked ? 'Tracked' : 'Not Tracked'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- 4-Column Details Grid -->
+                      <div class="details-grid">
+                        <div class="row g-3">
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">SKU / Code</div>
+                              <div class="field-value">${fmt(p.sku)}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Brand</div>
+                              <div class="field-value">${fmt(p.brand?.name)}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Unit</div>
+                              <div class="field-value">${fmt(p.unit)}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Barcode</div>
+                              <div class="field-value">${fmt(p.barcode)}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Supplier</div>
+                              <div class="field-value">${fmt(p.supplier?.name)}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Created Date</div>
+                              <div class="field-value">${createdDate}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Updated Date</div>
+                              <div class="field-value">${updatedDate}</div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-lg-3">
+                            <div class="field-item">
+                              <div class="field-label">Stock Status</div>
+                              <div class="field-value">
+                                <span class="stock-status ${stockStatus.class}">
+                                  <span class="stock-indicator ${stockStatus.indicator}"></span>
+                                  ${stockStatus.text}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <!-- Description Tab -->
+              <div class="tab-pane fade" id="description-${p.id}" role="tabpanel"
+                   aria-labelledby="description-tab-${p.id}">
+                <div class="tab-content-wrapper">
+                  <div class="description-content">
+                    <h5 class="mb-3">Product Description</h5>
+                    ${p.description ?
+                      `<div class="description-text">${formatDescription(p.description)}</div>` :
+                      `<div class="text-muted italic">No description available</div>`
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inventory Tab -->
+              <div class="tab-pane fade" id="inventory-${p.id}" role="tabpanel"
+                   aria-labelledby="inventory-tab-${p.id}">
+                <div class="tab-content-wrapper">
+                  <div class="row g-4">
+                    <div class="col-md-6">
+                      <h5 class="mb-3">Stock Information</h5>
+                      <div class="inventory-details">
+                        <div class="field-item mb-3">
+                          <div class="field-label">Current Stock</div>
+                          <div class="field-value fs-4 fw-bold ${stockStatus.class}">${fmt(p.onHand)} units</div>
+                        </div>
+                        <div class="field-item mb-3">
+                          <div class="field-label">Minimum Level</div>
+                          <div class="field-value">${fmt(p.minLevel)} units</div>
+                        </div>
+                        <div class="field-item mb-3">
+                          <div class="field-label">Maximum Level</div>
+                          <div class="field-value">${fmt(p.maxLevel)} units</div>
+                        </div>
+                        <div class="field-item mb-3">
+                          <div class="field-label">Reorder Point</div>
+                          <div class="field-value">
+                            ${p.minLevel ? fmt(p.minLevel) + ' units' : 'Not set'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <h5 class="mb-3">Inventory Settings</h5>
+                      <div class="inventory-settings">
+                        <div class="form-check form-switch mb-3">
+                          <input class="form-check-input" type="checkbox" ${p.isTracked ? 'checked' : ''} disabled>
+                          <label class="form-check-label">Track Inventory</label>
+                        </div>
+                        <div class="alert alert-info">
+                          <i class="fas fa-info-circle me-2"></i>
+                          <strong>Status:</strong> ${stockStatus.text}
+                          ${stockStatus.action ? `<br><strong>Recommended Action:</strong> ${stockStatus.action}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pricing Tab -->
+              <div class="tab-pane fade" id="pricing-${p.id}" role="tabpanel"
+                   aria-labelledby="pricing-tab-${p.id}">
+                <div class="tab-content-wrapper">
+                  <div class="row g-4">
+                    <div class="col-md-6">
+                      <h5 class="mb-3">Current Prices</h5>
+                      <div class="pricing-details">
+                        <div class="field-item mb-3">
+                          <div class="field-label">Selling Price</div>
+                          <div class="field-value fs-4 fw-bold text-success">
+                            ${p.sellingPrice ? `₫${Number(p.sellingPrice).toLocaleString('vi-VN')}` : 'Not set'}
+                          </div>
+                        </div>
+                        <div class="field-item mb-3">
+                          <div class="field-label">Cost Price</div>
+                          <div class="field-value fs-5">
+                            ${p.costPrice ? `₫${Number(p.costPrice).toLocaleString('vi-VN')}` : 'Not set'}
+                          </div>
+                        </div>
+                        <div class="field-item mb-3">
+                          <div class="field-label">Profit Margin</div>
+                          <div class="field-value">
+                            ${calculateProfitMargin(p.sellingPrice, p.costPrice)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <h5 class="mb-3">Pricing Analysis</h5>
+                      <div class="pricing-analysis">
+                        ${p.sellingPrice && p.costPrice ?
+                          `<div class="alert alert-success">
+                            <i class="fas fa-chart-line me-2"></i>
+                            <strong>Margin:</strong> ${calculateProfitMargin(p.sellingPrice, p.costPrice)}
+                          </div>` :
+                          `<div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Set both cost and selling prices to see margin analysis
+                          </div>`
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+              <div class="d-flex justify-content-end gap-2">
+                <button class="kv-btn kv-btn--ghost kv-btn--sm" data-act="delete">
+                  <i class="far fa-trash-can me-1"></i>Delete
+                </button>
+                <button class="kv-btn kv-btn--primary kv-btn--sm" data-act="edit">
+                  <i class="far fa-pen-to-square me-1"></i>Update
+                </button>
+                <button class="kv-btn kv-btn--secondary kv-btn--sm" data-act="toggleStatus">
+                  <i class="fas fa-power-off me-1"></i>${toggleLabel}
+                </button>
               </div>
             </div>
           </div>
         </td>
       </tr>`;
+  }
+
+  // Helper functions for enhanced expanded row
+  function buildCategoryPath(category) {
+    if (!category) return 'Uncategorized';
+    if (category.fullPath) return category.fullPath;
+    if (category.parentPath) return category.parentPath + ' / ' + category.name;
+    return category.name || 'Uncategorized';
+  }
+
+  function getStockStatus(onHand, minLevel) {
+    const stock = Number(onHand) || 0;
+    const min = Number(minLevel) || 0;
+
+    if (stock === 0) {
+      return {
+        text: 'Out of Stock',
+        class: 'text-danger',
+        indicator: 'stock-out',
+        action: 'Reorder immediately'
+      };
+    } else if (stock <= min) {
+      return {
+        text: 'Low Stock',
+        class: 'text-warning',
+        indicator: 'stock-low',
+        action: 'Reorder soon'
+      };
+    } else {
+      return {
+        text: 'In Stock',
+        class: 'text-success',
+        indicator: 'stock-good',
+        action: null
+      };
+    }
+  }
+
+  function formatDescription(description) {
+    if (!description) return '';
+    // Simple markdown-like formatting
+    return description
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      .replace(/^(.+)$/gm, '<p>$1</p>')
+      .replace(/<p><\/p>/g, '');
+  }
+
+  function calculateProfitMargin(sellingPrice, costPrice) {
+    const selling = Number(sellingPrice) || 0;
+    const cost = Number(costPrice) || 0;
+
+    if (selling === 0 || cost === 0) return 'Not available';
+
+    const margin = ((selling - cost) / selling * 100).toFixed(1);
+    const profit = selling - cost;
+
+    return `${margin}% (₫${profit.toLocaleString('vi-VN')})`;
   }
 
   function renderPagination(page, totalPages) {
@@ -418,11 +734,13 @@
     const chips = [];
     if (els.q.value.trim()) chips.push(chip('Search', els.q.value.trim(), () => { els.q.value = ''; fetchList(); }));
 
-    // Use autocomplete input values for chips
+    // Use stored display names for chips, fall back to input value if not available
     if (els.categoryAutocomplete && els.categoryAutocomplete.value.trim()) {
-      chips.push(chip('Category', els.categoryAutocomplete.value.trim(), () => {
+      const displayName = els.categoryAutocomplete.dataset.displayName || els.categoryAutocomplete.value.trim();
+      chips.push(chip('Category', displayName, () => {
         els.categoryAutocomplete.value = '';
         els.categoryAutocomplete.dataset.selectedValue = '';
+        els.categoryAutocomplete.dataset.displayName = '';
         els.categoryId.value = '';
         updateClearButton(els.categoryAutocomplete.parentElement, '');
         fetchList();
@@ -430,9 +748,11 @@
     }
 
     if (els.brandAutocomplete && els.brandAutocomplete.value.trim()) {
-      chips.push(chip('Brand', els.brandAutocomplete.value.trim(), () => {
+      const displayName = els.brandAutocomplete.dataset.displayName || els.brandAutocomplete.value.trim();
+      chips.push(chip('Brand', displayName, () => {
         els.brandAutocomplete.value = '';
         els.brandAutocomplete.dataset.selectedValue = '';
+        els.brandAutocomplete.dataset.displayName = '';
         els.brandId.value = '';
         updateClearButton(els.brandAutocomplete.parentElement, '');
         fetchList();
@@ -440,9 +760,11 @@
     }
 
     if (els.supplierAutocomplete && els.supplierAutocomplete.value.trim()) {
-      chips.push(chip('Supplier', els.supplierAutocomplete.value.trim(), () => {
+      const displayName = els.supplierAutocomplete.dataset.displayName || els.supplierAutocomplete.value.trim();
+      chips.push(chip('Supplier', displayName, () => {
         els.supplierAutocomplete.value = '';
         els.supplierAutocomplete.dataset.selectedValue = '';
+        els.supplierAutocomplete.dataset.displayName = '';
         els.supplierId.value = '';
         updateClearButton(els.supplierAutocomplete.parentElement, '');
         fetchList();
@@ -654,9 +976,8 @@
     // Focus event handler
     input.addEventListener('focus', () => {
       const value = input.value.trim();
-      if (value.length >= 1) {
-        showSuggestions(type, value);
-      }
+      // Show all suggestions on focus, even if input is empty
+      showSuggestions(type, value.length >= 1 ? value : '');
     });
 
     // Keyboard navigation
@@ -793,15 +1114,10 @@
   function selectAutocompleteValue(input, type, value, text) {
     input.value = text;
     input.dataset.selectedValue = value;
+    input.dataset.displayName = text; // Store display name for chip rendering
 
-    // Update the original select element for compatibility with existing filter logic
-    if (type === 'category') {
-      els.categoryId.value = value;
-    } else if (type === 'brand') {
-      els.brandId.value = value;
-    } else if (type === 'supplier') {
-      els.supplierId.value = value;
-    }
+    // Don't overwrite the autocomplete input with the ID - keep the display name
+    // The fetchList will use the dataset.selectedValue for filtering
 
     updateClearButton(input.parentElement, text);
     hideSuggestions(type);
@@ -814,6 +1130,7 @@
   function clearAutocomplete(input, type) {
     input.value = '';
     input.dataset.selectedValue = '';
+    input.dataset.displayName = ''; // Clear display name
 
     // Clear the original select element
     if (type === 'category') {
@@ -862,6 +1179,36 @@
       fetchBrands(),
       fetchSuppliers()
     ]);
+
+    // After loading lookup data, set display names for any existing URL filter values
+    setDisplayNamesFromUrl();
+  }
+
+  function setDisplayNamesFromUrl() {
+    // Set display names for existing filter values based on loaded lookup data
+    if (els.categoryId.value && els.categoryAutocomplete) {
+      const category = state.lookupData.categories.find(cat => cat.id == els.categoryId.value);
+      if (category) {
+        els.categoryAutocomplete.value = category.name;
+        els.categoryAutocomplete.dataset.displayName = category.name;
+      }
+    }
+
+    if (els.brandId.value && els.brandAutocomplete) {
+      const brand = state.lookupData.brands.find(b => b.id == els.brandId.value);
+      if (brand) {
+        els.brandAutocomplete.value = brand.name;
+        els.brandAutocomplete.dataset.displayName = brand.name;
+      }
+    }
+
+    if (els.supplierId.value && els.supplierAutocomplete) {
+      const supplier = state.lookupData.suppliers.find(s => s.id == els.supplierId.value);
+      if (supplier) {
+        els.supplierAutocomplete.value = supplier.name;
+        els.supplierAutocomplete.dataset.displayName = supplier.name;
+      }
+    }
   }
 
   // Ensure modal exists before binding
@@ -898,16 +1245,19 @@
     if (els.categoryAutocomplete) {
       els.categoryAutocomplete.value = '';
       els.categoryAutocomplete.dataset.selectedValue = '';
+      els.categoryAutocomplete.dataset.displayName = '';
       updateClearButton(els.categoryAutocomplete.parentElement, '');
     }
     if (els.brandAutocomplete) {
       els.brandAutocomplete.value = '';
       els.brandAutocomplete.dataset.selectedValue = '';
+      els.brandAutocomplete.dataset.displayName = '';
       updateClearButton(els.brandAutocomplete.parentElement, '');
     }
     if (els.supplierAutocomplete) {
       els.supplierAutocomplete.value = '';
       els.supplierAutocomplete.dataset.selectedValue = '';
+      els.supplierAutocomplete.dataset.displayName = '';
       updateClearButton(els.supplierAutocomplete.parentElement, '');
     }
     // Clear hidden select elements
@@ -933,6 +1283,16 @@
       if (act === 'delete') { doDelete(id); return; }
       if (act === 'toggleStatus') { const badge = document.querySelector(`tr[data-id="${id}"] [data-col="status"] .badge-status`); const isActive = badge?.classList.contains('active'); fetch(`${api.base}/${id}`, { method: 'PUT', headers: api.headers(), body: JSON.stringify({ status: isActive ? 'INACTIVE' : 'ACTIVE' }) }).then(authGuard).then(r => r.ok ? r.json() : r.json().then(b => Promise.reject(new Error(b?.message || 'Toggle failed')))).then(() => { showAlert('Status updated', 'success'); fetchList(); }).catch(e2 => showAlert(e2.message, 'danger')); return; }
     }
+
+    // Prevent row clicks on tabs and expanded content from collapsing
+    const tabClick = e.target.closest('[data-bs-toggle="tab"], .nav-link, .nav-tabs');
+    const expandedContentClick = e.target.closest('.expanded-wrapper, .tab-content, .tab-pane, .action-bar button');
+
+    if (tabClick || expandedContentClick) {
+      e.stopPropagation();
+      return;
+    }
+
     // toggle expand/collapse on row click
     if (state.expanded.has(id)) { state.expanded.clear(); }
     else { state.expanded.clear(); state.expanded.add(id); }
