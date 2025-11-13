@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - KiotViet</title>
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Dashboard Shared CSS -->
+  <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-themes.css}">
+  <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-core.css}">
+  <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-components.css}">
+
+  <!-- Setting Module CSS -->
+  <link rel="stylesheet" th:href="@{/modules/setting/css/setting.css}">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="container-fluid">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="logo-section">
+          <i class="fas fa-store"></i>
+          <h1 class="logo-text">KiotViet</h1>
+        </div>
+        <div class="header-actions">
+          <a th:href="@{/dashboard}" class="header-btn header-btn-text">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </a>
+          <a th:href="@{/setting}" class="header-btn header-btn-text active">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+          <button class="header-btn header-btn-user">
+            <div class="user-avatar"><i class="fas fa-user"></i></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navbar -->
+  <nav class="dashboard-navbar">
+    <div class="container-fluid">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a href="/dashboard" class="nav-link">
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard
+          </a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link">
+            <i class="fas fa-box"></i>
+            Product
+            <i class="fas fa-chevron-down ms-2"></i>
+          </a>
+          <div class="dropdown-menu">
+            <a href="#" class="dropdown-item"><i class="fas fa-list me-2"></i>All Products</a>
+            <a href="#" class="dropdown-item"><i class="fas fa-truck me-2"></i>Suppliers</a>
+            <a href="#" class="dropdown-item"><i class="fas fa-tags me-2"></i>Categories</a>
+          </div>
+        </li>
+
+        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-shopping-cart"></i> Order</a></li>
+        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-users"></i> Customer</a></li>
+        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-user-tie"></i> Employee</a></li>
+        <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-cog"></i> Setting</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  <main class="dashboard-container">
+    <div class="settings-wrapper">
+
+      <!-- Settings Sidebar -->
+      <aside class="settings-sidebar" id="settingsSidebar">
+        <ul>
+          <li class="active"><i class="fas fa-user-gear"></i> User management</li>
+          <li><i class="fas fa-store"></i> Store information</li>
+          <li><i class="fas fa-coins"></i> Currency management</li>
+        </ul>
+      </aside>
+
+      <!-- Filter Sidebar (replace left sidebar when Filter is clicked) -->
+      <aside class="filter-sidebar" id="filterSidebar" style="display:none;">
+
+  <h3>Filter</h3>
+
+  <div class="filter-group">
+    <label>Search</label>
+    <div class="search-input">
+        <i class="fa fa-search"></i>
+        <input type="text" placeholder="Display name, User name.." />
+    </div>
+
+  </div>
+
+  <div class="filter-group">
+    <label>Role</label>
+    <select>
+      <option value="">Select role</option>
+      <option>Admin</option>
+      <option>Manager</option>
+      <option>User</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label>Status</label>
+      <div class="status-options">
+          <button class="status-btn active" data-status="all">All</button>
+          <button class="status-btn" data-status="active">Active</button>
+          <button class="status-btn" data-status="inactive">Inactive</button>
+      </div>
+
+  </div>
+
+  <div class="filter-footer">
+    <button class="btn-reset" id="btnReset">Reset</button>
+    <button class="btn-close" id="btnCloseFilter">Close</button>
+  </div>
+
+</aside>
+
+
+
+      <!-- Main Content -->
+      <section class="settings-content">
+
+        <!-- Header Title -->
+        <div class="settings-header">
+          <h2 class="settings-title">User account</h2>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="settings-toolbar">
+          <div class="toolbar-left">
+            <button class="btn-filter"><i class="fa-solid fa-filter"></i> Filter</button>
+            <span class="selected-info" id="selectedInfo" style="display:none;">
+              Selected 0 <i class="fa-solid fa-xmark" id="clearSelection"></i>
+            </span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn-create" id="createBtn"><i class="fa-solid fa-plus"></i> Create account</button>
+            <div id="bulkActions" style="display:none;">
+              <button class="btn-outline" data-bulk="inactive"><i class="fa-solid fa-lock"></i> Inactive</button>
+              <button class="btn-outline" id="btnExport"><i class="fa-solid fa-file-export"></i> Export</button>
+              <button class="btn-outline danger" data-bulk="delete"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Table -->
+        <table class="settings-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox"></th>
+              <th>Display name</th>
+              <th>Username</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody"></tbody>
+
+          <!-- User detail template (hidden, cloned when click row) -->
+          <tr class="user-detail-row" id="userDetailTemplate" style="display:none;">
+            <td colspan="6">
+              <div class="detail-box">
+                <div class="detail-tabs">
+                  <button class="active">Details</button>
+                </div>
+
+                <div class="detail-content">
+                  <div class="detail-grid">
+                    <div><label>Display name</label> <span data-field="displayName"></span></div>
+                    <div><label>Username</label> <span data-field="username"></span></div>
+                    <div><label>Email</label> <span data-field="email">None</span></div>
+                    <div><label>Phone</label> <span data-field="phone"></span></div>
+                    <div><label>Status</label> <span data-field="status"></span></div>
+                    <div><label>Birthday</label> <span data-field="birthday">None</span></div>
+                    <div><label>Address</label> <span data-field="address">None</span></div>
+                  </div>
+
+                  <div class="detail-note" data-field="note">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                    <span>No note</span>
+                  </div>
+
+                  <div class="detail-feedback" data-feedback="password" style="display:none;"></div>
+
+                  <div class="detail-actions">
+                    <button class="btn-outline danger" data-action="delete"><i class="fa-solid fa-trash"></i> Delete</button>
+                    <button class="btn-outline" data-action="copy"><i class="fa-regular fa-copy"></i> Copy</button>
+                    <div class="spacer"></div>
+                    <button class="btn-primary btn-edit-detail" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button class="btn-outline" data-action="password"><i class="fa-solid fa-key"></i> Change password</button>
+                    <button class="btn-outline" data-action="toggle-status"><i class="fa-solid fa-lock"></i> Inactive</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Create / Edit User Modal -->
+  <div class="modal-backdrop" id="createUserModal" style="display:none;">
+    <div class="modal-overlay" onclick="closeCreateModal()"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Create user account</h3>
+        <button class="btn-close" onclick="closeCreateModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form class="modal-body" id="userForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Display name</label>
+            <input type="text" name="displayName" placeholder="Required" required>
+          </div>
+
+          <div class="form-group">
+            <label>Phone</label>
+            <div class="phone-input">
+              <button type="button" id="countryBtn" class="flag-btn">
+                <img src="https://flagcdn.com/w20/vn.png" alt=""> <span class="dial">+84</span> <i class="fa-solid fa-caret-down"></i>
+              </button>
+              <input type="tel" name="phone" placeholder="0912 345 678">
+              <div id="countryDropdown" class="country-dropdown">
+                <div data-flag="🇻🇳" data-code="+84" class="active">
+                  <img src="https://flagcdn.com/w20/vn.png" alt=""> Vietnam <span class="dial">+84</span> <i class="fa-solid fa-check"></i>
+                </div>
+                <div data-flag="🇺🇸" data-code="+1"><img src="https://flagcdn.com/w20/us.png" alt=""> United States <span class="dial">+1</span></div>
+                <div data-flag="🇬🇧" data-code="+44"><img src="https://flagcdn.com/w20/gb.png" alt=""> United Kingdom <span class="dial">+44</span></div>
+                <div data-flag="🇸🇬" data-code="+65"><img src="https://flagcdn.com/w20/sg.png" alt=""> Singapore <span class="dial">+65</span></div>
+                <div data-flag="🇯🇵" data-code="+81"><img src="https://flagcdn.com/w20/jp.png" alt=""> Japan <span class="dial">+81</span></div>
+                <div data-flag="🇰🇷" data-code="+82"><img src="https://flagcdn.com/w20/kr.png" alt=""> South Korea <span class="dial">+82</span></div>
+                <div data-flag="🇫🇷" data-code="+33"><img src="https://flagcdn.com/w20/fr.png" alt=""> France <span class="dial">+33</span></div>
+                <div data-flag="🇩🇪" data-code="+49"><img src="https://flagcdn.com/w20/de.png" alt=""> Germany <span class="dial">+49</span></div>
+                <div data-flag="🇹🇭" data-code="+66"><img src="https://flagcdn.com/w20/th.png" alt=""> Thailand <span class="dial">+66</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="email@gmail.com">
+          </div>
+
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Required" required>
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <div class="password-input">
+              <input type="password" name="password" placeholder="Required" required>
+              <i class="fa-regular fa-eye toggle-pass"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Re-type password</label>
+            <div class="password-input">
+              <input type="password" name="rePassword" placeholder="Required" required>
+              <i class="fa-regular fa-eye toggle-pass"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h5>Permission</h5>
+          <p class="muted">Grant permissions to this user</p>
+          <select class="select-role" name="role">
+            <option value="">Select role</option>
+            <option>Admin</option>
+            <option>Manager</option>
+            <option>User</option>
+          </select>
+
+          <div class="checkbox-group">
+            <label><input type="checkbox" checked> View summary information of products, transactions, partners</label>
+            <label><input type="checkbox" checked> View and edit transactions, and view end-of-day reports</label>
+          </div>
+        </div>
+
+        <div class="modal-section collapsible" id="otherSection">
+          <div class="collapsible-header">
+            <h5>Other</h5>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="collapsible-body">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Birthday</label>
+                <input type="date" name="birthday" placeholder="--/--/----">
+              </div>
+              <div class="form-group">
+                <label>Address</label>
+                <input type="text" name="address" placeholder="Enter address">
+              </div>
+              <div class="form-group">
+                <label>Province and District</label>
+                <div class="search-input">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" placeholder="Select Province - District">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Ward</label>
+                <div class="search-input">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" placeholder="Select Ward">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section collapsible" id="noteSection">
+          <div class="collapsible-header">
+            <h5>Note</h5>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="collapsible-body">
+            <textarea name="note" rows="3" placeholder="Write a note..."></textarea>
+          </div>
+        </div>
+
+        <input type="hidden" name="status" value="Active">
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <!-- JS -->
+  <script th:src="@{/modules/setting/js/setting.js}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+</body>
+</html>

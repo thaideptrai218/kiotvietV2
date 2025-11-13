@@ -3,7 +3,7 @@
 
 ### Variables
 @baseUrl = http://localhost:8080
-@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6IlRoYWloYnZuMjE4IiwiY29tcGFueUlkIjoxLCJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYyOTI5NDM5LCJleHAiOjE3NjI5MzAzMzl9.8KNIaF58shjyAhQbzM7kCzZUHaZg77NXk38ImFYyTfMvo8xVAHbrLoU-dhzU0Ki7A2ZUMxYGnhMkH8cQnGRk_w
+@token = eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiYWRtaW4iLCJjb21wYW55SWQiOjEsInVzZXJuYW1lIjoiVGhhaWhidm4yMTgiLCJ1c2VySWQiOjEsInN1YiI6IlRoYWloYnZuMjE4IiwiaWF0IjoxNzYzMDAwNzQ3LCJleHAiOjE3NjMwMDE2NDd9.ZTlqRnlaqO-Q6QtrLum-bd4eVaj40qTfUhZlpF6gDNP78p6-M--91dJJDitlyr5evvhxWiQDNaLxNzyV5zHmNw
 @companyId = 1
 
 ### Authentication Header
@@ -17,15 +17,15 @@ POST {{baseUrl}}/api/products
 Content-Type: application/json
 
 {
-  "sku": "TEST-001",
-  "name": "Test Product 1",
-  "barcode": "1234567890123",
-  "description": "This is a test product for API testing",
-  "sellingPrice": 29.99,
-  "costPrice": 15.50,
-  "onHand": 100,
-  "minLevel": 10,
-  "maxLevel": 200,
+  "sku": "TES33333132312312312312333",
+  "name": "Test3 3 13233",
+  "barcode": "3333333",
+  "description": "333333333",
+  "sellingPrice": "49.95",
+  "costPrice": "25.50",
+  "onHand": 10,
+  "minLevel": 2,
+  "maxLevel": 50,
   "status": "ACTIVE",
   "isTracked": true,
   "categoryId": 1,
@@ -258,4 +258,14 @@ Content-Type: application/json
 
 {
   "name": "No Auth Update"
+}
+
+###
+### UUID debug - POST to httpbin (echo)
+POST https://httpbin.org/post
+Content-Type: application/json
+
+{
+  "sku": "TEST-{{$uuid}}",
+  "note": "debug uuid replacement"
 }

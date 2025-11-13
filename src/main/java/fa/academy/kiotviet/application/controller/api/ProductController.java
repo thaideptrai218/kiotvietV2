@@ -38,8 +38,11 @@ public class ProductController {
     public SuccessResponse<Page<ProductDto>> listProducts(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) List<Long> categoryIds,
             @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) List<Long> supplierIds,
             @RequestParam(required = false) Long brandId,
+            @RequestParam(required = false) List<Long> brandIds,
             @RequestParam(required = false) Product.ProductStatus status,
             @RequestParam(required = false) Boolean tracked,
             @RequestParam(defaultValue = "0") int page,
@@ -49,7 +52,7 @@ public class ProductController {
 
         Long companyId = currentCompanyId();
         Page<ProductDto> products = productService.list(
-                companyId, search, categoryId, supplierId, brandId, status, tracked,
+                companyId, search, categoryId, categoryIds, supplierId, supplierIds, brandId, brandIds, status, tracked,
                 page, size, sortBy, sortDir);
 
         return ResponseFactory.success(products, "Products retrieved successfully");
@@ -167,7 +170,7 @@ public class ProductController {
 
         Long companyId = currentCompanyId();
         Page<ProductDto> products = productService.list(
-                companyId, null, categoryId, null, null, null, null,
+                companyId, null, categoryId, null, null, null, null, null, null, null,
                 page, size, sortBy, sortDir);
 
         return ResponseFactory.success(products, "Products in category retrieved");
@@ -186,7 +189,7 @@ public class ProductController {
 
         Long companyId = currentCompanyId();
         Page<ProductDto> products = productService.list(
-                companyId, null, null, supplierId, null, null, null,
+                companyId, null, null, null, supplierId, null, null, null, null, null,
                 page, size, sortBy, sortDir);
 
         return ResponseFactory.success(products, "Products from supplier retrieved");
@@ -205,7 +208,7 @@ public class ProductController {
 
         Long companyId = currentCompanyId();
         Page<ProductDto> products = productService.list(
-                companyId, null, null, null, brandId, null, null,
+                companyId, null, null, null, null, null, brandId, null, null, null,
                 page, size, sortBy, sortDir);
 
         return ResponseFactory.success(products, "Products from brand retrieved");
@@ -223,7 +226,7 @@ public class ProductController {
 
         Long companyId = currentCompanyId();
         Page<ProductDto> products = productService.list(
-                companyId, null, null, null, null, Product.ProductStatus.ACTIVE, null,
+                companyId, null, null, null, null, null, null, null, Product.ProductStatus.ACTIVE, null,
                 page, size, sortBy, sortDir);
 
         return ResponseFactory.success(products, "Active products retrieved");
