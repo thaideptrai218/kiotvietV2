@@ -577,27 +577,15 @@ window.toggleUserDropdown = function() {
 };
 
 window.openUserProfile = function() {
-    if (window.dashboardCore) {
-        window.dashboardCore.showToast('User Profile - Feature coming soon!', 'info');
-    } else {
-        alert('User Profile - Feature coming soon!');
-    }
+    window.location.href = '/profile';
 };
 
 window.openTwoFactorSettings = function() {
-    if (window.dashboardCore) {
-        window.dashboardCore.showToast('2FA Settings - Feature coming soon!', 'info');
-    } else {
-        alert('2FA Settings - Feature coming soon!');
-    }
+    window.location.href = '/profile';
 };
 
 window.openUserSettings = function() {
-    if (window.dashboardCore) {
-        window.dashboardCore.showToast('User Settings - Feature coming soon!', 'info');
-    } else {
-        alert('User Settings - Feature coming soon!');
-    }
+    window.location.href = '/setting';
 };
 
 // Initialize UI components when DOM is ready
