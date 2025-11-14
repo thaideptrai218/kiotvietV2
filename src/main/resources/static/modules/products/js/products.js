@@ -943,7 +943,9 @@
 
     if (Array.isArray(state.lookupData.suppliers)) {
       state.lookupData.suppliers.forEach(supplier => {
-        const safeName = (supplier.name || '').replace(/"/g, '&quot;');
+        // Use displayName first, fallback to name, then to id
+        const displayName = supplier.displayName || supplier.name || supplier.id || '';
+        const safeName = displayName.replace(/"/g, '&quot;');
         const safeId = supplier.id || '';
         options += `<option value="${safeId}">${safeName}</option>`;
         modalOptions += `<option value="${safeId}">${safeName}</option>`;
@@ -1238,8 +1240,10 @@
     if (els.supplierId.value && els.supplierAutocomplete) {
       const supplier = state.lookupData.suppliers.find(s => s.id == els.supplierId.value);
       if (supplier) {
-        els.supplierAutocomplete.value = supplier.name;
-        els.supplierAutocomplete.dataset.displayName = supplier.name;
+        // Use displayName first, fallback to name
+        const displayName = supplier.displayName || supplier.name;
+        els.supplierAutocomplete.value = displayName;
+        els.supplierAutocomplete.dataset.displayName = displayName;
       }
     }
   }
