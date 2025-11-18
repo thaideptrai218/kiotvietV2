@@ -12,68 +12,18 @@
   <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-themes.css}">
   <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-core.css}">
   <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-components.css}">
+  <link rel="stylesheet" th:href="@{/css/header-nav.css}">
 
   <!-- Setting Module CSS -->
   <link rel="stylesheet" th:href="@{/modules/setting/css/setting.css}">
+  <!-- Store Info extra CSS -->
+  <link rel="stylesheet" th:href="@{/modules/setting/css/storeInfo.css}">
 </head>
 
 <body>
-  <!-- Header -->
-  <header class="dashboard-header">
-    <div class="container-fluid">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="logo-section">
-          <i class="fas fa-store"></i>
-          <h1 class="logo-text">KiotViet</h1>
-        </div>
-        <div class="header-actions">
-          <a th:href="@{/dashboard}" class="header-btn header-btn-text">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-          </a>
-          <a th:href="@{/setting}" class="header-btn header-btn-text active">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
-          </a>
-          <button class="header-btn header-btn-user">
-            <div class="user-avatar"><i class="fas fa-user"></i></div>
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Navbar -->
-  <nav class="dashboard-navbar">
-    <div class="container-fluid">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a href="/dashboard" class="nav-link">
-            <i class="fas fa-tachometer-alt"></i>
-            Dashboard
-          </a>
-        </li>
-
-        <li class="nav-item dropdown">
-          <a href="#" class="nav-link">
-            <i class="fas fa-box"></i>
-            Product
-            <i class="fas fa-chevron-down ms-2"></i>
-          </a>
-          <div class="dropdown-menu">
-            <a href="#" class="dropdown-item"><i class="fas fa-list me-2"></i>All Products</a>
-            <a href="#" class="dropdown-item"><i class="fas fa-truck me-2"></i>Suppliers</a>
-            <a href="#" class="dropdown-item"><i class="fas fa-tags me-2"></i>Categories</a>
-          </div>
-        </li>
-
-        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-shopping-cart"></i> Order</a></li>
-        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-users"></i> Customer</a></li>
-        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-user-tie"></i> Employee</a></li>
-        <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-cog"></i> Setting</a></li>
-      </ul>
-    </div>
-  </nav>
+  <!-- Shared header & navigation fragments -->
+  <div th:replace="common/header :: dashboardHeader"></div>
+  <div th:replace="common/navigation :: dashboardNav('settings')"></div>
 
   <!-- Page Content -->
   <main class="dashboard-container">
@@ -82,57 +32,60 @@
       <!-- Settings Sidebar -->
       <aside class="settings-sidebar" id="settingsSidebar">
         <ul>
-          <li class="active"><i class="fas fa-user-gear"></i> User management</li>
-          <li><i class="fas fa-store"></i> Store information</li>
-          <li><i class="fas fa-coins"></i> Currency management</li>
+          <li class="active" data-section="user">
+            <i class="fas fa-user-gear"></i> User management
+          </li>
+          <li data-section="store">
+            <i class="fas fa-store"></i> Company information
+          </li>
+          <li data-section="currency">
+            <i class="fas fa-coins"></i> Currency management
+          </li>
         </ul>
       </aside>
 
-      <!-- Filter Sidebar (replace left sidebar when Filter is clicked) -->
+      <!-- Filter Sidebar (only for User management) -->
       <aside class="filter-sidebar" id="filterSidebar" style="display:none;">
+        <h3>Filter</h3>
 
-  <h3>Filter</h3>
+        <div class="filter-group">
+          <label>Search</label>
+          <div class="search-input">
+            <i class="fa fa-search"></i>
+            <input type="text" placeholder="Display name, User name.." />
+          </div>
+        </div>
 
-  <div class="filter-group">
-    <label>Search</label>
-    <div class="search-input">
-        <i class="fa fa-search"></i>
-        <input type="text" placeholder="Display name, User name.." />
-    </div>
+        <div class="filter-group">
+          <label>Role</label>
+          <select>
+            <option value="">Select role</option>
+            <option>Admin</option>
+            <option>Manager</option>
+            <option>User</option>
+          </select>
+        </div>
 
-  </div>
+        <div class="filter-group">
+          <label>Status</label>
+          <div class="status-options">
+            <button class="status-btn active" data-status="all">All</button>
+            <button class="status-btn" data-status="active">Active</button>
+            <button class="status-btn" data-status="inactive">Inactive</button>
+          </div>
+        </div>
 
-  <div class="filter-group">
-    <label>Role</label>
-    <select>
-      <option value="">Select role</option>
-      <option>Admin</option>
-      <option>Manager</option>
-      <option>User</option>
-    </select>
-  </div>
+        <div class="filter-footer">
+          <button class="btn-reset" id="btnReset">Reset</button>
+          <button class="btn-close" id="btnCloseFilter">Close</button>
+        </div>
+      </aside>
 
-  <div class="filter-group">
-    <label>Status</label>
-      <div class="status-options">
-          <button class="status-btn active" data-status="all">All</button>
-          <button class="status-btn" data-status="active">Active</button>
-          <button class="status-btn" data-status="inactive">Inactive</button>
-      </div>
+      <!-- MAIN CONTENT WRAPPER: 2 SECTION -->
+      <!-- ============== USER MANAGEMENT SECTION ============== -->
+   <section class="settings-content" id="userManagementSection" 
+  style="visibility:visible; position:static;">
 
-  </div>
-
-  <div class="filter-footer">
-    <button class="btn-reset" id="btnReset">Reset</button>
-    <button class="btn-close" id="btnCloseFilter">Close</button>
-  </div>
-
-</aside>
-
-
-
-      <!-- Main Content -->
-      <section class="settings-content">
 
         <!-- Header Title -->
         <div class="settings-header">
@@ -213,6 +166,64 @@
         </table>
 
       </section>
+
+<!-- ============== STORE INFORMATION SECTION ============== -->
+<section class="settings-content" id="storeInfoSection" 
+  style="visibility:hidden; position:absolute; left:-9999px; top:0;">
+
+  <div class="settings-header store-header">
+    <h2 class="settings-title">Company information</h2>
+    <button class="btn-store-edit" id="btnEditStore">Edit</button>
+  </div>
+
+  <div class="store-card">
+    <div class="store-top">
+
+      <!-- Logo + avatar -->
+      <div class="store-logo-block">
+        <div class="store-logo">
+          <img id="storeLogoPreview" src="https://via.placeholder.com/72x72.png?text=Logo">
+        </div>
+        <button class="btn-avatar" id="btnSelectAvatar">Select avatar</button>
+        <p class="store-logo-note">Note: Up to 2 MB per image</p>
+        <input type="file" id="storeLogoInput" accept="image/*" style="display:none;">
+      </div>
+
+      <!-- Info grid -->
+      <div class="store-info-grid">
+
+        <div class="store-field">
+          <label>URL</label>
+          <a href="#" id="storeUrlText">https://quangrainne.kiotviet.vn</a>
+        </div>
+
+        <div class="store-field">
+          <label>Phone</label>
+          <span id="storePhoneText">+84359492991</span>
+        </div>
+
+        <div class="store-field">
+          <label>Country</label>
+          <span id="storeCountryText">
+            <img src="https://flagcdn.com/w20/vn.png" class="flag-icon"> Việt Nam
+          </span>
+        </div>
+
+        <div class="store-field">
+          <label>Company name</label>
+          <span id="storeNameText">quangrainne</span>
+        </div>
+
+        <div class="store-field store-field-full">
+          <label>Address</label>
+          <span id="storeAddressText">None</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
     </div>
   </main>
 
@@ -351,10 +362,146 @@
     </div>
   </div>
 
-  
+  <div class="modal-backdrop" id="storeModal" style="display:none;">
+  <div class="modal-overlay" data-close="storeModal"></div>
+  <div class="modal-card store-modal-card">
+    <div class="modal-header">
+      <h3>Edit company information</h3>
+      <button class="btn-close" data-close="storeModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form class="modal-body" id="storeForm">
+      <div class="form-grid-2 store-form-grid">
+
+      <div class="form-group">
+        <label>URL</label>
+        <input type="text" name="url" disabled class="input-disabled">
+      </div>
+
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" name="phone">
+        </div>
+
+        <!-- COUNTRY SELECT (SAME AS USER MANAGEMENT) -->
+       <div class="form-group">
+  <label>Country</label>
+
+  <!-- Selected country (KiotViet style) -->
+  <div class="kv-country-box" id="kvCountryBox">
+    <img id="kvCountryFlag" src="https://flagcdn.com/w20/vn.png">
+    <span id="kvCountryName">Việt Nam</span>
+    <i class="fa-solid fa-chevron-down"></i>
+  </div>
+
+  <!-- DROPDOWN -->
+  <div class="kv-country-dropdown" id="kvCountryDropdown">
+
+    <!-- Search box -->
+    <div class="kv-country-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="kvCountrySearch" placeholder="Search country">
+    </div>
+
+    <!-- Country list -->
+    <div class="kv-country-list" id="kvCountryList">
+
+      <!-- Many countries (expandable) -->
+      <div class="kv-country-item active" data-flag="vn" data-name="Việt Nam">
+        <img src="https://flagcdn.com/w20/vn.png"> Việt Nam
+        <i class="fa-solid fa-check"></i>
+      </div>
+
+      <div class="kv-country-item" data-flag="us" data-name="United States">
+        <img src="https://flagcdn.com/w20/us.png"> United States
+      </div>
+
+      <div class="kv-country-item" data-flag="sg" data-name="Singapore">
+        <img src="https://flagcdn.com/w20/sg.png"> Singapore
+      </div>
+
+      <div class="kv-country-item" data-flag="jp" data-name="Japan">
+        <img src="https://flagcdn.com/w20/jp.png"> Japan
+      </div>
+
+      <div class="kv-country-item" data-flag="kr" data-name="South Korea">
+        <img src="https://flagcdn.com/w20/kr.png"> South Korea
+      </div>
+
+      <div class="kv-country-item" data-flag="th" data-name="Thailand">
+        <img src="https://flagcdn.com/w20/th.png"> Thailand
+      </div>
+
+      <div class="kv-country-item" data-flag="cn" data-name="China">
+        <img src="https://flagcdn.com/w20/cn.png"> China
+      </div>
+
+      <div class="kv-country-item" data-flag="de" data-name="Germany">
+        <img src="https://flagcdn.com/w20/de.png"> Germany
+      </div>
+
+      <div class="kv-country-item" data-flag="fr" data-name="France">
+        <img src="https://flagcdn.com/w20/fr.png"> France
+      </div>
+
+      <div class="kv-country-item" data-flag="au" data-name="Australia">
+        <img src="https://flagcdn.com/w20/au.png"> Australia
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+        <div class="form-group">
+          <label>Company name</label>
+          <input type="text" name="storeName">
+        </div>
+
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" name="address">
+        </div>
+
+        <div class="form-group">
+          <label>Province and District</label>
+          <div class="search-input">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="province" placeholder="Select Province - District">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Ward</label>
+          <div class="search-input">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="ward" placeholder="Select Ward">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" data-close="storeModal">Cancel</button>
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
   <!-- JS -->
+  <script th:src="@{/core/js/auth.js}"></script>
+  <script th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
+  <script th:src="@{/modules/dashboard/js/dashboard-theme.js}"></script>
+  <script th:src="@{/modules/dashboard/js/dashboard-ui.js}"></script>
   <script th:src="@{/modules/setting/js/setting.js}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+  <!-- Store Info JS -->
+  <script th:src="@{/modules/setting/js/storeInfo.js}"></script>
 </body>
 </html>

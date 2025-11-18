@@ -66,6 +66,11 @@ app:
         expiration: 900 # 15 minutes in seconds
         refresh-expiration: 604800 # 7 days in seconds
     include-stack-trace: true
+    company:
+        domain-template: http://localhost:8080/dashboard
+    storage:
+        upload-dir: uploads
+        public-base-url: http://localhost:8080
 
 logging:
     level:

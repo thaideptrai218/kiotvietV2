@@ -72,7 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const payload = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         const message = payload?.message || (resp.status === 401 ? 'Unauthorized. Please login again.' : 'Request failed');
-        throw new Error(message);
+        const error = new Error(message);
+        error.status = resp.status;
+        if (Array.isArray(payload?.details) && payload.details.length) {
+          error.details = payload.details;
+        }
+        throw error;
       }
       return payload?.data ?? payload;
     }
@@ -236,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderUsers();
     } catch (err) {
       renderUsers([]);
-      showToast(err.message, 'error');
+      showToast(getErrorMessage(err), 'error');
     }
   }
 
@@ -350,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fillDetail(clone, detail);
       bindDetailActions(clone);
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(getErrorMessage(err), 'error');
       closeDetail();
     }
   }
@@ -488,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeUserModal();
       loadUsers();
     } catch (err) {
-      showFormError(err.message);
+      showFormError(getErrorMessage(err));
     } finally {
       toggleFormSaving(false);
     }
@@ -531,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeDetail();
       loadUsers();
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(getErrorMessage(err), 'error');
     }
   }
 
@@ -544,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setPasswordFeedback(message, 'success');
       showToast(message, 'success');
     } catch (err) {
-      const msg = err.message || 'Change password failed';
+      const msg = getErrorMessage(err) || 'Change password failed';
       setPasswordFeedback(msg, 'error');
       showToast(msg, 'error');
     }
@@ -561,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeDetail();
       loadUsers();
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(getErrorMessage(err), 'error');
     }
   }
 
@@ -648,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.selectedIds.clear();
           loadUsers();
         } catch (err) {
-          showToast(err.message, 'error');
+          showToast(getErrorMessage(err), 'error');
         }
       });
     }
@@ -667,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.selectedIds.clear();
           loadUsers();
         } catch (err) {
-          showToast(err.message, 'error');
+          showToast(getErrorMessage(err), 'error');
         }
       });
     }
@@ -730,5 +735,13 @@ document.addEventListener('DOMContentLoaded', () => {
     el.textContent = message;
     el.style.display = 'block';
     el.classList.add(type === 'error' ? 'error' : 'success');
+  }
+
+  function getErrorMessage(err) {
+    if (!err) return 'Request failed';
+    if (Array.isArray(err.details) && err.details.length) {
+      return err.details.join(', ');
+    }
+    return err.message || 'Request failed';
   }
 });
