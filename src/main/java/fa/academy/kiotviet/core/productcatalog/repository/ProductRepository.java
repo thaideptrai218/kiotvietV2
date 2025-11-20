@@ -28,8 +28,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     // Unique constraint validation
     boolean existsByCompany_IdAndSkuIgnoreCase(Long companyId, String sku);
+    Optional<Product> findByCompany_IdAndSkuIgnoreCase(Long companyId, String sku);
 
     boolean existsByCompany_IdAndBarcodeIgnoreCase(Long companyId, String barcode);
+    Optional<Product> findByCompany_IdAndBarcodeIgnoreCase(Long companyId, String barcode);
 
     boolean existsByCompany_IdAndSkuIgnoreCaseAndIdNot(Long companyId, String sku, Long excludeId);
 

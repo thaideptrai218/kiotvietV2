@@ -1,0 +1,66 @@
+:root { --pos-blue: #0d6efd; --pos-bg: #f7f9fc; }
+body.kv-pos { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; background: var(--pos-bg); }
+
+.pos-topbar { position: sticky; top: 0; z-index: 1000; background: var(--pos-blue); color: #fff; padding: .5rem 0; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.pos-topbar__inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.pos-left { justify-self: start; }
+.pos-center { justify-self: center; }
+.pos-right { justify-self: end; }
+
+.pos-search { position: relative; width: min(2000px, 100%); }
+.pos-search .search-icon { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,.85); }
+.pos-search input { width: 500px; padding-left: 2.25rem; padding-right: 2.25rem; border: 0; height: 50px; border-radius: 12px; font-size: 16px; }
+.pos-search .scan-btn { position: absolute; right: .25rem; top: 50%; transform: translateY(-50%); color: var(--pos-blue); background: #fff; border-radius: 8px; }
+.pos-search input::placeholder { color: #7a8aa8; }
+.pos-search-dropdown { position: absolute; top: 48px; left: 0; right: 0; background: #fff; border: 1px solid #e6ebf2; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.08); max-height: 340px; overflow: auto; }
+.pos-search-dropdown .item { padding: .6rem .8rem; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: .6rem; row-gap: .15rem; }
+.pos-search-dropdown .item:hover { background: #f2f6ff; }
+.pos-search-dropdown .item.active { background: #e8f0ff; }
+.pos-search-dropdown .sku { font-weight: 700; color: #334155; grid-column: 1; grid-row: 1; min-width: 90px; }
+.pos-search-dropdown .name { color: #334155; grid-column: 2; grid-row: 1; }
+.pos-search-dropdown .barcode { color: #64748b; grid-column: 2; grid-row: 2; font-size: 12px; }
+.pos-search-dropdown .meta { display: inline-flex; align-items: center; gap: .5rem; grid-column: 3; grid-row: 1 / span 2; }
+.pos-search-dropdown .price { color: #64748b; }
+.pos-search-dropdown .stock { font-size: 12px; }
+.pos-search-dropdown .stock.badge { padding: .15rem .4rem; }
+.d-none { display: none !important; }
+
+.pos-tabs { display: flex; align-items: center; gap: .5rem; }
+.pos-tab { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.12); color: #fff; padding: .35rem .6rem; border-radius: .5rem; cursor: default; }
+.pos-tab .tab-close { background: transparent; border: 0; color: #fff; }
+.pos-tabs .tab-add { background: #fff; color: var(--pos-blue); border: 0; border-radius: 8px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+
+.pos-main { padding-top: .75rem; }
+.pos-workspace { max-width: 1400px; }
+
+.pos-leftpanel { padding: 0 10px 120px 10px; }
+.pos-rightpanel { background: #fff; border-left: 1px solid #e6ebf2; min-height: calc(100vh - 70px); position: relative; }
+
+.pos-items { display: flex; flex-direction: column; gap: .5rem; }
+.pos-itemcard { background: #fff; border: 1px solid #e6ebf2; border-radius: 10px; padding: .5rem .75rem; gap: .75rem; }
+.pos-itemcard .stt { width: 42px; text-align: center; font-weight: 600; color: #334155; }
+.pos-itemcard .icon-btn { background: transparent; border: 0; padding: .25rem .4rem; }
+.pos-itemcard .sku { width: 90px; }
+.pos-itemcard .name { min-width: 220px; }
+.pos-itemcard .qty { gap: .4rem; }
+.pos-itemcard .qty input { width: 64px; }
+.pos-itemcard .price { width: 110px; text-align: right; }
+.pos-itemcard .line-total { width: 130px; text-align: right; }
+
+.pos-whitespace { height: 28vh; }
+.pos-note { background: #fff; border: 1px solid #e6ebf2; border-radius: 10px; padding: .75rem; position: sticky; bottom: 90px; }
+.pos-note input { border: 0; box-shadow: none; }
+
+.pos-panel { padding: 14px; }
+.pos-row { display: flex; }
+.pos-summary hr { margin: .5rem 0; }
+.pos-summary .total { border-top: 1px dashed #e2e8f3; border-bottom: 1px dashed #e2e8f3; padding: .5rem 0; }
+
+.pos-complete { position: sticky; bottom: 0; background: #fff; box-shadow: 0 -4px 10px rgba(0,0,0,.04); padding: 12px 14px; }
+
+.btn-link { text-decoration: none; }
+
+@media (max-width: 991.98px) {
+  .pos-topbar__inner { grid-template-columns: 1fr; gap: 10px; }
+  .pos-center, .pos-right { justify-self: start; }
+}

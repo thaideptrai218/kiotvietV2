@@ -1,5 +1,7 @@
 package fa.academy.kiotviet.application.controller.api;
 
+import fa.academy.kiotviet.application.dto.orders.request.OrderCreateRequest;
+import fa.academy.kiotviet.application.dto.orders.response.OrderCreateResponse;
 import fa.academy.kiotviet.application.dto.orders.response.OrderListItemDto;
 import fa.academy.kiotviet.application.dto.shared.PagedResponse;
 import fa.academy.kiotviet.application.dto.shared.SuccessResponse;
@@ -45,6 +47,24 @@ public class OrderApiController {
         Long companyId = currentCompanyId();
         orderService.deleteBulk(companyId, ids);
         return ResponseFactory.success("Orders deleted successfully");
+    }
+
+    @PostMapping
+    public SuccessResponse<OrderCreateResponse> createOrder(@RequestBody OrderCreateRequest request) {
+        Long companyId = currentCompanyId();
+        Order saved = orderService.create(companyId, request);
+        var total = saved.getSubtotal().subtract(saved.getDiscount());
+        OrderCreateResponse resp = OrderCreateResponse.builder()
+                .id(saved.getId())
+                .orderCode(saved.getOrderCode())
+                .status(saved.getStatus() != null ? saved.getStatus().name() : null)
+                .orderDate(saved.getOrderDate())
+                .subtotal(saved.getSubtotal())
+                .discount(saved.getDiscount())
+                .total(total)
+                .paidAmount(saved.getPaidAmount())
+                .build();
+        return ResponseFactory.created(resp, "Order created successfully");
     }
 
     private OrderListItemDto toListDto(Order o) {
