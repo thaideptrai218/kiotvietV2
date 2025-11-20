@@ -233,8 +233,16 @@
                                     <label class="form-check-label" for="colSubTotal">Sub-total</label>
                                 </div>
                                 <div class="form-check form-check-sm">
-                                    <input class="form-check-input" type="checkbox" id="colDiscount">
+                                    <input class="form-check-input" type="checkbox" id="colDiscount" checked>
                                     <label class="form-check-label" for="colDiscount">Discount</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colCustomerPays">
+                                    <label class="form-check-label" for="colCustomerPays">Customer pays</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colRemaining">
+                                    <label class="form-check-label" for="colRemaining">Remaining</label>
                                 </div>
                                 <div class="form-check form-check-sm">
                                     <input class="form-check-input" type="checkbox" id="colPaidAmount" checked>
@@ -306,6 +314,12 @@
                                     <th data-sort="discount" data-col="discount" class="sortable" aria-sort="none">
                                         <span>Discount <i class="sort-icon"></i></span>
                                     </th>
+                                    <th data-sort="customerpays" data-col="customerpays" class="sortable" aria-sort="none">
+                                        <span>Customer pays <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="remaining" data-col="remaining" class="sortable" aria-sort="none">
+                                        <span>Remaining <i class="sort-icon"></i></span>
+                                    </th>
                                     <th data-sort="paidamount" data-col="paidamount" class="sortable" aria-sort="none">
                                         <span>Paid amount <i class="sort-icon"></i></span>
                                     </th>
@@ -367,3 +381,5 @@
 </body>
 
 </html>
+
+

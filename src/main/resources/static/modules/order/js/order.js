@@ -6,6 +6,8 @@
     phonenumber: false,
     subtotal: true,
     discount: true,
+    customerpays: false,
+    remaining: false,
     paidamount: true,
     paymentmethod: true,
     cashier: false,
@@ -36,6 +38,8 @@
     els.colSubTotal = document.getElementById('colSubTotal');
     els.colDiscount = document.getElementById('colDiscount');
     els.colPaidAmount = document.getElementById('colPaidAmount');
+    els.colCustomerPays = document.getElementById('colCustomerPays');
+    els.colRemaining = document.getElementById('colRemaining');
     els.colPaymentMethod = document.getElementById('colPaymentMethod');
     els.colCashier = document.getElementById('colCashier');
     els.colStatus = document.getElementById('colStatus');
@@ -78,6 +82,8 @@
     if (els.colPhoneNumber) els.colPhoneNumber.checked = !!state.columns.phonenumber;
     if (els.colSubTotal) els.colSubTotal.checked = !!state.columns.subtotal;
     if (els.colDiscount) els.colDiscount.checked = !!state.columns.discount;
+    if (els.colCustomerPays) els.colCustomerPays.checked = !!state.columns.customerpays;
+    if (els.colRemaining) els.colRemaining.checked = !!state.columns.remaining;
     if (els.colPaidAmount) els.colPaidAmount.checked = !!state.columns.paidamount;
     if (els.colPaymentMethod) els.colPaymentMethod.checked = !!state.columns.paymentmethod;
     if (els.colCashier) els.colCashier.checked = !!state.columns.cashier;
@@ -115,6 +121,8 @@
     bindColumnToggle(els.colPhoneNumber, 'phonenumber');
     bindColumnToggle(els.colSubTotal, 'subtotal');
     bindColumnToggle(els.colDiscount, 'discount');
+    bindColumnToggle(els.colCustomerPays, 'customerpays');
+    bindColumnToggle(els.colRemaining, 'remaining');
     bindColumnToggle(els.colPaidAmount, 'paidamount');
     bindColumnToggle(els.colPaymentMethod, 'paymentmethod');
     bindColumnToggle(els.colCashier, 'cashier');
@@ -674,7 +682,7 @@ function format(d) {
         <td data-col="phonenumber">${it.phoneNumber || ''}</td>
         <td class="text-end fw-semibold" data-col="subtotal">${fmtMoney(it.subtotal)}</td>
         <td class="text-end" data-col="discount">${fmtMoney(it.discount)}</td>
-        <td class="text-end fw-semibold" data-col="paidamount">${fmtMoney(it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0)))}</td>
+        <td class="text-end fw-semibold" data-col="customerpays">${fmtMoney(it.paidAmount)}</td>\n        <td class="text-end" data-col="remaining">${fmtMoney((it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0))) - Number(it.paidAmount||0))}</td>\n        <td class="text-end fw-semibold" data-col="paidamount">${fmtMoney(it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0)))}</td></td>
         <td data-col="paymentmethod">${(it.paymentMethod||'').toString().toUpperCase()}</td>
         <td data-col="cashier">${it.cashier || ''}</td>
         <td data-col="status">${statusBadge(it.status)}</td>
@@ -685,7 +693,7 @@ function format(d) {
 
     // Ensure column visibility matches defaults/saved after data render
     try {
-      const defaultCols = { ordercode:true, orderdate:true, customer:true, phonenumber:false, subtotal:true, discount:true, paidamount:true, paymentmethod:true, cashier:false, status:true };
+      const defaultCols = { ordercode:true, orderdate:true, customer:true, phonenumber:false, subtotal:true, discount:true, customerpays:false, remaining:false, paidamount:true, paymentmethod:true, cashier:false, status:true };
       function key() {
         try {
           const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
@@ -783,3 +791,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
