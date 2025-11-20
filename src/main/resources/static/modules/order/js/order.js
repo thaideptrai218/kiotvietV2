@@ -314,6 +314,27 @@ document.addEventListener("DOMContentLoaded", () => {
         popup.classList.toggle("show");
     });
 
+    function iso(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function startOfWeek(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return x; }
+    function endOfWeek(d){ const s=startOfWeek(d); const e=new Date(s); e.setDate(s.getDate()+6); return e; }
+    function startOfQuarter(d){ const q=Math.floor(d.getMonth()/3); return new Date(d.getFullYear(), q*3, 1); }
+    function endOfQuarter(d){ const q=Math.floor(d.getMonth()/3); return new Date(d.getFullYear(), q*3+3, 0); }
+    function computeRange(label){
+        const today=new Date();
+        const lower=label.toLowerCase();
+        if(lower.includes('today')){ return [today,today]; }
+        if(lower.includes('yesterday')){ const y=new Date(); y.setDate(today.getDate()-1); return [y,y]; }
+        if(lower.includes('this week')){ return [startOfWeek(today), endOfWeek(today)]; }
+        if(lower.includes('last week')){ const s=startOfWeek(today); s.setDate(s.getDate()-7); const e=new Date(s); e.setDate(s.getDate()+6); return [s,e]; }
+        if(lower.includes('last 7 days')){ const s=new Date(); s.setDate(today.getDate()-6); return [s,today]; }
+        if(lower.includes('this month')){ return [new Date(today.getFullYear(), today.getMonth(),1), new Date(today.getFullYear(), today.getMonth()+1,0)]; }
+        if(lower.includes('last month')){ return [new Date(today.getFullYear(), today.getMonth()-1,1), new Date(today.getFullYear(), today.getMonth(),0)]; }
+        if(lower.includes('last 30 days')){ const s=new Date(); s.setDate(today.getDate()-29); return [s,today]; }
+        if(lower.includes('this quarter')){ return [startOfQuarter(today), endOfQuarter(today)]; }
+        if(lower.includes('last quarter')){ const d=new Date(today.getFullYear(), today.getMonth()-3, 15); return [startOfQuarter(d), endOfQuarter(d)]; }
+        return [new Date(today.getFullYear(), today.getMonth(),1), new Date(today.getFullYear(), today.getMonth()+1,0)];
+    }
+
     popup.addEventListener("click", (e) => {
         if (!e.target.classList.contains("popup-item")) return;
 
@@ -324,6 +345,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         popup.classList.remove("show");
         presetRadio.checked = true;
+
+        // Apply filter
+        const [from, to] = computeRange(e.target.textContent || '');
+        if (window.kvOrders && typeof window.kvOrders.setDateRange === 'function') {
+            window.kvOrders.setDateRange(iso(from), iso(to));
+        }
     });
 
     document.addEventListener("click", (e) => {
@@ -594,6 +621,14 @@ document.getElementById("customApplyBtn").addEventListener("click", () => {
     customRadio.checked = true;
 
     console.log("APPLIED RANGE:", format(fromDate), format(toDate));
+    // Apply filter to list
+    try {
+        const fromIso = `${fromDate.getFullYear()}-${String(fromDate.getMonth()+1).padStart(2,'0')}-${String(fromDate.getDate()).padStart(2,'0')}`;
+        const toIso = `${toDate.getFullYear()}-${String(toDate.getMonth()+1).padStart(2,'0')}-${String(toDate.getDate()).padStart(2,'0')}`;
+        if (window.kvOrders && typeof window.kvOrders.setDateRange === 'function') {
+            window.kvOrders.setDateRange(fromIso, toIso);
+        }
+    } catch {}
 });
 
 /* =====================================================
@@ -634,13 +669,17 @@ function format(d) {
     sizeSel: document.getElementById('sizeSel'),
     pagi: document.getElementById('pagi')
   };
+  els.status = document.getElementById('status');
 
   const state = {
     page: 0,
     size: parseInt(els.sizeSel?.value || '25', 10) || 25,
     total: 0,
     totalPages: 0,
-    loading: false
+    loading: false,
+    fromDate: null,
+    toDate: null,
+    status: ''
   };
 
   function fmtMoney(v) {
@@ -741,7 +780,10 @@ function format(d) {
     if (state.loading) return;
     state.loading = true;
     try {
-      const url = `${api.base}?page=${state.page}&size=${state.size}`;
+      let url = `${api.base}?page=${state.page}&size=${state.size}`;
+      if (state.fromDate) url += `&fromDate=${encodeURIComponent(state.fromDate)}`;
+      if (state.toDate) url += `&toDate=${encodeURIComponent(state.toDate)}`;
+      if (state.status) url += `&status=${encodeURIComponent(state.status)}`;
       const res = await fetch(url, { headers: api.headers() });
       if (!res.ok) throw new Error(`Failed to load orders: ${res.status}`);
       const body = await res.json();
@@ -763,6 +805,7 @@ function format(d) {
   function bindEvents() {
     els.btnRefresh?.addEventListener('click', (e) => { e.preventDefault(); load(); });
     els.sizeSel?.addEventListener('change', () => { state.size = parseInt(els.sizeSel.value, 10) || 25; state.page = 0; load(); });
+    els.status?.addEventListener('change', () => { state.page = 0; state.status = els.status.value || ''; load(); });
     els.pagi?.addEventListener('click', (e) => {
       const a = e.target.closest('a');
       if (!a) return;
@@ -776,9 +819,26 @@ function format(d) {
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Default to current month on first load
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    state.fromDate = `${firstOfMonth.getFullYear()}-${String(firstOfMonth.getMonth()+1).padStart(2,'0')}-${String(firstOfMonth.getDate()).padStart(2,'0')}`;
+    state.toDate = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth()+1).padStart(2,'0')}-${String(endOfMonth.getDate()).padStart(2,'0')}`;
     bindEvents();
     load();
   });
+
+  // Expose a tiny API for date filtering from the preset/custom UI
+  window.kvOrders = {
+    setDateRange(from, to) {
+      state.page = 0;
+      state.fromDate = from;
+      state.toDate = to;
+      load();
+    },
+    reload() { load(); }
+  };
 })();
 
 // Navigate to Create Order page from the list toolbar
