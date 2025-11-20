@@ -63,6 +63,9 @@ public class PurchaseService {
         for (PurchaseLineRequest lr : req.getLines()) {
             Product product = productRepository.findByIdAndCompany_Id(lr.getProductId(), companyId)
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found", "PRODUCT_NOT_FOUND"));
+            if (product.getSupplier() == null || !product.getSupplier().getId().equals(supplier.getId())) {
+                throw new IllegalArgumentException("Product does not belong to selected supplier");
+            }
             PurchaseEntryLine line = PurchaseEntryLine.builder()
                     .company(Company.builder().id(companyId).build())
                     .purchaseEntry(entry)
@@ -139,6 +142,9 @@ public class PurchaseService {
                     if (lr.getProductId() == null) continue;
                     Product product = productRepository.findByIdAndCompany_Id(lr.getProductId(), companyId)
                             .orElseThrow(() -> new ResourceNotFoundException("Product not found", "PRODUCT_NOT_FOUND"));
+                    if (product.getSupplier() == null || !product.getSupplier().getId().equals(entry.getSupplier().getId())) {
+                        throw new IllegalArgumentException("Product does not belong to selected supplier");
+                    }
                     PurchaseEntryLine line = PurchaseEntryLine.builder()
                             .company(Company.builder().id(companyId).build())
                             .purchaseEntry(entry)
@@ -255,6 +261,9 @@ public class PurchaseService {
         if (entry.getStatus() == PurchaseEntry.Status.CANCELLED) {
             throw new IllegalStateException("Cannot pay a cancelled entry");
         }
+        if (entry.getStatus() == PurchaseEntry.Status.DRAFT) {
+            throw new IllegalStateException("Please confirm the purchase before recording a payment");
+        }
         BigDecimal amount = Objects.requireNonNull(nvl(req.getAmount()));
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Payment amount must be > 0");
@@ -273,11 +282,12 @@ public class PurchaseService {
         entry.setAmountDue(entry.getGrandTotal().subtract(entry.getAmountPaid()));
         if (entry.getAmountDue().compareTo(BigDecimal.ZERO) < 0) entry.setAmountDue(BigDecimal.ZERO);
 
-        // reduce supplier outstanding
+        // reduce supplier outstanding (if not fully paid, outstanding remains > 0)
         Supplier supplier = entry.getSupplier();
         if (supplier.getOutstandingBalance() == null) supplier.setOutstandingBalance(BigDecimal.ZERO);
         supplier.setOutstandingBalance(supplier.getOutstandingBalance().subtract(amount));
         if (supplier.getOutstandingBalance().compareTo(BigDecimal.ZERO) < 0) supplier.setOutstandingBalance(BigDecimal.ZERO);
+        supplier.setLastPaymentDate(java.time.LocalDateTime.now());
         supplierRepository.save(supplier);
 
         PurchaseEntry saved = purchaseEntryRepository.save(entry);
@@ -385,13 +395,21 @@ public class PurchaseService {
     private Specification<PurchaseEntry> likeSearch(String q) {
         if (q == null || q.isBlank()) return null;
         String pattern = "%" + q.toLowerCase() + "%";
+        boolean numeric = q.chars().allMatch(Character::isDigit);
         return (root, query, cb) -> {
             var supplierJoin = root.join("supplier", jakarta.persistence.criteria.JoinType.LEFT);
-            return cb.or(
+            var base = cb.or(
                     cb.like(cb.lower(root.get("code")), pattern),
                     cb.like(cb.lower(root.get("referenceNo")), pattern),
                     cb.like(cb.lower(supplierJoin.get("name")), pattern)
             );
+            if (numeric) {
+                try {
+                    Long id = Long.valueOf(q);
+                    base = cb.or(base, cb.equal(root.get("id"), id));
+                } catch (NumberFormatException ignored) { /* ignore */ }
+            }
+            return base;
         };
     }
     private Specification<PurchaseEntry> betweenDates(java.time.LocalDate from, java.time.LocalDate to) {

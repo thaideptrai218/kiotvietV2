@@ -102,6 +102,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
            "lower(p.name) like lower(concat(:q, '%')) order by p.name asc")
     List<Product> autocompleteProductNames(@Param("companyId") Long companyId, @Param("q") String q, Pageable pageable);
 
+    @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and p.supplier.id = :supplierId and " +
+           "lower(p.name) like lower(concat(:q, '%')) order by p.name asc")
+    List<Product> autocompleteProductNamesBySupplier(@Param("companyId") Long companyId,
+                                                    @Param("supplierId") Long supplierId,
+                                                    @Param("q") String q,
+                                                    Pageable pageable);
+
     @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and " +
            "lower(p.sku) like lower(concat(:q, '%')) order by p.sku asc")
     List<Product> autocompleteSkus(@Param("companyId") Long companyId, @Param("q") String q, Pageable pageable);

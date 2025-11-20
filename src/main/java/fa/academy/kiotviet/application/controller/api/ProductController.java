@@ -107,10 +107,11 @@ public class ProductController {
     @GetMapping("/autocomplete")
     public SuccessResponse<List<ProductAutocompleteItem>> autocompleteProducts(
             @RequestParam String query,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) Long supplierId) {
 
         Long companyId = currentCompanyId();
-        List<ProductAutocompleteItem> products = productService.autocomplete(companyId, query, limit);
+        List<ProductAutocompleteItem> products = productService.autocomplete(companyId, query, limit, supplierId);
         return ResponseFactory.success(products, "Product autocomplete results");
     }
 

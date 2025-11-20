@@ -29,6 +29,7 @@
     from: document.getElementById('from'),
     to: document.getElementById('to'),
     hdrSearch: document.getElementById('hdrSearch'),
+    hdrSearchTop: document.getElementById('hdrSearchTop'),
 
     // header + footer controls
     btnApplyFilters: document.getElementById('btnApplyFilters'),
@@ -84,23 +85,33 @@
   }
 
   function displayStatus(raw) {
-    if (raw === 'DRAFT') return 'Draft';
-    if (raw === 'CANCELLED') return 'Canceled';
-    return 'Completed';
+    switch (raw) {
+      case 'DRAFT': return 'Draft';
+      case 'CONFIRMED':
+      case 'PARTIALLY_RECEIVED':
+      case 'RECEIVED':
+        return 'Confirmed';
+      case 'CANCELLED': return 'Canceled';
+      default: return raw || '';
+    }
   }
 
   function statusBadgeClass(raw) {
-    if (raw === 'DRAFT') return 'status-badge status-draft';
-    if (raw === 'CANCELLED') return 'status-badge status-inactive';
-    return 'status-badge status-active';
+    switch (raw) {
+      case 'DRAFT': return 'status-badge status-draft';
+      case 'CONFIRMED':
+      case 'PARTIALLY_RECEIVED':
+      case 'RECEIVED':
+        return 'status-badge status-confirmed';
+      case 'CANCELLED': return 'status-badge status-inactive';
+      default: return 'status-badge';
+    }
   }
 
   async function list() {
     const q = new URLSearchParams();
     if (els.status && els.status.value) {
-      // map Completed to RECEIVED                                                                                                            
-      const v = els.status.value === 'COMPLETED' ? 'RECEIVED' : els.status.value;
-      q.append('status', v);
+      q.append('status', els.status.value);
     }
     if (els.supplierId && els.supplierId.value) q.append('supplierId', els.supplierId.value);
     if (els.from && els.from.value) q.append('from', els.from.value);
@@ -131,7 +142,7 @@
         (p) => `                                                                                                                              
         <tr class="purchase-row" data-id="${p.id}">                                                                                             
           <td style="width:36px"><input type="checkbox" class="rowChk" data-id="${p.id}" /></td>                                                
-          <td data-col="code">${p.code || ''}</td>                                                                                              
+          <td data-col="id">${p.id}</td>                                                                                                        
           <td data-col="supplier">${p.supplierName || p.supplierId || ''}</td>                                                                  
           <td data-col="date">${fmtDate(p.billDate)}</td>                                                                                       
           <td data-col="total" class="text-end">${fmtMoney(p.grandTotal)}</td>                                                                  
@@ -217,19 +228,17 @@
           const canComplete = p.status !== 'CANCELLED' && p.status !== 'RECEIVED' && p.status !== 'DRAFT';
           const canConfirm = p.status === 'DRAFT';
           const canCancel = (p.status === 'DRAFT' || p.status === 'CONFIRMED');
-          td.innerHTML = `                                                                                                                    
-              <div class="expanded-content">                                                                                                    
-                <div class="d-flex justify-content-between align-items-center mb-2">                                                            
-                  <div class="small text-muted">Details</div>                                                                                   
-                  <div class="d-flex gap-2">                                                                                                    
-                    ${canEdit ? `<button class="kv-btn kv-btn--ghost kv-btn--sm btn-edit-purchase" data-id="${p.id}"><i class="fas fa-pen"></i> 
-  Edit</button>` : ''}                                                                                                                          
-                    ${canConfirm ? `<button class="kv-btn kv-btn--primary kv-btn--sm btn-confirm-purchase" data-id="${p.id}"><i class="fas fa-  
-  check"></i> Confirm</button>` : ''}                                                                                                           
-                    ${canComplete ? `<button class="kv-btn kv-btn--primary kv-btn--sm btn-complete-purchase" data-id="${p.id}"><i class="fas fa-
-  check-double"></i> Complete</button>` : ''}                                                                                                   
-                  </div>                                                                                                                        
-                </div>                                                                                                                          
+          td.innerHTML = `
+              <div class="expanded-content">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="small text-muted">Details</div>
+                  <div class="d-flex gap-2">
+                    ${canEdit ? `<button class="kv-btn kv-btn--ghost kv-btn--sm btn-edit-purchase" data-id="${p.id}"><i class="fas fa-pen"></i> Edit</button>` : ''}
+                    ${canConfirm ? `<button class="kv-btn kv-btn--primary kv-btn--sm btn-confirm-purchase" data-id="${p.id}"><i class="fas fa-check"></i> Confirm</button>` : ''}
+                    ${canComplete ? `<button class="kv-btn kv-btn--primary kv-btn--sm btn-complete-purchase" data-id="${p.id}"><i class="fas fa-check-double"></i> Complete</button>` : ''}
+                    ${canCancel ? `<button class="kv-btn kv-btn--danger kv-btn--sm btn-cancel-purchase" data-id="${p.id}"><i class="fas fa-ban"></i> Cancel</button>` : ''}
+                  </div>
+                </div>
                 <div class="row g-3">                                                                                                           
                   <div class="col-md-6">                                                                                                        
                     <div class="small text-muted">Reference</div>                                                                               
@@ -315,8 +324,37 @@
       state.page = 0;
       list();
     });
+    // Trigger search from both top and sidebar inputs (sync values)
+    const setSearchValue = (val) => {
+      if (els.hdrSearch) els.hdrSearch.value = val;
+      if (els.hdrSearchTop) els.hdrSearchTop.value = val;
+    };
+    const wireSearch = (el) => {
+      if (!el) return;
+      let t;
+      el.addEventListener('input', () => {
+        clearTimeout(t);
+        const val = el.value;
+        setSearchValue(val);
+        t = setTimeout(() => {
+          state.page = 0;
+          list();
+        }, 300);
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          setSearchValue(el.value);
+          state.page = 0;
+          list();
+        }
+      });
+    };
+    wireSearch(els.hdrSearch);
+    wireSearch(els.hdrSearchTop);
     els.btnClearFilters?.addEventListener('click', () => {
       if (els.hdrSearch) els.hdrSearch.value = '';
+      if (els.hdrSearchTop) els.hdrSearchTop.value = '';
       if (els.status) els.status.value = '';
       if (els.supplierId) els.supplierId.value = '';
       if (els.from) els.from.value = '';
@@ -552,6 +590,8 @@
           const body = await res.json();
           if (res.ok) {
             const p = body.data;
+            // set current edit supplier for autocomplete filtering
+            window.currentEditSupplierId = p.supplierId;
             const tbody = document.getElementById('e_lines');
             if (tbody) {
               tbody.innerHTML = (p.lines || [])
@@ -635,6 +675,19 @@
         const confirmEl = document.getElementById('confirmPurchaseModal');
         const cm = new bootstrap.Modal(confirmEl);
         cm.show();
+      }
+
+      if (t?.matches?.('.btn-cancel-purchase')) {
+        e.preventDefault();
+        const id = t.getAttribute('data-id');
+        const modalEl = document.getElementById('cancelPurchaseModal');
+        if (modalEl) {
+          const idsInput = document.getElementById('x_ids');
+          if (idsInput) idsInput.value = id;
+          document.getElementById('cancelErr')?.classList.add('d-none');
+          const cm = new bootstrap.Modal(modalEl);
+          cm.show();
+        }
       }
     });
 
@@ -728,13 +781,39 @@
         toggle(false);
       }
     });
+
+    // Cancel submit (single/bulk via modal)
+    const btnDoCancel = document.getElementById('btnDoCancel');
+    btnDoCancel?.addEventListener('click', async () => {
+      const idsRaw = (document.getElementById('x_ids')?.value || '').trim();
+      const ids = idsRaw ? idsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      const errBox = document.getElementById('cancelErr');
+      try {
+        for (const id of ids) {
+          const res = await fetch(`${api.base}/${id}/cancel`, { method: 'POST', headers: api.headers() });
+          if (!res.ok) {
+            const b = await res.json().catch(() => ({}));
+            throw new Error(b?.message || `Cancel failed (${res.status})`);
+          }
+        }
+        bootstrap.Modal.getInstance(document.getElementById('cancelPurchaseModal'))?.hide();
+        list();
+      } catch (err) {
+        if (errBox) {
+          errBox.textContent = err.message || String(err);
+          errBox.classList.remove('d-none');
+        } else {
+          alert(String(err));
+        }
+      }
+    });
   }
 
   // ---------- Columns visibility ----------                                                                                                 
   const colPrefsKey = 'purchases.columns';
-  const colIds = ['Code', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
+  const colIds = ['Id', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
   const mapKey = {
-    Code: 'code',
+    Id: 'id',
     Supplier: 'supplier',
     Date: 'date',
     Total: 'total',
@@ -792,16 +871,18 @@
     return body.data || [];
   }
 
-  async function productAutocomplete(query) {
-    const url = `/api/products/autocomplete?query=${encodeURIComponent(query || '')}&limit=10`;
+  async function productAutocomplete(query, supplierId) {
+    if (!supplierId) return [];
+    const url = `/api/products/autocomplete?query=${encodeURIComponent(query || '')}&limit=10&supplierId=${encodeURIComponent(supplierId)}`;
     const res = await fetch(url, { headers: api.headers() });
     if (!res.ok) return [];
     const body = await res.json();
     return body.data || [];
   }
 
-  function wireAutocomplete(inputEl, dropdownEl, onChoose, fetcher, displayFn) {
+  function wireAutocomplete(inputEl, dropdownEl, onChoose, fetcher, displayFn, opts = {}) {
     if (!inputEl || !dropdownEl) return;
+    const supplierIdProvider = opts.supplierIdProvider;
     const show = (items) => {
       if (!items || items.length === 0) {
         dropdownEl.innerHTML = '';
@@ -823,15 +904,19 @@
       'input',
       debounce(async () => {
         const q = inputEl.value.trim();
-        const items = await fetcher(q);
+        const sid = typeof supplierIdProvider === 'function' ? supplierIdProvider() : undefined;
+        const items = await fetcher(q, sid);
         show(items);
       }, 200)
     );
-    inputEl.addEventListener('focus', async () => {
-      const q = inputEl.value.trim();
-      const items = await fetcher(q);
+    async function fetchAndShowOnFocus() {
+      const q = (opts && opts.focusAll) ? '' : inputEl.value.trim();
+      const sid = typeof supplierIdProvider === 'function' ? supplierIdProvider() : undefined;
+      const items = await fetcher(q, sid);
       show(items);
-    });
+    }
+    inputEl.addEventListener('focus', fetchAndShowOnFocus);
+    inputEl.addEventListener('click', fetchAndShowOnFocus);
     document.addEventListener('click', (e) => {
       if (!dropdownEl.contains(e.target) && e.target !== inputEl) dropdownEl.style.display = 'none';
     });
@@ -865,15 +950,29 @@
     const prodSearch = row.querySelector('.prodSearch');
     const prodDropdown = row.querySelector('.prodDropdown');
     const prodId = row.querySelector('.prodId');
+    const unitCostInput = row.querySelector('.unitCost');
+    const validateCost = () => {
+      const sp = parseFloat(row.getAttribute('data-selling-price') || '0');
+      const uc = parseFloat(unitCostInput.value || '0');
+      if (sp && uc > sp) unitCostInput.classList.add('warn-high-cost');
+      else unitCostInput.classList.remove('warn-high-cost');
+    };
+    unitCostInput.addEventListener('input', validateCost);
     wireAutocomplete(
       prodSearch,
       prodDropdown,
-      (id, label) => {
+      (id, label, meta) => {
         prodId.value = id;
         prodSearch.value = label;
+        if (meta && typeof meta.price === 'number' && !Number.isNaN(meta.price)) {
+          row.setAttribute('data-selling-price', String(meta.price));
+          if (!unitCostInput.value) unitCostInput.placeholder = `<= ${fmtMoney(meta.price)}`;
+          validateCost();
+        }
       },
       productAutocomplete,
-      (it) => `${it.displayName || it.name || it.sku || ''}`
+      (it) => `${it.displayName || it.name || it.sku || ''}`,
+      { supplierIdProvider: () => (els.p_supplierId ? els.p_supplierId.value : undefined) }
     );
     row.querySelector('.btnRemoveLine').addEventListener('click', (e) => {
       e.preventDefault();
@@ -886,6 +985,11 @@
 
     // Init create modal: add first line                                                                                                      
     if (els.p_lines) addCreateLine();
+    // Initially disable product inputs if supplier not chosen
+    els.p_lines?.querySelectorAll('.prodSearch')?.forEach((input) => {
+      input.disabled = !(els.p_supplierId && els.p_supplierId.value);
+      if (input.disabled) input.placeholder = 'Select supplier first';
+    });
     els.btnAddLine?.addEventListener('click', (e) => {
       e.preventDefault();
       addCreateLine();
@@ -898,9 +1002,20 @@
       (id, label) => {
         els.p_supplierId.value = id;
         els.p_supplierSearch.value = label;
+        // enable product inputs after choosing supplier
+        els.p_lines?.querySelectorAll('.prodSearch')?.forEach((input) => {
+          input.disabled = false;
+          if (input.placeholder === 'Select supplier first') input.placeholder = 'Search product...';
+        });
+        // clear existing product lines when supplier changes
+        if (els.p_lines) {
+          els.p_lines.innerHTML = '';
+          addCreateLine();
+        }
       },
       supplierAutocomplete,
-      (it) => `${it.displayName || it.name || ''}`
+      (it) => `${it.displayName || it.name || ''}`,
+      { focusAll: true }
     );
 
     // Edit modal product autocomplete                                                                                                        
@@ -912,11 +1027,12 @@
         els.e_productSearch.value = label;
       },
       productAutocomplete,
-      (it) => `${it.displayName || it.name || it.sku || ''}`
+      (it) => `${it.displayName || it.name || it.sku || ''}`,
+      { supplierIdProvider: () => window.currentEditSupplierId }
     );
 
     // Columns dropdown wiring                                                                                                                
-    const colIds = ['Code', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
+    const colIds = ['Id', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
     colIds.forEach((lbl) => {
       const id = 'col' + lbl;
       const key = lbl.toLowerCase();
@@ -941,10 +1057,3 @@
     list();
   });
 })();                                                          
-
-
-
-
-
-
-

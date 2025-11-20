@@ -26,6 +26,20 @@
   color: #374151;
 }
 
+/* New statuses for purchases */
+.status-badge.status-confirmed {
+  background-color: #dbeafe; /* light blue */
+  color: #1e3a8a;           /* dark blue */
+}
+.status-badge.status-partial {
+  background-color: #fef9c3; /* light amber */
+  color: #92400e;            /* amber-900 */
+}
+.status-badge.status-received {
+  background-color: #dcfce7; /* light green */
+  color: #166534;            /* green-800 */
+}
+
 /* More visible row hover and pointer cursor for purchases table */
 .kv-table tbody tr { cursor: pointer; }
 .kv-table tbody tr:hover { background: #eef2ff; }
@@ -36,3 +50,10 @@
 
 /* Ensure Bootstrap .table-hover uses our color */
 #tbl.table-hover tbody tr:hover { background-color: #eef2ff !important; }
+
+/* Warning style: unit cost > selling price */
+.warn-high-cost {
+  border-color: #dc2626 !important; /* red-600 */
+  color: #b91c1c !important;       /* red-700 */
+  background-color: #fee2e2;        /* red-100 */
+}

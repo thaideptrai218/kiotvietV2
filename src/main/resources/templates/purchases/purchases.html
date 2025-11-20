@@ -62,9 +62,7 @@
                         <select id="status" class="kv-select">
                             <option value="">All</option>
                             <option value="DRAFT">Draft</option>
-                            <option value="COMPLETED">Completed</option>
-                            
-                            
+                            <option value="CONFIRMED">Confirmed</option>
                             <option value="CANCELLED">Canceled</option>
                         </select>
                     </div>
@@ -101,7 +99,7 @@
                 <div id="hdrNormal" class="kv-cardbar">
                     <div class="kv-input-search kv-input-search--sm">
                         <i class="fas fa-search"></i>
-                        <input id="hdrSearch" type="text" placeholder="Search purchases..." />
+                        <input id="hdrSearchTop" type="text" placeholder="Search purchases..." />
                     </div>
 
                     <div class="kv-cardbar__right">
@@ -110,7 +108,7 @@
                                 <i class="fas fa-columns"></i> Columns
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="btnColumns">
-                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colCode" checked><label class="form-check-label" for="colCode">Code</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colId" checked><label class="form-check-label" for="colId">ID</label></li>
                                 <li class="form-check"><input class="form-check-input" type="checkbox" id="colSupplier" checked><label class="form-check-label" for="colSupplier">Supplier</label></li>
                                 <li class="form-check"><input class="form-check-input" type="checkbox" id="colDate" checked><label class="form-check-label" for="colDate">Date</label></li>
                                 <li class="form-check"><input class="form-check-input" type="checkbox" id="colStatus" checked><label class="form-check-label" for="colStatus">Status</label></li>
@@ -133,7 +131,7 @@
                         <thead>
                             <tr>
                                 <th style="width:36px"><input type="checkbox" id="chkAll" /></th>
-                                <th class="sortable" data-col="code" data-sort="code"><span>Code <i class="sort-icon"></i></span></th>
+                                <th class="sortable" data-col="id" data-sort="id"><span>ID <i class="sort-icon"></i></span></th>
                                 <th class="sortable" data-col="supplier" data-sort="supplier">Supplier</th>
                                 <th class="sortable" data-col="date" data-sort="billDate"><span>Date <i class="sort-icon"></i></span></th>
                                 <th class="text-end sortable" data-col="total" data-sort="grandTotal"><span>Total <i class="sort-icon"></i></span></th>
@@ -157,17 +155,19 @@
                 </div>
 
                 <div class="kv-table__footer">
-                    <div>
-                        <select id="sizeSel" class="form-select form-select-sm d-inline-block me-2" style="width: auto;">
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="sizeSel" class="small text-muted">Show</label>
+                        <select id="sizeSel" class="form-select form-select-sm" style="width: 90px;">
                             <option value="15">15</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
-                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="prevPage">Prev</button>
+                        <span class="small text-muted">per page</span>
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm ms-2" id="prevPage">Prev</button>
                         <button class="kv-btn kv-btn--ghost kv-btn--sm" id="nextPage">Next</button>
+                        <div id="pageInfo" class="text-muted small ms-2"></div>
                     </div>
-                    <div id="pageInfo" class="small text-muted"></div>
                 </div>
             </section>
         </div>
