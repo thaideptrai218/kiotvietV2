@@ -5,7 +5,7 @@
     customer: true,
     phonenumber: false,
     subtotal: true,
-    discount: false,
+    discount: true,
     paidamount: true,
     paymentmethod: true,
     cashier: false,
@@ -246,6 +246,11 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
+    // Ensure initial view matches "Reset to default" on first entry
+    try {
+      const key = storageKey && typeof storageKey === 'function' ? storageKey() : null;
+      if (key) localStorage.removeItem(key);
+    } catch { /* ignore */ }
     loadColumns();
     bindColumnControls();
     bindSelectionEvents();
@@ -630,8 +635,12 @@ function format(d) {
     loading: false
   };
 
-  function fmtNumber(n) {
-    try { return Number(n).toLocaleString('vi-VN'); } catch (_) { return n; }
+  function fmtMoney(v) {
+    try {
+      if (v === null || v === undefined) return '0';
+      const n = typeof v === 'number' ? v : Number(String(v).replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(n) ? n.toLocaleString('vi-VN') : '0';
+    } catch (_) { return '0'; }
   }
 
   function fmtDateTime(iso) {
@@ -663,16 +672,40 @@ function format(d) {
         <td class="text-muted small" data-col="orderdate">${fmtDateTime(it.orderDate)}</td>
         <td class="fw-medium" data-col="customer">${it.customerName || ''}</td>
         <td data-col="phonenumber">${it.phoneNumber || ''}</td>
-        <td class="text-end fw-semibold" data-col="subtotal">${fmtNumber(it.subtotal)}</td>
-        <td class="text-end" data-col="discount">${fmtNumber(it.discount)}</td>
-        <td class="text-end ${Number(it.paidAmount||0)===0 ? 'paid-zero' : 'paid-full'} fw-semibold" data-col="paidamount">${fmtNumber(it.paidAmount)}</td>
-        <td data-col="paymentmethod">${it.paymentMethod || ''}</td>
+        <td class="text-end fw-semibold" data-col="subtotal">${fmtMoney(it.subtotal)}</td>
+        <td class="text-end" data-col="discount">${fmtMoney(it.discount)}</td>
+        <td class="text-end fw-semibold" data-col="paidamount">${fmtMoney(it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0)))}</td>
+        <td data-col="paymentmethod">${(it.paymentMethod||'').toString().toUpperCase()}</td>
         <td data-col="cashier">${it.cashier || ''}</td>
         <td data-col="status">${statusBadge(it.status)}</td>
       </tr>
     `).join('');
     els.tblBody.innerHTML = rows;
     if (els.chkAll) { els.chkAll.checked = false; els.chkAll.indeterminate = false; }
+
+    // Ensure column visibility matches defaults/saved after data render
+    try {
+      const defaultCols = { ordercode:true, orderdate:true, customer:true, phonenumber:false, subtotal:true, discount:true, paidamount:true, paymentmethod:true, cashier:false, status:true };
+      function key() {
+        try {
+          const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1] || ''));
+            return `orders.columns.v1.${payload.companyId || 'default'}`;
+          }
+        } catch {}
+        return 'orders.columns.v1.default';
+      }
+      let cfg = {};
+      try { cfg = JSON.parse(localStorage.getItem(key()) || '{}') || {}; } catch { cfg = {}; }
+      const cols = Object.assign({}, defaultCols, cfg);
+      document.querySelectorAll('#tblPreorder th[data-col], #tblPreorder td[data-col]')
+        .forEach(el => {
+          const c = el.getAttribute('data-col');
+          if (!c) return;
+          el.classList.toggle('col-hidden', cols[c] === false);
+        });
+    } catch {}
   }
 
   function renderPagination(page, size, total, totalPages) {

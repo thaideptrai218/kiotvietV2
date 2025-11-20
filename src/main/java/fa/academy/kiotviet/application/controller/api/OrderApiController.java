@@ -68,18 +68,24 @@ public class OrderApiController {
     }
 
     private OrderListItemDto toListDto(Order o) {
+        java.math.BigDecimal zero = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal sub = o.getSubtotal() != null ? o.getSubtotal() : zero;
+        java.math.BigDecimal disc = o.getDiscount() != null ? o.getDiscount() : zero;
+        java.math.BigDecimal total = sub.subtract(disc);
+        if (total.compareTo(zero) < 0) total = zero;
         return OrderListItemDto.builder()
                 .id(o.getId())
                 .orderCode(o.getOrderCode())
                 .orderDate(o.getOrderDate())
                 .customerName(o.getCustomerName())
                 .phoneNumber(o.getPhoneNumber())
-                .subtotal(o.getSubtotal())
-                .discount(o.getDiscount())
-                .paidAmount(o.getPaidAmount())
-                .paymentMethod(o.getPaymentMethod() != null ? o.getPaymentMethod().name() : null)
+                .subtotal(sub)
+                .discount(disc)
+                .paidAmount(o.getPaidAmount() != null ? o.getPaidAmount() : zero)
+                .totalAmount(total)
+                .paymentMethod(o.getPaymentMethod() != null ? o.getPaymentMethod().name() : "")
                 .cashier(o.getCashier())
-                .status(o.getStatus() != null ? o.getStatus().name() : null)
+                .status(o.getStatus() != null ? o.getStatus().name() : "DRAFT")
                 .build();
     }
 

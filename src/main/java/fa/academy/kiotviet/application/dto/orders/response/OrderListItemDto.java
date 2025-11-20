@@ -21,8 +21,8 @@ public class OrderListItemDto {
     private BigDecimal subtotal;
     private BigDecimal discount;
     private BigDecimal paidAmount;
+    private BigDecimal totalAmount;
     private String paymentMethod;
     private String cashier;
     private String status;
 }
-
