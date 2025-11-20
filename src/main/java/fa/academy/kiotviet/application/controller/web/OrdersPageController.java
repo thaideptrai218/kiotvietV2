@@ -16,4 +16,10 @@ public class OrdersPageController extends BaseController {
         logRequest("/order", "GET", null);
         return "orders/order";
     }
+
+    @GetMapping("/create")
+    public String createOrderPage() {
+        logRequest("/order/create", "GET", null);
+        return "orders/order-create";
+    }
 }

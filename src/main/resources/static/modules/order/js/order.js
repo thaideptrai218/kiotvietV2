@@ -218,12 +218,29 @@
       clearSelection();
     });
 
-    els.btnBulkDelete?.addEventListener('click', (e) => {
+    els.btnBulkDelete?.addEventListener('click', async (e) => {
       e.preventDefault();
       if (!state.selected.size) return;
       if (!confirm(`Delete ${state.selected.size} orders?`)) return;
-      console.warn('Bulk delete not implemented yet. Selected orders:', [...state.selected]);
-      clearSelection();
+      try {
+        const ids = [...state.selected]
+          .map(v => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+          })
+          .filter(v => v != null);
+        if (!ids.length) return;
+        const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+        const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch('/api/orders/bulk', { method: 'DELETE', headers, body: JSON.stringify(ids) });
+        if (!res.ok) throw new Error(`Bulk delete failed: ${res.status}`);
+        clearSelection();
+        document.getElementById('btnRefresh')?.click();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete orders.');
+      }
     });
   }
 
@@ -581,3 +598,155 @@ document.getElementById("customCancelBtn").addEventListener("click", () => {
 function format(d) {
     return d.toLocaleDateString("en-GB");
 }
+
+/* =====================================================
+   DATA LOADING & RENDERING (API)
+===================================================== */
+(function () {
+  const api = {
+    base: '/api/orders',
+    headers() {
+      const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+      const h = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+      if (token) h['Authorization'] = `Bearer ${token}`;
+      return h;
+    }
+  };
+
+  const els = {
+    tblBody: document.querySelector('#tblPreorder tbody'),
+    chkAll: document.getElementById('chkAll'),
+    btnRefresh: document.getElementById('btnRefresh'),
+    pageInfo: document.getElementById('pageInfo'),
+    sizeSel: document.getElementById('sizeSel'),
+    pagi: document.getElementById('pagi')
+  };
+
+  const state = {
+    page: 0,
+    size: parseInt(els.sizeSel?.value || '25', 10) || 25,
+    total: 0,
+    totalPages: 0,
+    loading: false
+  };
+
+  function fmtNumber(n) {
+    try { return Number(n).toLocaleString('vi-VN'); } catch (_) { return n; }
+  }
+
+  function fmtDateTime(iso) {
+    try {
+      const d = typeof iso === 'string' ? new Date(iso) : iso;
+      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    } catch (_) { return iso; }
+  }
+
+  function statusBadge(status) {
+    const s = (status || '').toUpperCase();
+    if (s === 'COMPLETED') return '<span class="status-badge status-completed">Completed</span>';
+    if (s === 'SHIPPING') return '<span class="status-badge status-shipping">Shipping</span>';
+    return '<span class="status-badge status-draft">Draft</span>';
+  }
+
+  function renderRows(items) {
+    if (!els.tblBody) return;
+    if (!Array.isArray(items) || !items.length) {
+      els.tblBody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No orders found</td></tr>';
+      if (els.chkAll) { els.chkAll.checked = false; els.chkAll.indeterminate = false; }
+      return;
+    }
+
+    const rows = items.map(it => `
+      <tr data-id="${it.id}">
+        <td><input type="checkbox" class="row-check" data-id="${it.id}"></td>
+        <td class="fw-bold text-primary" data-col="ordercode">${it.orderCode || ''}</td>
+        <td class="text-muted small" data-col="orderdate">${fmtDateTime(it.orderDate)}</td>
+        <td class="fw-medium" data-col="customer">${it.customerName || ''}</td>
+        <td data-col="phonenumber">${it.phoneNumber || ''}</td>
+        <td class="text-end fw-semibold" data-col="subtotal">${fmtNumber(it.subtotal)}</td>
+        <td class="text-end" data-col="discount">${fmtNumber(it.discount)}</td>
+        <td class="text-end ${Number(it.paidAmount||0)===0 ? 'paid-zero' : 'paid-full'} fw-semibold" data-col="paidamount">${fmtNumber(it.paidAmount)}</td>
+        <td data-col="paymentmethod">${it.paymentMethod || ''}</td>
+        <td data-col="cashier">${it.cashier || ''}</td>
+        <td data-col="status">${statusBadge(it.status)}</td>
+      </tr>
+    `).join('');
+    els.tblBody.innerHTML = rows;
+    if (els.chkAll) { els.chkAll.checked = false; els.chkAll.indeterminate = false; }
+  }
+
+  function renderPagination(page, size, total, totalPages) {
+    if (els.pageInfo) {
+      const start = total === 0 ? 0 : (page * size) + 1;
+      const end = Math.min(total, (page + 1) * size);
+      els.pageInfo.textContent = `${start}-${end} of ${total}`;
+    }
+    if (!els.pagi) return;
+    const prevDisabled = page <= 0 ? 'disabled' : '';
+    const nextDisabled = page >= totalPages - 1 ? 'disabled' : '';
+    const pages = [];
+    for (let i = 0; i < Math.min(totalPages, 5); i++) {
+      const active = i === page ? 'active' : '';
+      pages.push(`<li class="page-item ${active}"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`);
+    }
+    els.pagi.innerHTML = `
+      <li class="page-item ${prevDisabled}"><a class="page-link" href="#" data-nav="prev"><i class="fas fa-chevron-left"></i></a></li>
+      ${pages.join('')}
+      <li class="page-item ${nextDisabled}"><a class="page-link" href="#" data-nav="next"><i class="fas fa-chevron-right"></i></a></li>
+    `;
+  }
+
+  async function load() {
+    if (state.loading) return;
+    state.loading = true;
+    try {
+      const url = `${api.base}?page=${state.page}&size=${state.size}`;
+      const res = await fetch(url, { headers: api.headers() });
+      if (!res.ok) throw new Error(`Failed to load orders: ${res.status}`);
+      const body = await res.json();
+      const paged = body?.data || {};
+      const items = paged.content || [];
+      state.total = paged.totalElements || items.length || 0;
+      state.totalPages = paged.totalPages || 1;
+      renderRows(items);
+      renderPagination(paged.page || state.page, paged.size || state.size, state.total, state.totalPages);
+    } catch (err) {
+      console.error(err);
+      renderRows([]);
+      renderPagination(0, state.size, 0, 0);
+    } finally {
+      state.loading = false;
+    }
+  }
+
+  function bindEvents() {
+    els.btnRefresh?.addEventListener('click', (e) => { e.preventDefault(); load(); });
+    els.sizeSel?.addEventListener('change', () => { state.size = parseInt(els.sizeSel.value, 10) || 25; state.page = 0; load(); });
+    els.pagi?.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      e.preventDefault();
+      const nav = a.getAttribute('data-nav');
+      const p = a.getAttribute('data-page');
+      if (nav === 'prev' && state.page > 0) { state.page -= 1; load(); }
+      else if (nav === 'next' && state.page < state.totalPages - 1) { state.page += 1; load(); }
+      else if (p != null) { state.page = parseInt(p, 10) || 0; load(); }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    bindEvents();
+    load();
+  });
+})();
+
+// Navigate to Create Order page from the list toolbar
+document.addEventListener('DOMContentLoaded', () => {
+  const btnAdd = document.getElementById('btnAdd');
+  if (btnAdd) {
+    btnAdd.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = '/order/create';
+    });
+  }
+});
