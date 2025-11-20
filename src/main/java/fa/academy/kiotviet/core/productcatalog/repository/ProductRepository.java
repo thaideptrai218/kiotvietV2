@@ -34,8 +34,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     // Unique constraint validation
     boolean existsByCompany_IdAndSkuIgnoreCase(Long companyId, String sku);
+    Optional<Product> findByCompany_IdAndSkuIgnoreCase(Long companyId, String sku);
 
     boolean existsByCompany_IdAndBarcodeIgnoreCase(Long companyId, String barcode);
+    Optional<Product> findByCompany_IdAndBarcodeIgnoreCase(Long companyId, String barcode);
 
     boolean existsByCompany_IdAndSkuIgnoreCaseAndIdNot(Long companyId, String sku, Long excludeId);
 
@@ -118,6 +120,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and " +
            "lower(p.sku) like lower(concat(:q, '%')) order by p.sku asc")
     List<Product> autocompleteSkus(@Param("companyId") Long companyId, @Param("q") String q, Pageable pageable);
+
+    // Unified autocomplete: prefix match against name, sku, or barcode
+    @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and (" +
+           "lower(p.name) like lower(concat(:q, '%')) or " +
+           "lower(p.sku) like lower(concat(:q, '%')) or " +
+           "lower(p.barcode) like lower(concat(:q, '%'))" +
+           ") order by p.name asc")
+    List<Product> autocompleteAll(@Param("companyId") Long companyId, @Param("q") String q, Pageable pageable);
 
     // Count queries for reporting
     long countByCompany_IdAndStatus(Long companyId, Product.ProductStatus status);

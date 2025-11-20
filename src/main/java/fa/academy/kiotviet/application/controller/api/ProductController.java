@@ -116,6 +116,20 @@ public class ProductController {
     }
 
     /**
+     * Fast lookup by exact SKU or barcode (case-insensitive)
+     */
+    @GetMapping("/lookup")
+    public SuccessResponse<ProductAutocompleteItem> lookupByCode(@RequestParam String code) {
+        Long companyId = currentCompanyId();
+        ProductAutocompleteItem item = productService.lookupByCode(companyId, code);
+        if (item == null) {
+            // Return 200 with null data for simplicity; clients can treat as not found
+            return ResponseFactory.success(null, "No product matched code");
+        }
+        return ResponseFactory.success(item, "Product found by code");
+    }
+
+    /**
      * Get products that are low on stock
      */
     @GetMapping("/low-stock")

@@ -224,25 +224,26 @@ public class ProductService {
         int effectiveLimit = limit <= 0 ? 10 : Math.min(limit, 50);
         Pageable pageable = PageRequest.of(0, effectiveLimit, Sort.by("name").ascending());
         String q = query == null ? "" : query.trim();
-        List<Product> products;
-        if (supplierId != null) {
-            products = productRepository.autocompleteProductNamesBySupplier(companyId, supplierId, q, pageable);
-        } else {
-            products = productRepository.autocompleteProductNames(companyId, q, pageable);
-        }
+        if (q.isEmpty()) return List.of();
+
+        // Unified prefix search on name, sku, and barcode for better UX (works for barcode same as name)
+        List<Product> products = productRepository.autocompleteAll(companyId, q, pageable);
 
         return products.stream()
-                .map(p -> ProductAutocompleteItem.builder()
-                        .id(p.getId())
-                        .sku(p.getSku())
-                        .name(p.getName())
-                        .barcode(p.getBarcode())
-                        .displayName(buildDisplayName(p))
-                        .onHand(p.getOnHand())
-                        .isAvailable(p.isAvailable())
-                        .sellingPrice(p.getSellingPrice().toString())
-                        .build())
+                .map(this::toAutocomplete)
                 .collect(Collectors.toList());
+    }
+
+    public ProductAutocompleteItem lookupByCode(Long companyId, String code) {
+        if (code == null || code.trim().isEmpty()) return null;
+        String c = code.trim();
+        // Try SKU exact (case-insensitive)
+        var bySku = productRepository.findByCompany_IdAndSkuIgnoreCase(companyId, c).orElse(null);
+        if (bySku != null) return toAutocomplete(bySku);
+        // Try barcode exact (case-insensitive)
+        var byBarcode = productRepository.findByCompany_IdAndBarcodeIgnoreCase(companyId, c).orElse(null);
+        if (byBarcode != null) return toAutocomplete(byBarcode);
+        return null;
     }
 
     public List<ProductDto> findLowStockProducts(Long companyId) {
@@ -336,6 +337,19 @@ public class ProductService {
             return String.format("%s - %s", product.getSku(), product.getName());
         }
         return product.getName();
+    }
+
+    private ProductAutocompleteItem toAutocomplete(Product p) {
+        return ProductAutocompleteItem.builder()
+                .id(p.getId())
+                .sku(p.getSku())
+                .name(p.getName())
+                .barcode(p.getBarcode())
+                .displayName(buildDisplayName(p))
+                .onHand(p.getOnHand())
+                .isAvailable(p.isAvailable())
+                .sellingPrice(p.getSellingPrice().toString())
+                .build();
     }
 
     // Specification methods

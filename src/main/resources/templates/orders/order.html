@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - KiotViet</title>
+
+    <!-- Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Module CSS -->
+    <link rel="stylesheet" th:href="@{/modules/order/css/order.css}">
+    <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
+    <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
+</head>
+
+<body>
+    <!-- Shared Header -->
+    <div th:replace="~{common/header :: dashboardHeader}"></div>
+
+    <!-- Shared Navigation -->
+    <div th:replace="~{common/navigation :: dashboardNav('orders')}"></div>
+
+    <!-- Page Toolbar (Import / Export / Create) -->
+    <section class="kv-toolbar" aria-labelledby="page-title">
+        <div class="kv-toolbar__inner">
+            <h1 id="page-title" class="kv-title">Orders</h1>
+            <div class="kv-actions">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import suppliers from file">
+                    <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
+                </button>
+                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export suppliers to CSV">
+                    <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
+                </button>
+                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new supplier">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>Create Order</span>
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- Main content -->
+    <main class="kv-content">
+        <div class="kv-grid">
+            <!-- Filter Sidebar -->
+            <aside class="kv-filter" id="filterPanel">
+                <form class="kv-filter__form" onsubmit="return false;">
+
+                    <!-- THIS MONTH -->
+                    <div class="date-row">
+                        <label class="radio-line ">
+                            <input type="radio" name="dateRange" checked>
+                        </label>
+
+                        <div id="datePresetBtn" class="date-select-btn">
+                            <span id="selectedDateLabel">This month</span>
+                            <i class="fa fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- CUSTOM DATE -->
+                    <div class="date-row">
+
+                        <label class="radio-line">
+                            <input id="customRadio" type="radio" name="dateRange">
+                        </label>
+
+                        <div id="customTrigger" class="date-custom-box">
+                            <span id="customRangeLabel">Custom range</span>
+                            <i class="fa fa-calendar"></i>
+                        </div>
+                    </div>
+
+
+
+
+                    <!-- POPUP -->
+                    <div id="datePopup" class="date-popup">
+
+
+                        <div class="popup-col">
+                            <div class="popup-col-title">By day</div>
+                            <div class="popup-item">Today</div>
+                            <div class="popup-item">Yesterday</div>
+                        </div>
+
+                        <div class="popup-col">
+                            <div class="popup-col-title">By week</div>
+                            <div class="popup-item">This week</div>
+                            <div class="popup-item">Last week</div>
+                            <div class="popup-item">Last 7 days</div>
+                        </div>
+
+                        <div class="popup-col">
+                            <div class="popup-col-title">By month</div>
+                            <div class="popup-item selected">This month</div>
+                            <div class="popup-item">Last month</div>
+                            <div class="popup-item">This month (lunar calendar)</div>
+                            <div class="popup-item">Last month (lunar calendar)</div>
+                            <div class="popup-item">Last 30 days</div>
+                        </div>
+
+                        <div class="popup-col">
+                            <div class="popup-col-title">By quarter</div>
+                            <div class="popup-item">This quarter</div>
+                            <div class="popup-item">Last quarter</div>
+                        </div>
+
+                        <div class="popup-col">
+                            <div class="popup-col-title">By year</div>
+                            <div class="popup-item">This year</div>
+                            <div class="popup-item">Last year</div>
+                            <div class="popup-item">This year (lunar calendar)</div>
+                            <div class="popup-item">Last year (lunar calendar)</div>
+                        </div>
+
+                    </div>
+
+                    <!-- CUSTOM DATE POPUP -->
+                    <div id="customDatePopup" class="custom-date-popup hidden">
+
+                        <div class="date-range-header">
+                            From date: <b id="fromDateText">--/--/----</b>
+                            – To date: <b id="toDateText">--/--/----</b>
+                        </div>
+
+                        <div class="date-range-body">
+
+                            <!-- LEFT CALENDAR -->
+                            <div class="calendar-block">
+                                <div class="cal-nav">
+                                    <button class="cal-prev" data-cal="from">&lt;</button>
+                                    <span class="cal-title" id="fromCalTitle">November 2025</span>
+                                    <button class="cal-next" data-cal="from">&gt;</button>
+                                </div>
+
+                                <div class="cal-grid" id="fromCalendar"></div>
+                            </div>
+
+                            <!-- RIGHT CALENDAR -->
+                            <div class="calendar-block">
+                                <div class="cal-nav">
+                                    <button class="cal-prev" data-cal="to">&lt;</button>
+                                    <span class="cal-title" id="toCalTitle">November 2025</span>
+                                    <button class="cal-next" data-cal="to">&gt;</button>
+                                </div>
+
+                                <div class="cal-grid" id="toCalendar"></div>
+                            </div>
+
+                        </div>
+
+                        <div class="date-range-footer">
+                            <button id="customTodayBtn">Today</button>
+                            <div class="footer-right">
+                                <button id="customCancelBtn">Cancel</button>
+                                <button id="customApplyBtn" class="apply-btn">Apply</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- Status filter -->
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Status</label>
+                        <select id="status" class="kv-select">
+                            <option value="">All Status</option>
+                            <option value="DRAFT">Draft</option>
+                            <option value="COMPLETED">Completed</option>
+                        </select>
+                    </div>
+
+                    <!-- Customer -->
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Customer</label>
+                        <input type="text" class="kv-input" placeholder="Enter customer" id="locationFilter">
+                    </div>
+
+                    <!-- Cashier -->
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Cashier</label>
+                        <input type="text" class="kv-input" placeholder="Enter Cashier" id="locationFilter">
+                    </div>
+
+
+
+                    <!-- Phone number -->
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Phone number</label>
+                        <input type="text" class="kv-input" placeholder="Enter phone number" id="locationFilter">
+                    </div>
+                </form>
+            </aside>
+
+            <!-- Right data panel -->
+            <section class="kv-card">
+                <!-- Table toolbar -->
+                <div id="hdrNormal" class="kv-cardbar">
+                    <div class="kv-input-search kv-input-search--sm">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="hdrSearch" placeholder="By order code" />
+                    </div>
+                    <div class="kv-cardbar__right">
+                        <div class="dropdown">
+                            <button class="kv-btn kv-btn--ghost kv-btn--sm dropdown-toggle" id="btnColumns"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-table-columns me-1"></i> Columns
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 240px;" id="colMenu">
+
+                                <!-- Các cột có thể ẩn/hiện -->
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colOrderCode" checked>
+                                    <label class="form-check-label" for="colOrderCode">Order Code</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colOrderDate" checked>
+                                    <label class="form-check-label" for="colOrderDate">Order Date</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colCustomer" checked>
+                                    <label class="form-check-label" for="colCustomer">Customer</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colPhoneNumber">
+                                    <label class="form-check-label" for="colPhoneNumber">Phone number</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colSubTotal" checked>
+                                    <label class="form-check-label" for="colSubTotal">Sub-total</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colDiscount" checked>
+                                    <label class="form-check-label" for="colDiscount">Discount</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colCustomerPays">
+                                    <label class="form-check-label" for="colCustomerPays">Customer pays</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colRemaining">
+                                    <label class="form-check-label" for="colRemaining">Remaining</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colPaidAmount" checked>
+                                    <label class="form-check-label" for="colPaidAmount">Paid amount</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colPaymentMethod">
+                                    <label class="form-check-label" for="colPaymentMethod">Payment method</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colCashier">
+                                    <label class="form-check-label" for="colCashier">Cashier</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="checkbox" id="colStatus" checked>
+                                    <label class="form-check-label" for="colStatus">Status</label>
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item text-danger small" id="btnResetColumns">
+                                    <i class="fas fa-rotate-left me-1"></i> Reset to default
+                                </button>
+                            </div>
+                        </div>
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnRefresh">
+                            <i class="fas fa-rotate"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bulk mode bar -->
+                <div id="hdrBulk" class="kv-bulkbar d-none">
+                    <div><span id="selCount" class="fw-semibold">0</span> selected</div>
+                    <div class="d-flex gap-2">
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnClearSel">Clear</button>
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete"><i
+                                class="far fa-trash-can me-1"></i>Delete</button>
+                    </div>
+                </div>
+
+                <!-- Active filter chips -->
+                <div id="chips" class="kv-chips"></div>
+
+                <!-- Data table -->
+                <div class="kv-card-content">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle kv-table" id="tblPreorder">
+                            <thead>
+                                <tr>
+                                    <th style="width:38px"><input type="checkbox" id="chkAll"
+                                            title="Select current page only"></th>
+
+                                    <th data-sort="ordercode" data-col="ordercode" class="sortable" aria-sort="none">
+                                        <span>Order Code <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="orderdate" data-col="orderdate" class="sortable" aria-sort="none">
+                                        <span>Order Date <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="customer" data-col="customer" class="sortable" aria-sort="none">
+                                        <span>Customer <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="phonenumber" data-col="phonenumber" class="sortable"
+                                        aria-sort="none">
+                                        <span>Phone number <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="subtotal" data-col="subtotal" class="sortable" aria-sort="none">
+                                        <span>Sub-total <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="discount" data-col="discount" class="sortable" aria-sort="none">
+                                        <span>Discount <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="customerpays" data-col="customerpays" class="sortable" aria-sort="none">
+                                        <span>Customer pays <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="remaining" data-col="remaining" class="sortable" aria-sort="none">
+                                        <span>Remaining <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="paidamount" data-col="paidamount" class="sortable" aria-sort="none">
+                                        <span>Paid amount <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="paymentmethod" data-col="paymentmethod" class="sortable"
+                                        aria-sort="none">
+                                        <span>Payment method <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="cashier" data-col="cashier" class="sortable" aria-sort="none">
+                                        <span>Cashier <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="status" data-col="status" class="sortable" aria-sort="none">
+                                        <span>Status <i class="sort-icon"></i></span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="kv-table__footer">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="sizeSel" class="small text-muted">Show</label>
+                            <select id="sizeSel" class="form-select form-select-sm" style="width: 90px;">
+                                <option>15</option>
+                                <option selected>25</option>
+                                <option>50</option>
+                                <option>100</option>
+                            </select>
+                            <span class="small text-muted">per page</span>
+                            <div id="pageInfo" class="text-muted small ms-2">1–2 of 2</div>
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="pagi">
+                                <li class="page-item disabled"><a class="page-link" href="#"><i
+                                            class="fas fa-chevron-left"></i></a></li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item disabled"><a class="page-link" href="#"><i
+                                            class="fas fa-chevron-right"></i></a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core -->
+    <script src="/core/js/auth.js" th:src="@{/core/js/auth.js}"></script>
+    <script src="/modules/dashboard/js/dashboard-core.js" th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
+
+    <!-- Module JS -->
+    <script src="/modules/order/js/order.js" th:src="@{/modules/order/js/order.js}"></script>
+</body>
+
+</html>
+
+
