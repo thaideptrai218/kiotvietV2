@@ -220,7 +220,10 @@ public class ProductService {
         int effectiveLimit = limit <= 0 ? 10 : Math.min(limit, 50);
         Pageable pageable = PageRequest.of(0, effectiveLimit, Sort.by("name").ascending());
         String q = query == null ? "" : query.trim();
-        List<Product> products = productRepository.autocompleteProductNames(companyId, q, pageable);
+        if (q.isEmpty()) return List.of();
+
+        // Unified prefix search on name, sku, and barcode for better UX (works for barcode same as name)
+        List<Product> products = productRepository.autocompleteAll(companyId, q, pageable);
 
         return products.stream()
                 .map(this::toAutocomplete)

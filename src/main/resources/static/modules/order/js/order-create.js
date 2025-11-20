@@ -8,11 +8,18 @@
     sumSubtotal: document.getElementById('sumSubtotal'),
     sumDiscount: document.getElementById('sumDiscount'),
     sumTotal: document.getElementById('sumTotal'),
-    customerPay: document.getElementById('customerPay')
+    customerPay: document.getElementById('customerPay'),
+    orderDiscount: document.getElementById('orderDiscount'),
+    sumChange: document.getElementById('sumChange')
   };
 
   function fmt(n) { try { return Number(n||0).toLocaleString('vi-VN'); } catch { return n; } }
   function parseNumber(n) { const v = Number(n); return Number.isFinite(v) ? v : 0; }
+  function parseCurrencyText(text) {
+    // Strip all non-digits (treat as VND integer amount)
+    const raw = (text || '').toString().replace(/[^0-9]/g, '');
+    return Number(raw || '0');
+  }
 
   function tickClock() {
     if (!els.nowTs) return;
@@ -26,15 +33,23 @@
     // Placeholder calculation: sum visible items' line totals if any numeric present
     let subtotal = 0;
     els.items?.querySelectorAll('.pos-itemcard .line-total').forEach(el => {
-      const raw = (el.textContent || '0').replace(/[^0-9.-]/g, '');
-      const v = Number(raw);
+      const v = parseCurrencyText(el.textContent);
       if (!Number.isNaN(v)) subtotal += v;
     });
-    const discount = 0;
-    const total = subtotal - discount;
+    const discountPercentRaw = parseFloat(els.orderDiscount?.value || '0');
+    const discountPercent = isNaN(discountPercentRaw) ? 0 : Math.min(Math.max(discountPercentRaw, 0), 100);
+    const discount = Math.round(subtotal * (discountPercent / 100));
+    const total = Math.max(0, subtotal - discount);
     if (els.sumSubtotal) els.sumSubtotal.textContent = fmt(subtotal);
     if (els.sumDiscount) els.sumDiscount.textContent = fmt(discount);
     if (els.sumTotal) els.sumTotal.textContent = fmt(total);
+    const paid = parseCurrencyText(els.customerPay?.value || '0');
+    const change = paid - total;
+    if (els.sumChange) {
+      els.sumChange.textContent = fmt(change);
+      els.sumChange.classList.toggle('text-danger', change < 0);
+      els.sumChange.classList.toggle('text-success', change >= 0);
+    }
   }
 
   function addItemCard(prod) {
@@ -47,6 +62,7 @@
     const row = document.createElement('div');
     row.className = 'pos-itemcard d-flex align-items-center';
     row.dataset.productId = id;
+    row.dataset.unitPrice = String(price);
     row.innerHTML = `
       <div class="stt"></div>
       <button class="icon-btn text-danger" title="Remove"><i class="fa fa-trash-can"></i></button>
@@ -255,7 +271,7 @@
       }
       if (e.target.closest('.btn-qty-minus')) {
         const input = card.querySelector('.qty input');
-        const price = parseNumber((card.querySelector('.price')?.textContent||'0').replace(/[^0-9.-]/g,''));
+        const price = parseNumber(card.dataset.unitPrice || '0');
         let q = Math.max(1, parseInt(input.value || '1', 10) - 1);
         input.value = String(q);
         card.querySelector('.line-total').textContent = fmt(price * q);
@@ -263,7 +279,7 @@
       }
       if (e.target.closest('.btn-qty-plus')) {
         const input = card.querySelector('.qty input');
-        const price = parseNumber((card.querySelector('.price')?.textContent||'0').replace(/[^0-9.-]/g,''));
+        const price = parseNumber(card.dataset.unitPrice || '0');
         let q = Math.max(1, parseInt(input.value || '1', 10) + 1);
         input.value = String(q);
         card.querySelector('.line-total').textContent = fmt(price * q);
@@ -274,12 +290,16 @@
       const input = e.target.closest('.qty input');
       if (!input) return;
       const card = e.target.closest('.pos-itemcard');
-      const price = parseNumber((card.querySelector('.price')?.textContent||'0').replace(/[^0-9.-]/g,''));
+      const price = parseNumber(card.dataset.unitPrice || '0');
       let q = Math.max(1, parseInt(input.value || '1', 10));
       input.value = String(q);
       card.querySelector('.line-total').textContent = fmt(price * q);
       calcTotals();
     });
+
+    // Discount and customer pay auto-calculation
+    els.orderDiscount?.addEventListener('input', () => { calcTotals(); });
+    els.customerPay?.addEventListener('input', () => { calcTotals(); });
 
     els.btnComplete?.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -290,8 +310,7 @@
         const sku = (card.querySelector('.sku')?.textContent || '').trim();
         const name = (card.querySelector('.name')?.textContent || '').trim();
         const qty = Number(card.querySelector('.qty input')?.value || '1') || 1;
-        const unitRaw = (card.querySelector('.price')?.textContent || '0').replace(/[^0-9.-]/g, '');
-        const unitPrice = Number(unitRaw) || 0;
+        const unitPrice = parseNumber(card.dataset.unitPrice || '0');
         const productId = card.dataset.productId ? Number(card.dataset.productId) : null;
         items.push({ productId, sku, name, quantity: qty, unitPrice, discount: 0 });
       });
@@ -300,12 +319,18 @@
         return;
       }
 
-      const paidAmount = Number(els.customerPay?.value || '0') || 0;
+      const paidAmount = parseCurrencyText(els.customerPay?.value || '0');
+      const orderDiscountPercent = (function(){
+        const v = parseFloat(els.orderDiscount?.value || '0');
+        if (isNaN(v)) return 0;
+        return Math.min(Math.max(v, 0), 100);
+      })();
       const payload = {
         customerName: document.getElementById('customerSearch')?.value || null,
         phoneNumber: null,
         paymentMethod: 'CASH',
         paidAmount,
+        orderDiscountPercent,
         items
       };
 
@@ -320,8 +345,12 @@
         }
         const body = await res.json();
         const code = body?.data?.orderCode || 'Order';
-        // Redirect back to orders list after creation
-        window.location.href = '/order';
+        // Stay on page; show success and reset current draft
+        alert(`Created ${code} successfully.`);
+        if (els.items) els.items.innerHTML = '';
+        if (els.customerPay) els.customerPay.value = '';
+        calcTotals();
+        els.productSearch?.focus();
       } catch (err) {
         console.error(err);
         alert('Failed to create order.');

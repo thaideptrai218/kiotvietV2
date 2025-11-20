@@ -95,6 +95,19 @@ public class OrderService {
             items.add(oi);
         }
 
+        // Add order-level discount: percentage takes precedence over absolute
+        if (req.getOrderDiscountPercent() != null) {
+            java.math.BigDecimal percent = req.getOrderDiscountPercent();
+            if (percent.compareTo(java.math.BigDecimal.ZERO) < 0) percent = java.math.BigDecimal.ZERO;
+            // cap at 100%
+            if (percent.compareTo(new java.math.BigDecimal("100")) > 0) percent = new java.math.BigDecimal("100");
+            java.math.BigDecimal percentAmount = subtotal
+                    .multiply(percent)
+                    .divide(new java.math.BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+            totalDiscount = totalDiscount.add(percentAmount);
+        } else if (req.getOrderDiscount() != null) {
+            totalDiscount = totalDiscount.add(req.getOrderDiscount());
+        }
         order.setSubtotal(subtotal);
         order.setDiscount(totalDiscount);
         java.math.BigDecimal total = subtotal.subtract(totalDiscount);
