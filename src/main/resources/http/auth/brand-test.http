@@ -1,0 +1,110 @@
+### Brand Management API Tests (Authenticated)
+### Step 1: Login to obtain JWT, then paste accessToken into @token below.
+
+### Variables
+@baseUrl = http://localhost:8080
+@username = Novem
+@password = Admin123!
+@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjExLCJ1c2VybmFtZSI6Ik5vdmVtIiwiY29tcGFueUlkIjo0LCJyb2xlIjoiYWRtaW4iLCJzdWIiOiJOb3ZlbSIsImlhdCI6MTc2MzQ0OTI0NywiZXhwIjoxNzYzNDUwMTQ3fQ.FOgLHhpc8N1nSNpt7qEM76Ax4TrlfpB8FhPvEQQcVFSE-pHxU2dDIyiu43QIYoH0e_cG0A4-TwN2B17BvDfiPw
+
+### Step 1 — Login (copy data.accessToken into @token)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### Common header (used by all brand endpoints)
+@authHeader = Authorization: Bearer {{token}}
+
+### =================== CREATE ===================
+
+### Create a new brand
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Apple",
+  "description": "Technology company known for iPhone and Mac computers",
+  "website": "https://www.apple.com",
+  "logoUrl": "https://example.com/logos/apple.png",
+  "isActive": true
+}
+
+### Create another brand (minimal fields)
+POST {{baseUrl}}/api/brands
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Generic Brand"
+}
+
+### =================== READ/LIST ===================
+
+### List brands (paginated, sorted by name ASC)
+GET {{baseUrl}}/api/brands?page=0&size=20&sortBy=name&sortDir=asc
+{{authHeader}}
+
+### List active brands only (paginated)
+GET {{baseUrl}}/api/brands?active=true&page=0&size=20
+{{authHeader}}
+
+### Get all active brands (no pagination)
+GET {{baseUrl}}/api/brands/active
+{{authHeader}}
+
+### Get a brand by ID
+GET {{baseUrl}}/api/brands/1
+{{authHeader}}
+
+### Search brands by keyword
+GET {{baseUrl}}/api/brands?search=apple&page=0&size=10
+{{authHeader}}
+
+### =================== UPDATE ===================
+
+### Update brand fields
+PUT {{baseUrl}}/api/brands/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Apple Inc.",
+  "description": "Updated: American multinational technology company",
+  "website": "https://www.apple.com/updated",
+  "logoUrl": "https://example.com/logos/apple-updated.png",
+  "isActive": true
+}
+
+### Deactivate (soft delete) via update
+PUT {{baseUrl}}/api/brands/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+### =================== DELETE (SOFT) ===================
+
+### Soft delete a brand by ID (sets inactive)
+DELETE {{baseUrl}}/api/brands/2
+{{authHeader}}
+
+### =================== AUTOCOMPLETE & FILTERS ===================
+
+### Autocomplete by prefix
+GET {{baseUrl}}/api/brands/autocomplete?query=ap&limit=10
+{{authHeader}}
+
+### Brands with website only
+GET {{baseUrl}}/api/brands/with-website
+{{authHeader}}
+
+### Brands with logo only
+GET {{baseUrl}}/api/brands/with-logo
+{{authHeader}}

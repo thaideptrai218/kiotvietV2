@@ -42,6 +42,25 @@ public class Company {
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
+    @Size(max = 100, message = "Country must not exceed 100 characters")
+    @Column(name = "country", length = 100)
+    private String country;
+
+    @Size(max = 10, message = "Country flag code must not exceed 10 characters")
+    @Column(name = "country_flag", length = 10)
+    private String countryFlag;
+
+    @Size(max = 255, message = "Province must not exceed 255 characters")
+    @Column(name = "province")
+    private String province;
+
+    @Size(max = 255, message = "Ward must not exceed 255 characters")
+    @Column(name = "ward")
+    private String ward;
+
+    @Column(name = "logo_url", columnDefinition = "TEXT")
+    private String logoUrl;
+
     @Size(max = 50, message = "Tax code must not exceed 50 characters")
     @Column(name = "tax_code")
     private String taxCode;

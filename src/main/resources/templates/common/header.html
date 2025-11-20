@@ -35,9 +35,10 @@
                 </button>
 
                 <!-- Settings -->
-                <button class="iconButton" aria-label="Settings" onclick="openUserSettings()">
-                    <i class="fas fa-cog"></i>
-                </button>
+                <a th:href="@{/setting}" class="header-btn header-btn-text" aria-label="Settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
 
                 <!-- User Avatar -->
                 <button class="avatarButton" aria-label="User Profile" onclick="toggleUserDropdown()">
@@ -67,7 +68,7 @@
                             <i class="fas fa-shield-alt" style="margin-right: 8px; width: 16px;"></i>
                             2FA Settings
                         </a>
-                        <a href="#" style="display: flex; align-items: center; padding: 12px 16px; color: #333; text-decoration: none; transition: background-color 0.2s ease;" onclick="openUserSettings()" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a th:href="@{/setting}" style="display: flex; align-items: center; padding: 12px 16px; color: #333; text-decoration: none; transition: background-color 0.2s ease;" onclick="openUserSettings()" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'">
                             <i class="fas fa-cog" style="margin-right: 8px; width: 16px;"></i>
                             Settings
                         </a>

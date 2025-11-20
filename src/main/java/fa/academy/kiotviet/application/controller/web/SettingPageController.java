@@ -9,4 +9,5 @@ public class SettingPageController {
     public String setting() {
         return "modules/setting/setting"; 
     }
+
 }

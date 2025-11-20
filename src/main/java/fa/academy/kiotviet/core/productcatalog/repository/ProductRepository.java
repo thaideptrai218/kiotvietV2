@@ -6,8 +6,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     // Basic CRUD with tenant isolation
     Optional<Product> findByIdAndCompany_Id(Long id, Long companyId);
+
+    // For inventory updates: lock product row to avoid concurrent stock increments
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Product> findWithLockByIdAndCompany_Id(Long id, Long companyId);
 
     Page<Product> findByCompany_Id(Long companyId, Pageable pageable);
 
@@ -103,6 +109,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and " +
            "lower(p.name) like lower(concat(:q, '%')) order by p.name asc")
     List<Product> autocompleteProductNames(@Param("companyId") Long companyId, @Param("q") String q, Pageable pageable);
+
+    @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and p.supplier.id = :supplierId and " +
+           "lower(p.name) like lower(concat(:q, '%')) order by p.name asc")
+    List<Product> autocompleteProductNamesBySupplier(@Param("companyId") Long companyId,
+                                                    @Param("supplierId") Long supplierId,
+                                                    @Param("q") String q,
+                                                    Pageable pageable);
 
     @Query("select p from Product p where p.company.id = :companyId and p.status = 'ACTIVE' and " +
            "lower(p.sku) like lower(concat(:q, '%')) order by p.sku asc")

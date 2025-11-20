@@ -298,31 +298,31 @@
   - [x] Create endpoint: GET /api/suppliers/autocomplete?query=
   - [x] Return limited results with id and display name for dropdowns
   - **Add product-supplier relationship preparation**
-  - [ ] Add supplier_id field to products table (future V8 migration)
+  - [x] Add supplier_id field to products table (future V8 migration)
   - [ ] Test supplier selection in product forms
   - [ ] Create shared supplier search component
 
 #### Days 11-12: Supplier Frontend with Auto-Complete
 - [ ] **Build supplier management HTML structure**
-  - [ ] Create supplier management HTML template
-  - [ ] Build supplier list/table with responsive design
-  - [ ] Add search and filter sidebar
+  - [x] Create supplier management HTML template
+  - [x] Build supplier list/table with responsive design
+  - [x] Add search and filter sidebar
   - [ ] Add supplier details modal for viewing
-  - [ ] Add create/edit supplier modals
+  - [x] Add create/edit supplier modals
 
 - [ ] **Create supplier forms and validation**
   - [ ] Create supplier creation form with all fields
   - [ ] Add supplier editing form with data population
   - [ ] Implement field validation (email, phone, tax code)
   - [ ] Add form validation messages and error handling
-  - [ ] Add loading indicators for AJAX operations
+  - [x] Add loading indicators for AJAX operations
 
 - [ ] **Implement supplier search functionality**
-  - [ ] Real-time search with debouncing
-  - [ ] Multiple search criteria (name, contact, tax code)
+  - [x] Real-time search with debouncing
+  - [x] Multiple search criteria (name, contact, tax code)
   - [ ] Search result highlighting
-  - [ ] Filter by active status
-  - [ ] Pagination with page numbers and sorting
+  - [x] Filter by active status
+  - [x] Pagination with page numbers and sorting
 
 - [ ] **Create auto-complete component for integration**
   - [ ] Build reusable supplier auto-complete component
@@ -459,45 +459,45 @@
 
 ### Days 15-17: Product CRUD
 - [ ] **Create products and product_images tables**
-  - [ ] Design Product entity with required fields
-  - [ ] Design ProductImage entity for multiple images
-  - [ ] Write Flyway migrations for product tables
-  - [ ] Add foreign key constraints
-  - [ ] Add indexes for performance
+  - [x] Design Product entity with required fields
+  - [x] Design ProductImage entity for multiple images
+  - [x] Write Flyway migrations for product tables
+  - [x] Add foreign key constraints
+  - [x] Add indexes for performance
   - [ ] Test table creation
 
 - [ ] **Implement product CRUD endpoints**
-  - [ ] Create Product entity with JPA annotations
-  - [ ] Create ProductRepository with account isolation
-  - [ ] Create ProductService with business logic
-  - [ ] Create ProductController with REST endpoints
-  - [ ] Add comprehensive validation
-  - [ ] Add error handling for duplicate SKUs/barcodes
+  - [x] Create Product entity with JPA annotations
+  - [x] Create ProductRepository with account isolation
+  - [x] Create ProductService with business logic
+  - [x] Create ProductController with REST endpoints
+  - [x] Add comprehensive validation
+  - [x] Add error handling for duplicate SKUs/barcodes
   - [ ] Test all product CRUD operations
 
 - [ ] **Build product list UI with pagination**
-  - [ ] Create product management HTML template
-  - [ ] Build product list table with responsive design
-  - [ ] Implement pagination controls
-  - [ ] Add product status indicators
+  - [x] Create product management HTML template
+  - [x] Build product list table with responsive design
+  - [x] Implement pagination controls
+  - [x] Add product status indicators
   - [ ] Add product image thumbnails
   - [ ] Test product list UI
 
 - [ ] **Build add/edit product form**
-  - [ ] Create product creation form
-  - [ ] Add category selection dropdown
-  - [ ] Add supplier selection dropdown
-  - [ ] Add price and cost validation
-  - [ ] Add stock level initialization
-  - [ ] Add form validation and error display
+  - [x] Create product creation form
+  - [x] Add category selection dropdown
+  - [x] Add supplier selection dropdown
+  - [x] Add price and cost validation
+  - [x] Add stock level initialization
+  - [x] Add form validation and error display
   - [ ] Test product forms
 
 - [ ] **Implement product validation**
-  - [ ] Add SKU uniqueness validation per account
-  - [ ] Add barcode uniqueness validation
-  - [ ] Add price validation (positive numbers)
-  - [ ] Add required field validation
-  - [ ] Add business logic validation
+  - [x] Add SKU uniqueness validation per account
+  - [x] Add barcode uniqueness validation
+  - [x] Add price validation (positive numbers)
+  - [x] Add required field validation
+  - [x] Add business logic validation
   - [ ] Test validation rules
 
 - [ ] **Test product operations**
@@ -549,30 +549,30 @@
 
 ### Days 20-21: Product Search
 - [ ] **Set up FULLTEXT index on product name**
-  - [ ] Add FULLTEXT index to products.name
+  - [x] Add FULLTEXT index to products.name
   - [ ] Configure MySQL for full-text search
   - [ ] Test full-text search functionality
   - [ ] Optimize search queries
   - [ ] Test search performance
 
 - [ ] **Implement search endpoint with filters**
-  - [ ] Create product search service
-  - [ ] Add search by product name
+  - [x] Create product search service
+  - [x] Add search by product name
   - [ ] Add search by barcode (exact match)
-  - [ ] Add category filter
-  - [ ] Add supplier filter
-  - [ ] Add status filter
-  - [ ] Add sorting options
-  - [ ] Add pagination to search results
+  - [x] Add category filter
+  - [x] Add supplier filter
+  - [x] Add status filter
+  - [x] Add sorting options
+  - [x] Add pagination to search results
   - [ ] Test search functionality
 
 - [ ] **Build search UI with filter options**
   - [ ] Create search bar with autocomplete
-  - [ ] Add filter dropdowns (category, supplier, status)
-  - [ ] Add sort options (name, price, created date)
-  - [ ] Add search results display
-  - [ ] Add search result count
-  - [ ] Add clear filters functionality
+  - [x] Add filter dropdowns (category, supplier, status)
+  - [x] Add sort options (name, price, created date)
+  - [x] Add search results display
+  - [x] Add search result count
+  - [x] Add clear filters functionality
   - [ ] Test search UI
 
 - [ ] **Implement search result caching**
