@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Purchases - KiotViet</title>
+
+    <!-- Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Module CSS (use products styling for kv-* components) -->
+    <link rel="stylesheet" th:href="@{/modules/products/css/products.css}">
+    <link rel="stylesheet" th:href="@{/modules/purchases/css/purchases.css}">
+    <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
+    <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
+</head>
+
+<body>
+    <!-- Shared Header -->
+    <div th:replace="~{common/header :: dashboardHeader}"></div>
+
+    <!-- Shared Navigation -->
+    <div th:replace="~{common/navigation :: dashboardNav('purchases')}"></div>
+
+    <!-- Page Toolbar (same skeleton as Suppliers) -->
+    <section class="kv-toolbar" aria-labelledby="page-title">
+        <div class="kv-toolbar__inner">
+            <h1 id="page-title" class="kv-title">Purchases</h1>
+            <div class="kv-actions">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import purchases from file">
+                    <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
+                </button>
+                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export purchases to CSV">
+                    <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
+                </button>
+                <button class="kv-btn kv-btn--primary" id="btnNew" title="Create new purchase entry">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>Create Entry</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content (same skeleton as Suppliers) -->
+    <main class="kv-content">
+        <div class="kv-grid">
+            <!-- Filter Sidebar -->
+            <aside class="kv-filter" id="filterPanel">
+                <form class="kv-filter__form" onsubmit="return false;">
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Search</label>
+                        <div class="kv-input-search">
+                            <i class="fas fa-search"></i>
+                            <input id="hdrSearch" type="text" placeholder="Search purchases (code/ref/supplier)..." />
+                        </div>
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Status</label>
+                        <select id="status" class="kv-select">
+                            <option value="">All</option>
+                            <option value="DRAFT">Draft</option>
+                            <option value="COMPLETED">Completed</option>
+                            
+                            
+                            <option value="CANCELLED">Canceled</option>
+                        </select>
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Supplier</label>
+                        <input id="supplierId" type="text" class="kv-input" placeholder="Supplier ID (temp)" />
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">From</label>
+                        <input id="from" type="date" class="kv-input" />
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">To</label>
+                        <input id="to" type="date" class="kv-input" />
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <div class="d-grid gap-2">
+                            <button type="button" class="kv-btn kv-btn--primary" id="btnApplyFilters">
+                                <i class="fas fa-filter me-1"></i>Apply
+                            </button>
+                            <button type="button" class="kv-btn kv-btn--ghost" id="btnClearFilters">Clear</button>
+                        </div>
+                    </div>
+                </form>
+            </aside>
+
+            <!-- Right data panel -->
+            <section class="kv-card">
+                <!-- Table toolbar -->
+                <div id="hdrNormal" class="kv-cardbar">
+                    <div class="kv-input-search kv-input-search--sm">
+                        <i class="fas fa-search"></i>
+                        <input id="hdrSearch" type="text" placeholder="Search purchases..." />
+                    </div>
+
+                    <div class="kv-cardbar__right">
+                        <div class="dropdown">
+                            <button class="kv-btn kv-btn--ghost kv-btn--sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="btnColumns">
+                                <i class="fas fa-columns"></i> Columns
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="btnColumns">
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colCode" checked><label class="form-check-label" for="colCode">Code</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colSupplier" checked><label class="form-check-label" for="colSupplier">Supplier</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colDate" checked><label class="form-check-label" for="colDate">Date</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colStatus" checked><label class="form-check-label" for="colStatus">Status</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colTotal" checked><label class="form-check-label" for="colTotal">Total</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colPaid" checked><label class="form-check-label" for="colPaid">Paid</label></li>
+                                <li class="form-check"><input class="form-check-input" type="checkbox" id="colDue" checked><label class="form-check-label" for="colDue">Due</label></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><button class="kv-btn kv-btn--ghost kv-btn--sm w-100" id="btnResetColumns">Reset</button></li>
+                            </ul>
+                        </div>
+
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnRefresh">
+                            <i class="fas fa-rotate"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover kv-table align-middle mb-0" id="tbl">
+                        <thead>
+                            <tr>
+                                <th style="width:36px"><input type="checkbox" id="chkAll" /></th>
+                                <th class="sortable" data-col="code" data-sort="code"><span>Code <i class="sort-icon"></i></span></th>
+                                <th class="sortable" data-col="supplier" data-sort="supplier">Supplier</th>
+                                <th class="sortable" data-col="date" data-sort="billDate"><span>Date <i class="sort-icon"></i></span></th>
+                                <th class="text-end sortable" data-col="total" data-sort="grandTotal"><span>Total <i class="sort-icon"></i></span></th>
+                                <th class="text-end sortable" data-col="paid" data-sort="amountPaid"><span>Paid <i class="sort-icon"></i></span></th>
+                                <th class="text-end sortable" data-col="due" data-sort="amountDue"><span>Due <i class="sort-icon"></i></span></th>
+                                <th class="sortable" data-col="status" data-sort="status"><span>Status <i class="sort-icon"></i></span></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="bulkBar" class="kv-bulkbar d-none">
+                    <div>
+                        <span class="fw-semibold" id="selCount">0</span> selected
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="kv-btn kv-btn--secondary kv-btn--sm" id="btnBulkConfirm"><i class="fas fa-check"></i> Confirm</button>
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkCancel"><i class="fas fa-ban"></i> Cancel</button>
+                    </div>
+                </div>
+
+                <div class="kv-table__footer">
+                    <div>
+                        <select id="sizeSel" class="form-select form-select-sm d-inline-block me-2" style="width: auto;">
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="prevPage">Prev</button>
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="nextPage">Next</button>
+                    </div>
+                    <div id="pageInfo" class="small text-muted"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal: Create Purchase Entry -->
+    <div class="modal fade" id="createPurchaseModal" tabindex="-1" aria-labelledby="createPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="createPurchaseModalLabel">New Purchase Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="frmPurchase">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Supplier</label>
+                                <div class="kv-autocomplete">
+                                    <input id="p_supplierSearch" type="text" class="form-control" placeholder="Search supplier..." autocomplete="off" />
+                                    <input id="p_supplierId" type="hidden" />
+                                    <div class="kv-autocomplete__dropdown" id="p_supplierDropdown"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Bill Date</label>
+                                <input id="p_billDate" type="date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Reference</label>
+                                <input id="p_reference" class="form-control" placeholder="Number/Code">
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Products</label>
+                                <div id="p_lines" class="d-flex flex-column gap-2"></div>
+                                <button class="kv-btn kv-btn--secondary kv-btn--sm mt-2" id="btnAddLine"><i class="fas fa-plus"></i> Add Product</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="createErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--primary" id="btnCreatePurchase">
+                        <span class="default-text"><i class="fas fa-save"></i> Create Draft</span>
+                        <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Import Purchases from CSV -->
+    <div class="modal fade" id="importPurchaseModal" tabindex="-1" aria-labelledby="importPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="importPurchaseModalLabel">Import Purchases (CSV)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2 small text-muted">CSV columns: productId,qty,unitCost,discount,taxPercent</div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Supplier ID</label>
+                            <input id="im_supplierId" class="form-control" placeholder="e.g. 1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Bill Date</label>
+                            <input id="im_billDate" type="date" class="form-control">
+                        </div>
+                    </div>
+                    <input type="file" id="im_file" accept=".csv" class="form-control mb-3" />
+                    <div id="importErr" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--primary" id="btnImportUpload"><i class="fas fa-upload me-1"></i>Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Purchase Entry -->
+    <div class="modal fade" id="editPurchaseModal" tabindex="-1" aria-labelledby="editPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="editPurchaseModalLabel">Edit Purchase (Draft)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="e_id" />
+                    <div class="mb-3">
+                        <label class="form-label">Current Lines</label>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th style="width:110px" class="text-end">Ordered</th>
+                                        <th style="width:140px" class="text-end">Unit Cost</th>
+                                        <th style="width:120px" class="text-end">Discount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="e_lines"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea id="e_notes" class="form-control" rows="3" placeholder="Update notes..."></textarea>
+                    </div>
+                    <div class="border-top pt-3 mt-3">
+                        <div class="small text-muted mb-2">Add new line (optional)</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="kv-autocomplete">
+                                    <input id="e_productSearch" type="text" class="form-control" placeholder="Search product..." autocomplete="off" />
+                                    <input id="e_productId" type="hidden" />
+                                    <div class="kv-autocomplete__dropdown" id="e_productDropdown"></div>
+                                </div>
+                            </div>
+                            <div class="col-3"><input id="e_qty" type="number" min="1" value="1" class="form-control" placeholder="Qty"></div>
+                            <div class="col-3"><input id="e_unitCost" type="number" step="0.01" class="form-control" placeholder="Unit Cost"></div>
+                            <div class="col-2"><input id="e_discount" type="number" step="0.01" value="0" class="form-control" placeholder="Disc"></div>
+                        </div>
+                    </div>
+                    <div id="editErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Close</button>
+                    <button class="kv-btn kv-btn--primary" id="btnSaveEdit">
+                        <span class="default-text"><i class="fas fa-save"></i> Save</span>
+                        <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirm Purchase -->
+    <div class="modal fade" id="confirmPurchaseModal" tabindex="-1" aria-labelledby="confirmPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="confirmPurchaseModalLabel">Confirm Purchase</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="c_id" />
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Payment Method</label>
+                            <select id="c_method" class="form-select" required>
+                                <option value="">Choose...</option>
+                                <option value="CASH">Cash</option>
+                                <option value="BANK">Bank</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Amount</label>
+                            <input id="c_amount" type="number" min="0" step="0.01" class="form-control" placeholder="0.00" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Reference (optional)</label>
+                            <input id="c_reference" class="form-control" placeholder="Payment reference" />
+                        </div>
+                    </div>
+                    <div id="confirmErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Close</button>
+                    <button class="kv-btn kv-btn--primary" id="btnDoConfirm">
+                        <span class="default-text"><i class="fas fa-check"></i> Confirm</span>
+                        <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Processing...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cancel Purchase (Single/Bulk) -->
+    <div class="modal fade" id="cancelPurchaseModal" tabindex="-1" aria-labelledby="cancelPurchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="cancelPurchaseModalLabel">Cancel Purchase</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="x_ids" />
+                    <div id="cancelMsg">Are you sure you want to cancel this purchase? This action cannot be undone.</div>
+                    <div id="cancelErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Close</button>
+                    <button class="kv-btn kv-btn--danger" id="btnDoCancel">
+                        <span class="default-text"><i class="fas fa-ban"></i> Cancel</span>
+                        <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Processing...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/modules/purchases/js/purchases.js}"></script>
+</body>
+
+</html>

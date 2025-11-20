@@ -31,6 +31,16 @@
             </li>
             <li role="presentation">
                 <a role="tab"
+                   aria-selected="${activeLink == 'purchases'} ? 'true' : 'false'"
+                   class="tab"
+                   th:classappend="${activeLink == 'purchases'} ? 'active' : ''"
+                   href="/purchases">
+                    Purchases
+                    <span class="newBadge">New</span>
+                </a>
+            </li>
+            <li role="presentation">
+                <a role="tab"
                    aria-selected="${activeLink == 'suppliers'} ? 'true' : 'false'"
                    class="tab"
                    th:classappend="${activeLink == 'suppliers'} ? 'active' : ''"
