@@ -1,0 +1,249 @@
+### Purchases API Tests (Ready-to-Test Sequence)
+### This file creates a Supplier and a Product, then runs the Purchase Entry flow.
+
+### Base URL & Auth
+@baseUrl = http://localhost:8080
+@username = your_username_here
+@password = your_password_here
+@token = 
+
+### Runtime IDs (auto-populated by scripts below)
+@supplierId = 
+@productId = 
+@purchaseId = 
+@lineId = 
+@purchaseIdCancel = 
+
+### --------------------------------------------------------------------
+### 0) Login to obtain access token (copy data.accessToken into @token if scripts disabled)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (res && res.data && res.data.accessToken) {
+      client.global.set("token", res.data.accessToken);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### Common header for all subsequent requests
+@authHeader = Authorization: Bearer {{token}}
+
+### ====================================================================
+### 1) Create a Supplier (captures {{supplierId}})
+POST {{baseUrl}}/api/suppliers
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "PO Test Supplier",
+  "contactPerson": "Tester",
+  "phone": "0909000000",
+  "email": "supplier@test.local",
+  "address": "123 Test Street, HCMC"
+}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (res && res.data && res.data.id) {
+      client.global.set("supplierId", res.data.id);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### 1b) Fallback: Find supplier by name and capture id if not set
+GET {{baseUrl}}/api/suppliers?search=PO%20Test%20Supplier&page=0&size=1
+{{authHeader}}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (!client.global.get("supplierId") && res && res.data && res.data.content && res.data.content.length) {
+      client.global.set("supplierId", res.data.content[0].id);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### ====================================================================
+### 2) Create a Product (captures {{productId}})
+POST {{baseUrl}}/api/products
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "sku": "PO-TEST-001",
+  "name": "PO Test Product",
+  "description": "Product for purchase tests",
+  "sellingPrice": 200000.00,
+  "costPrice": 100000.00,
+  "onHand": 0,
+  "minLevel": 0,
+  "maxLevel": 0,
+  "status": "ACTIVE",
+  "isTracked": true
+}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (res && res.data && res.data.id) {
+      client.global.set("productId", res.data.id);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### 2b) Fallback: Find product by SKU/name and capture id if not set
+GET {{baseUrl}}/api/products?search=PO-TEST-001&page=0&size=1
+{{authHeader}}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (!client.global.get("productId") && res && res.data && res.data.content && res.data.content.length) {
+      client.global.set("productId", res.data.content[0].id);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### ====================================================================
+### 3) Create Draft Purchase Entry (captures {{purchaseId}}, {{lineId}})
+POST {{baseUrl}}/api/purchases
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "supplierId": {{supplierId}},
+  "billDate": "2025-11-18",
+  "referenceNo": "INV-PO-1001",
+  "notes": "Draft created by test suite",
+  "discountTotal": 0,
+  "supplierExpense": 0,
+  "otherExpense": 0,
+  "amountPaid": 0,
+  "lines": [
+    { "productId": {{productId}}, "qtyOrdered": 5, "unitCost": 100000.00, "discountAmount": 0, "taxPercent": 0, "description": "Line A" },
+    { "productId": {{productId}}, "qtyOrdered": 3, "unitCost": 120000.00, "discountAmount": 10000.00, "taxPercent": 0, "description": "Line B" }
+  ]
+}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (res && res.data && res.data.id) {
+      client.global.set("purchaseId", res.data.id);
+    }
+    if (res && res.data && res.data.lines && res.data.lines.length) {
+      client.global.set("lineId", res.data.lines[0].id);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### 3b) Create a separate Draft to test Cancel (captures {{purchaseIdCancel}})
+POST {{baseUrl}}/api/purchases
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "supplierId": {{supplierId}},
+  "billDate": "2025-11-18",
+  "referenceNo": "INV-PO-TO-CANCEL",
+  "lines": [
+    { "productId": {{productId}}, "qtyOrdered": 1, "unitCost": 10000.00 }
+  ]
+}
+
+> {%
+  try {
+    var res = JSON.parse(response.body);
+    if (res && res.data && res.data.id) {
+      client.global.set("purchaseIdCancel", res.data.id);
+    }
+  } catch (e) { /* ignore */ }
+%}
+
+### 3c) Cancel the separate Draft (should succeed)
+POST {{baseUrl}}/api/purchases/{{purchaseIdCancel}}/cancel
+{{authHeader}}
+
+### ====================================================================
+### 4) Update Draft (modify quantities or costs)
+PUT {{baseUrl}}/api/purchases/{{purchaseId}}
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "notes": "Updated draft notes",
+  "lines": [
+    { "id": {{lineId}}, "qtyOrdered": 6, "unitCost": 99000.00 },
+    { "productId": {{productId}}, "qtyOrdered": 2, "unitCost": 150000.00, "description": "Added new line" }
+  ]
+}
+
+### ====================================================================
+### 5) Confirm Purchase (status → CONFIRMED)
+POST {{baseUrl}}/api/purchases/{{purchaseId}}/confirm
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "amountPaid": 0,
+  "paymentMethod": "CASH",
+  "reference": "PMT-1001"
+}
+
+### ====================================================================
+### 6) Receive Goods (partial)
+POST {{baseUrl}}/api/purchases/{{purchaseId}}/receive
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "lines": [
+    { "id": {{lineId}}, "qtyReceived": 4 }
+  ]
+}
+
+### 6b) Receive remaining to complete
+POST {{baseUrl}}/api/purchases/{{purchaseId}}/receive
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "lines": [
+    { "id": {{lineId}}, "qtyReceived": 2 }
+  ]
+}
+
+### ====================================================================
+### 7) Record Additional Payment
+POST {{baseUrl}}/api/purchases/{{purchaseId}}/payments
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "amount": 100000.00,
+  "method": "BANK",
+  "reference": "TRF-2025-0001",
+  "note": "Final settlement"
+}
+
+### ====================================================================
+### 8) Get Purchase Detail
+GET {{baseUrl}}/api/purchases/{{purchaseId}}
+{{authHeader}}
+
+### ====================================================================
+### 9) List Purchases with filters
+GET {{baseUrl}}/api/purchases?status=RECEIVED&supplierId={{supplierId}}&from=2025-11-01&to=2025-11-30&page=0&size=20&sortBy=billDate&sortDir=desc
+{{authHeader}}
+
+### ====================================================================
+### 10) Cancel of main purchase is skipped because it was received (would return 422)

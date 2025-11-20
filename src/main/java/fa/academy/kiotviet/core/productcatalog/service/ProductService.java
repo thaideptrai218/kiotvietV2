@@ -217,10 +217,19 @@ public class ProductService {
     }
 
     public List<ProductAutocompleteItem> autocomplete(Long companyId, String query, int limit) {
+        return autocomplete(companyId, query, limit, null);
+    }
+
+    public List<ProductAutocompleteItem> autocomplete(Long companyId, String query, int limit, Long supplierId) {
         int effectiveLimit = limit <= 0 ? 10 : Math.min(limit, 50);
         Pageable pageable = PageRequest.of(0, effectiveLimit, Sort.by("name").ascending());
         String q = query == null ? "" : query.trim();
-        List<Product> products = productRepository.autocompleteProductNames(companyId, q, pageable);
+        List<Product> products;
+        if (supplierId != null) {
+            products = productRepository.autocompleteProductNamesBySupplier(companyId, supplierId, q, pageable);
+        } else {
+            products = productRepository.autocompleteProductNames(companyId, q, pageable);
+        }
 
         return products.stream()
                 .map(p -> ProductAutocompleteItem.builder()
