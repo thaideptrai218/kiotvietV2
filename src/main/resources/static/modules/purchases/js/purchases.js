@@ -25,7 +25,11 @@
   const els = {
     // filters                                                                                                                                
     status: document.getElementById('status'),
-    supplierId: document.getElementById('supplierId'),
+    // filter supplier autocomplete (left panel)
+    f_supplierId: document.getElementById('f_supplierId'),
+    f_supplierSearch: document.getElementById('f_supplierSearch'),
+    f_supplierDropdown: document.getElementById('f_supplierDropdown'),
+    f_supplierClear: document.getElementById('f_supplierClear'),
     from: document.getElementById('from'),
     to: document.getElementById('to'),
     hdrSearch: document.getElementById('hdrSearch'),
@@ -89,8 +93,9 @@
       case 'DRAFT': return 'Draft';
       case 'CONFIRMED':
       case 'PARTIALLY_RECEIVED':
-      case 'RECEIVED':
         return 'Confirmed';
+      case 'RECEIVED':
+        return 'Completed';
       case 'CANCELLED': return 'Canceled';
       default: return raw || '';
     }
@@ -101,8 +106,9 @@
       case 'DRAFT': return 'status-badge status-draft';
       case 'CONFIRMED':
       case 'PARTIALLY_RECEIVED':
-      case 'RECEIVED':
         return 'status-badge status-confirmed';
+      case 'RECEIVED':
+        return 'status-badge status-received';
       case 'CANCELLED': return 'status-badge status-inactive';
       default: return 'status-badge';
     }
@@ -113,7 +119,7 @@
     if (els.status && els.status.value) {
       q.append('status', els.status.value);
     }
-    if (els.supplierId && els.supplierId.value) q.append('supplierId', els.supplierId.value);
+    if (els.f_supplierId && els.f_supplierId.value) q.append('supplierId', els.f_supplierId.value);
     if (els.from && els.from.value) q.append('from', els.from.value);
     if (els.to && els.to.value) q.append('to', els.to.value);
     if (els.hdrSearch && els.hdrSearch.value) q.append('search', els.hdrSearch.value);
@@ -141,7 +147,6 @@
       .map(
         (p) => `                                                                                                                              
         <tr class="purchase-row" data-id="${p.id}">                                                                                             
-          <td style="width:36px"><input type="checkbox" class="rowChk" data-id="${p.id}" /></td>                                                
           <td data-col="id">${p.id}</td>                                                                                                        
           <td data-col="supplier">${p.supplierName || p.supplierId || ''}</td>                                                                  
           <td data-col="date">${fmtDate(p.billDate)}</td>                                                                                       
@@ -159,18 +164,7 @@
 
     applyColumnVisibility();
 
-    // Restore selection & wire row checkboxes                                                                                                
-    els.tblBody.querySelectorAll('input.rowChk').forEach((cb) => {
-      const id = Number(cb.getAttribute('data-id'));
-      cb.checked = selected.has(id);
-      cb.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (cb.checked) selected.add(id);
-        else selected.delete(id);
-        refreshBulkBar();
-      });
-    });
-    refreshBulkBar();
+    // No multi-select
 
     // Row click expand                                                                                                                       
     els.tblBody.querySelectorAll('tr.purchase-row').forEach((tr) => {
@@ -186,7 +180,7 @@
         const exp = document.createElement('tr');
         exp.className = 'expanded-row';
         const td = document.createElement('td');
-        td.colSpan = 8;
+        td.colSpan = 7;
         td.innerHTML = '<div class="expanded-content">Loading details...</div>';
         exp.appendChild(td);
         tr.after(exp);
@@ -356,24 +350,15 @@
       if (els.hdrSearch) els.hdrSearch.value = '';
       if (els.hdrSearchTop) els.hdrSearchTop.value = '';
       if (els.status) els.status.value = '';
-      if (els.supplierId) els.supplierId.value = '';
+      if (els.f_supplierId) els.f_supplierId.value = '';
+      if (els.f_supplierSearch) els.f_supplierSearch.value = '';
       if (els.from) els.from.value = '';
       if (els.to) els.to.value = '';
       state.page = 0;
       list();
     });
 
-    // Select all                                                                                                                             
-    const chkAll = document.getElementById('chkAll');
-    chkAll?.addEventListener('change', () => {
-      els.tblBody.querySelectorAll('input.rowChk').forEach((cb) => {
-        cb.checked = chkAll.checked;
-        const id = Number(cb.getAttribute('data-id'));
-        if (chkAll.checked) selected.add(id);
-        else selected.delete(id);
-      });
-      refreshBulkBar();
-    });
+    // Select all    // No multi-select header checkbox\n
 
     // Page size selector                                                                                                                     
     if (els.sizeSel) {
@@ -557,8 +542,7 @@
         });
       }
       selected.clear();
-      document.getElementById('chkAll').checked = false;
-      refreshBulkBar();
+      // no multi-select
       list();
     });
     btnBulkCancel?.addEventListener('click', async () => {
@@ -566,8 +550,7 @@
         await fetch(`${api.base}/${id}/cancel`, { method: 'POST', headers: api.headers() });
       }
       selected.clear();
-      document.getElementById('chkAll').checked = false;
-      refreshBulkBar();
+      // no multi-select
       list();
     });
 
@@ -995,7 +978,7 @@
       addCreateLine();
     });
 
-    // Supplier autocomplete                                                                                                                  
+    // Supplier autocomplete (create modal)
     wireAutocomplete(
       els.p_supplierSearch,
       els.p_supplierDropdown,
@@ -1017,6 +1000,28 @@
       (it) => `${it.displayName || it.name || ''}`,
       { focusAll: true }
     );
+
+    // Supplier autocomplete (left filter)
+    wireAutocomplete(
+      els.f_supplierSearch,
+      els.f_supplierDropdown,
+      (id, label) => {
+        els.f_supplierId.value = id;
+        els.f_supplierSearch.value = label;
+        state.page = 0;
+        list();
+      },
+      supplierAutocomplete,
+      (it) => `${it.displayName || it.name || ''}`,
+      { focusAll: true }
+    );
+    els.f_supplierClear?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (els.f_supplierId) els.f_supplierId.value = '';
+      if (els.f_supplierSearch) els.f_supplierSearch.value = '';
+      state.page = 0;
+      list();
+    });
 
     // Edit modal product autocomplete                                                                                                        
     wireAutocomplete(

@@ -63,13 +63,21 @@
                             <option value="">All</option>
                             <option value="DRAFT">Draft</option>
                             <option value="CONFIRMED">Confirmed</option>
+                            <option value="RECEIVED">Completed</option>
                             <option value="CANCELLED">Canceled</option>
                         </select>
                     </div>
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Supplier</label>
-                        <input id="supplierId" type="text" class="kv-input" placeholder="Supplier ID (temp)" />
+                        <div class="kv-autocomplete">
+                            <input id="f_supplierSearch" type="text" class="kv-input" placeholder="Search supplier..." autocomplete="off" />
+                            <button type="button" class="kv-autocomplete__clear" id="f_supplierClear" aria-label="Clear supplier" title="Clear supplier">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <input id="f_supplierId" type="hidden" />
+                            <div class="kv-autocomplete__dropdown" id="f_supplierDropdown"></div>
+                        </div>
                     </div>
 
                     <div class="kv-filter__group">
@@ -130,7 +138,6 @@
                     <table class="table table-hover kv-table align-middle mb-0" id="tbl">
                         <thead>
                             <tr>
-                                <th style="width:36px"><input type="checkbox" id="chkAll" /></th>
                                 <th class="sortable" data-col="id" data-sort="id"><span>ID <i class="sort-icon"></i></span></th>
                                 <th class="sortable" data-col="supplier" data-sort="supplier">Supplier</th>
                                 <th class="sortable" data-col="date" data-sort="billDate"><span>Date <i class="sort-icon"></i></span></th>
@@ -144,15 +151,7 @@
                     </table>
                 </div>
 
-                <div id="bulkBar" class="kv-bulkbar d-none">
-                    <div>
-                        <span class="fw-semibold" id="selCount">0</span> selected
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="kv-btn kv-btn--secondary kv-btn--sm" id="btnBulkConfirm"><i class="fas fa-check"></i> Confirm</button>
-                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkCancel"><i class="fas fa-ban"></i> Cancel</button>
-                    </div>
-                </div>
+                
 
                 <div class="kv-table__footer">
                     <div class="d-flex align-items-center gap-2">

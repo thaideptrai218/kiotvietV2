@@ -59,6 +59,13 @@ public class PurchaseService {
         if (req.getLines() == null || req.getLines().isEmpty()) {
             throw new IllegalArgumentException("At least one line is required");
         }
+        // header amounts cannot be negative
+        if (nvl(req.getDiscountTotal()).compareTo(BigDecimal.ZERO) < 0
+                || nvl(req.getSupplierExpense()).compareTo(BigDecimal.ZERO) < 0
+                || nvl(req.getOtherExpense()).compareTo(BigDecimal.ZERO) < 0
+                || nvl(req.getAmountPaid()).compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Header amounts cannot be negative");
+        }
 
         for (PurchaseLineRequest lr : req.getLines()) {
             Product product = productRepository.findByIdAndCompany_Id(lr.getProductId(), companyId)
@@ -66,14 +73,22 @@ public class PurchaseService {
             if (product.getSupplier() == null || !product.getSupplier().getId().equals(supplier.getId())) {
                 throw new IllegalArgumentException("Product does not belong to selected supplier");
             }
+            // per-line numeric validation
+            int qty = nvlInt(lr.getQtyOrdered());
+            if (qty <= 0) throw new IllegalArgumentException("qtyOrdered must be at least 1");
+            BigDecimal unitCost = Objects.requireNonNull(lr.getUnitCost(), "unitCost is required");
+            if (unitCost.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("unitCost must be > 0");
+            if (nvl(lr.getDiscountAmount()).compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("discountAmount cannot be negative");
+            if (nvl(lr.getTaxPercent()).compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("taxPercent cannot be negative");
+
             PurchaseEntryLine line = PurchaseEntryLine.builder()
                     .company(Company.builder().id(companyId).build())
                     .purchaseEntry(entry)
                     .product(product)
                     .description(lr.getDescription())
-                    .qtyOrdered(nvlInt(lr.getQtyOrdered()))
+                    .qtyOrdered(qty)
                     .qtyReceived(0)
-                    .unitCost(Objects.requireNonNull(lr.getUnitCost(), "unitCost is required"))
+                    .unitCost(unitCost)
                     .discountAmount(nvl(lr.getDiscountAmount()))
                     .taxPercent(nvl(lr.getTaxPercent()))
                     .build();
@@ -119,9 +134,18 @@ public class PurchaseService {
         }
 
         if (req.getNotes() != null) entry.setNotes(req.getNotes());
-        if (req.getDiscountTotal() != null) entry.setDiscountTotal(nvl(req.getDiscountTotal()));
-        if (req.getSupplierExpense() != null) entry.setSupplierExpense(nvl(req.getSupplierExpense()));
-        if (req.getOtherExpense() != null) entry.setOtherExpense(nvl(req.getOtherExpense()));
+        if (req.getDiscountTotal() != null) {
+            if (req.getDiscountTotal().compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("discountTotal cannot be negative");
+            entry.setDiscountTotal(nvl(req.getDiscountTotal()));
+        }
+        if (req.getSupplierExpense() != null) {
+            if (req.getSupplierExpense().compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("supplierExpense cannot be negative");
+            entry.setSupplierExpense(nvl(req.getSupplierExpense()));
+        }
+        if (req.getOtherExpense() != null) {
+            if (req.getOtherExpense().compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("otherExpense cannot be negative");
+            entry.setOtherExpense(nvl(req.getOtherExpense()));
+        }
 
         if (req.getLines() != null) {
             // Map existing lines by id
@@ -132,10 +156,22 @@ public class PurchaseService {
                 if (lr.getId() != null && existing.containsKey(lr.getId())) {
                     PurchaseEntryLine line = existing.get(lr.getId());
                     if (lr.getDescription() != null) line.setDescription(lr.getDescription());
-                    if (lr.getQtyOrdered() != null) line.setQtyOrdered(nvlInt(lr.getQtyOrdered()));
-                    if (lr.getUnitCost() != null) line.setUnitCost(lr.getUnitCost());
-                    if (lr.getDiscountAmount() != null) line.setDiscountAmount(nvl(lr.getDiscountAmount()));
-                    if (lr.getTaxPercent() != null) line.setTaxPercent(nvl(lr.getTaxPercent()));
+                    if (lr.getQtyOrdered() != null) {
+                        if (lr.getQtyOrdered() <= 0) throw new IllegalArgumentException("qtyOrdered must be at least 1");
+                        line.setQtyOrdered(nvlInt(lr.getQtyOrdered()));
+                    }
+                    if (lr.getUnitCost() != null) {
+                        if (lr.getUnitCost().compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("unitCost must be > 0");
+                        line.setUnitCost(lr.getUnitCost());
+                    }
+                    if (lr.getDiscountAmount() != null) {
+                        if (lr.getDiscountAmount().compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("discountAmount cannot be negative");
+                        line.setDiscountAmount(nvl(lr.getDiscountAmount()));
+                    }
+                    if (lr.getTaxPercent() != null) {
+                        if (lr.getTaxPercent().compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("taxPercent cannot be negative");
+                        line.setTaxPercent(nvl(lr.getTaxPercent()));
+                    }
                     line.setLineTotal(calcLineTotal(line));
                 } else {
                     // new line
@@ -145,14 +181,22 @@ public class PurchaseService {
                     if (product.getSupplier() == null || !product.getSupplier().getId().equals(entry.getSupplier().getId())) {
                         throw new IllegalArgumentException("Product does not belong to selected supplier");
                     }
+                    // validate new line numbers
+                    int qtyNew = nvlInt(lr.getQtyOrdered());
+                    if (qtyNew <= 0) throw new IllegalArgumentException("qtyOrdered must be at least 1");
+                    BigDecimal unitCostNew = Objects.requireNonNullElse(lr.getUnitCost(), BigDecimal.ZERO);
+                    if (unitCostNew.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("unitCost must be > 0");
+                    if (nvl(lr.getDiscountAmount()).compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("discountAmount cannot be negative");
+                    if (nvl(lr.getTaxPercent()).compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("taxPercent cannot be negative");
+
                     PurchaseEntryLine line = PurchaseEntryLine.builder()
                             .company(Company.builder().id(companyId).build())
                             .purchaseEntry(entry)
                             .product(product)
                             .description(lr.getDescription())
-                            .qtyOrdered(nvlInt(lr.getQtyOrdered()))
+                            .qtyOrdered(qtyNew)
                             .qtyReceived(0)
-                            .unitCost(Objects.requireNonNullElse(lr.getUnitCost(), BigDecimal.ZERO))
+                            .unitCost(unitCostNew)
                             .discountAmount(nvl(lr.getDiscountAmount()))
                             .taxPercent(nvl(lr.getTaxPercent()))
                             .build();
@@ -237,10 +281,15 @@ public class PurchaseService {
             }
             if (add > 0) {
                 line.setQtyReceived(current + add);
-                // increment product stock
-                Product prod = line.getProduct();
-                prod.setOnHand((prod.getOnHand() == null ? 0 : prod.getOnHand()) + add);
-                productRepository.save(prod);
+                // increment product stock (tracked products only) with row-level lock for safety
+                Product prod = productRepository
+                        .findWithLockByIdAndCompany_Id(line.getProduct().getId(), companyId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found", "PRODUCT_NOT_FOUND"));
+                if (Boolean.TRUE.equals(prod.getIsTracked())) {
+                    int currentOnHand = prod.getOnHand() == null ? 0 : prod.getOnHand();
+                    prod.setOnHand(currentOnHand + add);
+                    productRepository.save(prod);
+                }
             }
         }
 
