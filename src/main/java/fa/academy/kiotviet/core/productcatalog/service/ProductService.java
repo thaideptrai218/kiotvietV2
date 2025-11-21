@@ -224,10 +224,22 @@ public class ProductService {
         int effectiveLimit = limit <= 0 ? 10 : Math.min(limit, 50);
         Pageable pageable = PageRequest.of(0, effectiveLimit, Sort.by("name").ascending());
         String q = query == null ? "" : query.trim();
-        if (q.isEmpty()) return List.of();
 
-        // Unified prefix search on name, sku, and barcode for better UX (works for barcode same as name)
-        List<Product> products = productRepository.autocompleteAll(companyId, q, pageable);
+        List<Product> products;
+        if (supplierId != null) {
+            // When supplier is chosen:
+            // - If query empty: return top items for that supplier (by name)
+            // - Else: unified prefix search restricted to the supplier
+            if (q.isEmpty()) {
+                products = productRepository.autocompleteProductNamesBySupplier(companyId, supplierId, "", pageable);
+            } else {
+                products = productRepository.autocompleteAllBySupplier(companyId, supplierId, q, pageable);
+            }
+        } else {
+            // No supplier chosen: require non-empty query to avoid heavy result sets
+            if (q.isEmpty()) return List.of();
+            products = productRepository.autocompleteAll(companyId, q, pageable);
+        }
 
         return products.stream()
                 .map(this::toAutocomplete)
