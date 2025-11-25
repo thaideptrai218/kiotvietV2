@@ -893,22 +893,17 @@ window.kvOrderToggleDetail = (function(){
 </div>
 <div class='kv-order-detail__grid'>
   <div class='kv-order-detail__section'>
-    <h6>Creator & Seller</h6>
+    <h6>Creator</h6>
     <div class='kv-order-detail__row'><span class='label'>Creator</span><span class='value'>${d.creator||''}</span></div>
     <div class='kv-order-detail__row'><span class='label'>Sale channel</span><span class='value'>
       <select class='form-select form-select-sm' style='min-width:160px;'>
         <option selected>Sell in-store</option>
-        <option>Online</option>
-        <option>Phone</option>
         <option>Other</option>
       </select>
     </span></div>
-    <div class='kv-order-detail__row'><span class='label'>Price book</span><span class='value'>General price book</span></div>
   </div>
   <div class='kv-order-detail__section'>
-    <h6>Seller & Time</h6>
-    <div class='kv-order-detail__row'><span class='label'>Seller</span><span class='value'>${d.seller||''}</span></div>
-    <div class='kv-order-detail__row'><span class='label'>Time</span><span class='value'>${dt(d.orderDate)}</span></div>
+    <div class='kv-order-detail__row'><span class='label'><h6>Time</h6></span><span class='value'>${dt(d.orderDate)}</span></div>
   </div>
 </div>
 <div class='kv-order-detail__section' style='margin-top:10px;'>
@@ -925,28 +920,35 @@ window.kvOrderToggleDetail = (function(){
     <textarea placeholder='Note'></textarea>
   </div>
   <div class='kv-order-detail__summary'>
-    <div class='row'><span>Sub-total (${itemsCount})</span><span>${fmt(d.subtotal)}</span></div>
-    <div class='row'><span>Discount</span><span>${fmt(d.discountAmount)}</span></div>
-    <div class='row total'><span>Total</span><span>${fmt(d.total)}</span></div>
-    <div class='row'><span>Paid amount</span><span>${fmt(d.paidAmount)}</span></div>
+    <div class='row'><span class="label">Sub-total (${itemsCount})</span><span class="value">${fmt(d.subtotal)}</span></div>
+    <div class='row'><span class="label">Discount</span><span class="value">${fmt(d.discountAmount)}</span></div>
+    <div class='row total'><span class="label">Total</span><span class="value">${fmt(d.total)}</span></div>
+    <div class='row'><span class="label">Paid amount</span><span class="value">${fmt(d.total)}</span></div>
   </div>
 </div>
 <div class='kv-order-detail__footer'>
+  <div class='kv-order-detail__actions'></div>
   <div class='kv-order-detail__actions'>
     <button class='kv-btn--danger' data-action='delete'>Delete</button>
-  </div>
-  <div class='kv-order-detail__actions'>
     <button class='kv-btn--primary' data-action='update'>Update</button>
   </div>
-</div>
-  <div class='kv-order-detail__actions'>
-    <button class='kv-btn--primary'>Update</button>
-    <button class='kv-btn--ghost'>?? Save</button>
-    <button class='kv-btn--ghost'>? Return</button>
-    <button class='kv-btn--ghost'>?? Print</button>
-    <button class='kv-btn--ghost'>Generate QR</button>
-  </div>
 </div>`;
+      // bind footer actions
+      const delBtn = panel.querySelector("[data-action='delete']");
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('Delete this order?')) return;
+          try {
+            const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            const h = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+            if (t) h['Authorization'] = `Bearer ${t}`;
+            const res = await fetch('/api/orders/bulk', { method: 'DELETE', headers: h, body: JSON.stringify([Number(id)]) });
+            if (!res.ok) throw new Error('Delete failed');
+            const open = document.querySelector('.kv-order-detail-row'); if (open) open.remove();
+            if (window.kvOrders && typeof window.kvOrders.reload === 'function') window.kvOrders.reload();
+          } catch (e) { alert('Failed to delete order'); }
+        });
+      }
       requestAnimationFrame(()=> panel.classList.add('show'));
     }catch(e){ panel.innerHTML = "<div class='text-danger'>Failed to load order detail.</div>"; }
   }

@@ -1979,3 +1979,11 @@ th.sortable.active.desc .sort-icon::before {
 
 
 .kv-btn--danger { background:#dc3545; color:#fff; border:none; border-radius:6px; padding:6px 12px; }
+
+/* Summary inline alignment overrides */
+.kv-order-detail__summary { width: 100%; }
+/* Force perfect two-column alignment for summary rows */
+.kv-order-detail__summary .row { display: grid; grid-template-columns: 1fr 200px; align-items: center; column-gap: 12px; }
+.kv-order-detail__summary .row .label { grid-column: 1; color: #475569; white-space: nowrap; }
+.kv-order-detail__summary .row .value { grid-column: 2; width: 200px !important; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
