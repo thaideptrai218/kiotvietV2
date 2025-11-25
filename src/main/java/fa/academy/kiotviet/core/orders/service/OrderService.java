@@ -50,6 +50,12 @@ public class OrderService {
         orderRepository.deleteAll(orders);
     }
 
+    public Order getById(Long companyId, Long id) {
+        return orderRepository.findById(id)
+                .filter(o -> o.getCompany() != null && companyId.equals(o.getCompany().getId()))
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+    }
+
     @Transactional
     public Order create(Long companyId, OrderCreateRequest req) {
         if (req == null || req.getItems() == null || req.getItems().isEmpty()) {

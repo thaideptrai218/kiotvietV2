@@ -707,13 +707,13 @@ function format(d) {
   function renderRows(items) {
     if (!els.tblBody) return;
     if (!Array.isArray(items) || !items.length) {
-      els.tblBody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No orders found</td></tr>';
+      els.tblBody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">No orders found</td></tr>';
       if (els.chkAll) { els.chkAll.checked = false; els.chkAll.indeterminate = false; }
       return;
     }
 
     const rows = items.map(it => `
-      <tr data-id="${it.id}">
+      <tr class="kv-order-row" data-id="${it.id}">
         <td><input type="checkbox" class="row-check" data-id="${it.id}"></td>
         <td class="fw-bold text-primary" data-col="ordercode">${it.orderCode || ''}</td>
         <td class="text-muted small" data-col="orderdate">${fmtDateTime(it.orderDate)}</td>
@@ -721,7 +721,9 @@ function format(d) {
         <td data-col="phonenumber">${it.phoneNumber || ''}</td>
         <td class="text-end fw-semibold" data-col="subtotal">${fmtMoney(it.subtotal)}</td>
         <td class="text-end" data-col="discount">${fmtMoney(it.discount)}</td>
-        <td class="text-end fw-semibold" data-col="customerpays">${fmtMoney(it.paidAmount)}</td>\n        <td class="text-end" data-col="remaining">${fmtMoney((it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0))) - Number(it.paidAmount||0))}</td>\n        <td class="text-end fw-semibold" data-col="paidamount">${fmtMoney(it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0)))}</td></td>
+        <td class="text-end" data-col="customerpays">${fmtMoney(it.paidAmount)}</td>
+        <td class="text-end" data-col="remaining">${fmtMoney((it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0))) - Number(it.paidAmount||0))}</td>
+        <td class="text-end fw-semibold" data-col="paidamount">${fmtMoney(it.totalAmount ?? (Number(it.subtotal||0) - Number(it.discount||0)))}</td>
         <td data-col="paymentmethod">${(it.paymentMethod||'').toString().toUpperCase()}</td>
         <td data-col="cashier">${it.cashier || ''}</td>
         <td data-col="status">${statusBadge(it.status)}</td>
@@ -729,6 +731,14 @@ function format(d) {
     `).join('');
     els.tblBody.innerHTML = rows;
     if (els.chkAll) { els.chkAll.checked = false; els.chkAll.indeterminate = false; }
+    // bind row click to expand detail
+    els.tblBody.querySelectorAll('tr.kv-order-row')?.forEach(tr => {
+      tr.addEventListener('click', (e) => {
+        if (e.target.closest('input') || e.target.closest('button') || e.target.closest('a')) return;
+        const id = tr.getAttribute('data-id');
+        window.kvOrderToggleDetail && window.kvOrderToggleDetail(tr, id);
+      });
+    });
 
     // Ensure column visibility matches defaults/saved after data render
     try {
@@ -851,4 +861,97 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+
+
+// Order detail toggler
+window.kvOrderToggleDetail = (function(){
+  const api = { base: '/api/orders', headers() { const t=localStorage.getItem('jwtToken')||sessionStorage.getItem('jwtToken')||localStorage.getItem('accessToken')||sessionStorage.getItem('accessToken'); const h={'Accept':'application/json'}; if(t) h['Authorization']=`Bearer ${t}`; return h; } };
+  function fmt(n){ try{ return Number(n||0).toLocaleString('vi-VN'); }catch{return n; } }
+  function dt(iso){ try{ const d=new Date(iso); return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d);}catch{return iso;} }
+  async function loadDetail(tr,id){
+    const open = document.querySelector('.kv-order-detail-row'); if(open) open.remove();
+    const cols = tr.children.length;
+    const row = document.createElement('tr'); row.className='kv-order-detail-row';
+    row.innerHTML = `<td colspan="${cols}"><div class='kv-order-detail kv-slide'><div>Loading...</div></div></td>`;
+    tr.after(row); const panel=row.querySelector('.kv-order-detail');
+    try{ const res= await fetch(`${api.base}/${id}/detail`,{ headers: api.headers()}); if(!res.ok) throw new Error('fail'); const body= await res.json(); const d=body?.data||{};
+      const badge = (d.status||'').toUpperCase()==='COMPLETED' ? 'kv-badge kv-badge--completed' : 'kv-badge kv-badge--draft';
+      const items = (d.items||[]).map(it=>`<tr><td>${it.productCode||''}</td><td>${it.productName||''}</td><td class='text-end'>${Number(it.quantity||0)}</td><td class='text-end'>${fmt(it.unitPrice)}</td><td class='text-end'>${fmt(it.discount)}</td><td class='text-end'>${fmt(it.salePrice)}</td><td class='text-end'>${fmt(it.total)}</td></tr>`).join('');
+      const itemsCount = (d.items||[]).reduce((acc,it)=> acc + Number(it.quantity||0), 0);
+      panel.innerHTML = `
+<div class='kv-order-detail__header'>
+  <div class='kv-order-detail__title'>
+    <span class='fw-semibold'>${d.customerName||'Guest'}</span>
+    <span class='text-muted'>${d.orderCode||''}</span>
+    <span class='${badge}'>${(d.status||'').charAt(0)+(d.status||'').slice(1).toLowerCase()}</span>
+  </div>
+  <div class='kv-order-detail__meta'>
+    <div>${dt(d.orderDate)}</div>
+    <div>${d.branchName||''}</div>
+  </div>
+</div>
+<div class='kv-order-detail__grid'>
+  <div class='kv-order-detail__section'>
+    <h6>Creator & Seller</h6>
+    <div class='kv-order-detail__row'><span class='label'>Creator</span><span class='value'>${d.creator||''}</span></div>
+    <div class='kv-order-detail__row'><span class='label'>Sale channel</span><span class='value'>
+      <select class='form-select form-select-sm' style='min-width:160px;'>
+        <option selected>Sell in-store</option>
+        <option>Online</option>
+        <option>Phone</option>
+        <option>Other</option>
+      </select>
+    </span></div>
+    <div class='kv-order-detail__row'><span class='label'>Price book</span><span class='value'>General price book</span></div>
+  </div>
+  <div class='kv-order-detail__section'>
+    <h6>Seller & Time</h6>
+    <div class='kv-order-detail__row'><span class='label'>Seller</span><span class='value'>${d.seller||''}</span></div>
+    <div class='kv-order-detail__row'><span class='label'>Time</span><span class='value'>${dt(d.orderDate)}</span></div>
+  </div>
+</div>
+<div class='kv-order-detail__section' style='margin-top:10px;'>
+  <h6>Order Items</h6>
+  <table class='kv-order-items'>
+    <thead><tr>
+      <th>Product number</th><th>Product name</th><th class='text-end'>Quantity</th><th class='text-end'>Price</th><th class='text-end'>Discount</th><th class='text-end'>Sale price</th><th class='text-end'>Total</th>
+    </tr></thead>
+    <tbody>${items}</tbody>
+  </table>
+</div>
+<div class='kv-order-detail__grid' style='margin-top:10px;'>
+  <div class='kv-order-detail__note'>
+    <textarea placeholder='Note'></textarea>
+  </div>
+  <div class='kv-order-detail__summary'>
+    <div class='row'><span>Sub-total (${itemsCount})</span><span>${fmt(d.subtotal)}</span></div>
+    <div class='row'><span>Discount</span><span>${fmt(d.discountAmount)}</span></div>
+    <div class='row total'><span>Total</span><span>${fmt(d.total)}</span></div>
+    <div class='row'><span>Paid amount</span><span>${fmt(d.paidAmount)}</span></div>
+  </div>
+</div>
+<div class='kv-order-detail__footer'>
+  <div class='kv-order-detail__actions'>
+    <button class='kv-btn--danger' data-action='delete'>Delete</button>
+  </div>
+  <div class='kv-order-detail__actions'>
+    <button class='kv-btn--primary' data-action='update'>Update</button>
+  </div>
+</div>
+  <div class='kv-order-detail__actions'>
+    <button class='kv-btn--primary'>Update</button>
+    <button class='kv-btn--ghost'>?? Save</button>
+    <button class='kv-btn--ghost'>? Return</button>
+    <button class='kv-btn--ghost'>?? Print</button>
+    <button class='kv-btn--ghost'>Generate QR</button>
+  </div>
+</div>`;
+      requestAnimationFrame(()=> panel.classList.add('show'));
+    }catch(e){ panel.innerHTML = "<div class='text-danger'>Failed to load order detail.</div>"; }
+  }
+  return function(tr,id){ const next=tr.nextElementSibling; if(next && next.classList.contains('kv-order-detail-row')){ next.remove(); } else { loadDetail(tr,id); } }
+})();
+
+
 

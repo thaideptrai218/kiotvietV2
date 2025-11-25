@@ -1,4 +1,8 @@
 /* ===================================
+.kv-order-detail__summary .row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; font-size: 13px; }
+.kv-order-detail__summary .row .label { flex: 1; color: #475569; }
+.kv-order-detail__summary .row .value { min-width: 140px; text-align: right; font-variant-numeric: tabular-nums; }
+/* ===================================
    PRODUCTS MODULE CSS
    Kiotviet-style product management interface
    =================================== */
@@ -1932,3 +1936,46 @@ th.sortable.active.desc .sort-icon::before {
 .status-completed { background:#f0fdf4; color:#16a34a; }
 .status-cancelled { background:#fee2e2; color:#dc2626; }
 
+/* Order detail expandable panel */
+.kv-order-detail { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; padding: 14px; box-shadow: 0 6px 16px rgba(16,24,40,.06); margin: 8px 0; }
+.kv-order-detail__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.kv-order-detail__title { display: flex; align-items: center; gap: 10px; }
+.kv-badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.kv-badge--completed { background: #e6f7ed; color: #15803d; }
+.kv-badge--draft { background: #eef2ff; color: #4338ca; }
+.kv-order-detail__meta { color: #6b7280; font-size: 13px; text-align: right; }
+
+.kv-order-detail__grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+.kv-order-detail__section { background: #fafbff; border: 1px solid #eef2f7; border-radius: 8px; padding: 10px; }
+.kv-order-detail__section h6 { margin: 0 0 8px 0; font-size: 13px; color: #374151; }
+.kv-order-detail__row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 13px; }
+.kv-order-detail__row .label { color: #6b7280; }
+.kv-order-detail__row .value { font-weight: 600; }
+
+.kv-order-items { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #eef2f7; border-radius: 8px; overflow: hidden; }
+.kv-order-items th, .kv-order-items td { padding: 8px 10px; border-bottom: 1px solid #eef2f7; font-size: 13px; }
+.kv-order-items th { background: #f7f9fc; color: #374151; font-weight: 600; }
+.kv-order-items td { color: #111827; }
+.kv-order-items tfoot td { font-weight: 700; }
+
+.kv-order-detail__summary { background: #fff; border: 1px solid #eef2f7; border-radius: 8px; padding: 10px; }
+.kv-order-detail__summary .row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; font-size: 13px; }
+.kv-order-detail__summary .row.total { font-size: 16px; color: #0d6efd; }
+
+.kv-order-detail__note { margin-top: 10px; }
+.kv-order-detail__note textarea { width: 100%; min-height: 70px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; }
+
+.kv-order-detail__footer { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #eef2f7; margin-top: 10px; }
+.kv-order-detail__actions { display: flex; gap: 8px; }
+.kv-btn--ghost { background: transparent; border: 1px solid #e5e7eb; color: #374151; border-radius: 6px; padding: 6px 10px; }
+.kv-btn--primary { background: #0d6efd; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; }
+
+.kv-slide { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
+.kv-order-detail__summary .row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; font-size: 13px; }
+
+.kv-slide.show { max-height: 99999px; }
+.kv-order-detail-row > td { padding: 0 !important; border: 0 !important; }
+.kv-order-detail { width: 100%; }
+
+
+.kv-btn--danger { background:#dc3545; color:#fff; border:none; border-radius:6px; padding:6px 12px; }
