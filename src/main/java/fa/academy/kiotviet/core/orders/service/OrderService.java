@@ -137,6 +137,37 @@ public class OrderService {
             oi.setOrder(saved);
         }
         orderItemRepository.saveAll(items);
+
+        // Inventory: if order is COMPLETED, validate and deduct stock for tracked products
+        if (order.getStatus() == Order.OrderStatus.COMPLETED) {
+            // Validate first
+            for (OrderItem oi : items) {
+                if (oi.getProduct() == null || oi.getQuantity() == null) continue;
+                Long pid = oi.getProduct().getId();
+                if (pid == null) continue;
+                final int qty = oi.getQuantity();
+                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                    if (Boolean.TRUE.equals(p.getIsTracked())) {
+                        int onHand = p.getOnHand() != null ? p.getOnHand() : 0;
+                        if (onHand < qty) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
+                    }
+                });
+            }
+            // Deduct
+            for (OrderItem oi : items) {
+                if (oi.getProduct() == null || oi.getQuantity() == null) continue;
+                Long pid = oi.getProduct().getId();
+                if (pid == null) continue;
+                final int qty = oi.getQuantity();
+                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                    if (Boolean.TRUE.equals(p.getIsTracked())) {
+                        int onHand = p.getOnHand() != null ? p.getOnHand() : 0;
+                        p.setOnHand(onHand - qty);
+                        productRepository.save(p);
+                    }
+                });
+            }
+        }
         return saved;
     }
 
@@ -210,18 +241,19 @@ public class OrderService {
         java.math.BigDecimal paid = req.getPaidAmount() != null ? req.getPaidAmount() : java.math.BigDecimal.ZERO;
         order.setPaidAmount(paid);
 
-        if (paid != null && total != null && paid.compareTo(total) >= 0) {
-            order.setStatus(Order.OrderStatus.COMPLETED);
-        } else {
-            order.setStatus(Order.OrderStatus.DRAFT);
-        }
+        boolean markCompleted = paid != null && total != null && paid.compareTo(total) >= 0;
+        if (markCompleted) order.setStatus(Order.OrderStatus.COMPLETED);
+        else order.setStatus(Order.OrderStatus.DRAFT);
+
+        // Capture previous state for inventory adjustments
+        Order.OrderStatus oldStatus = order.getStatus();
+        java.util.List<OrderItem> prevItems = orderItemRepository.findByOrder_IdAndCompany_Id(orderId, companyId);
 
         Order saved = orderRepository.save(order);
         // Replace existing items
         try {
             orderItemRepository.deleteByOrder_IdAndCompany_Id(saved.getId(), companyId);
         } catch (Exception e) {
-            // fallback when deleteBy method is not supported by the JPA provider
             var existing = orderItemRepository.findByOrder_IdAndCompany_Id(saved.getId(), companyId);
             if (existing != null && !existing.isEmpty()) {
                 orderItemRepository.deleteAll(existing);
@@ -231,6 +263,91 @@ public class OrderService {
             oi.setOrder(saved);
         }
         orderItemRepository.saveAll(items);
+
+        // Inventory adjustments with oversell prevention
+        boolean prevCompleted = oldStatus == Order.OrderStatus.COMPLETED;
+        boolean newCompleted = order.getStatus() == Order.OrderStatus.COMPLETED;
+        java.util.Map<Long, Integer> prevMap = new java.util.HashMap<>();
+        if (prevItems != null) {
+            for (OrderItem pi : prevItems) {
+                if (pi.getProduct() == null || pi.getProduct().getId() == null) continue;
+                prevMap.merge(pi.getProduct().getId(), pi.getQuantity()!=null?pi.getQuantity():0, Integer::sum);
+            }
+        }
+        java.util.Map<Long, Integer> newMap = new java.util.HashMap<>();
+        for (OrderItem ni : items) {
+            if (ni.getProduct() == null || ni.getProduct().getId() == null) continue;
+            newMap.merge(ni.getProduct().getId(), ni.getQuantity()!=null?ni.getQuantity():0, Integer::sum);
+        }
+
+        if (prevCompleted && newCompleted) {
+            java.util.Set<Long> keys = new java.util.HashSet<>();
+            keys.addAll(prevMap.keySet());
+            keys.addAll(newMap.keySet());
+            // Validate increases first
+            for (Long pid : keys) {
+                int prevQty = prevMap.getOrDefault(pid, 0);
+                int newQty = newMap.getOrDefault(pid, 0);
+                int diff = newQty - prevQty;
+                if (diff > 0) {
+                    final int need = diff;
+                    productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                        if (Boolean.TRUE.equals(p.getIsTracked())) {
+                            int onHand = p.getOnHand()!=null?p.getOnHand():0;
+                            if (onHand < need) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
+                        }
+                    });
+                }
+            }
+            // Apply deltas
+            for (Long pid : keys) {
+                int prevQty = prevMap.getOrDefault(pid, 0);
+                int newQty = newMap.getOrDefault(pid, 0);
+                int diff = newQty - prevQty;
+                if (diff == 0) continue;
+                final int delta = diff;
+                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                    if (!Boolean.TRUE.equals(p.getIsTracked())) return;
+                    int onHand = p.getOnHand()!=null?p.getOnHand():0;
+                    p.setOnHand(onHand - delta);
+                    productRepository.save(p);
+                });
+            }
+        } else if (!prevCompleted && newCompleted) {
+            // Validate all
+            for (java.util.Map.Entry<Long,Integer> e : newMap.entrySet()) {
+                Long pid = e.getKey(); int qty = e.getValue();
+                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                    if (Boolean.TRUE.equals(p.getIsTracked())) {
+                        int onHand = p.getOnHand()!=null?p.getOnHand():0;
+                        if (onHand < qty) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
+                    }
+                });
+            }
+            // Deduct
+            for (java.util.Map.Entry<Long,Integer> e : newMap.entrySet()) {
+                Long pid = e.getKey(); int qty = e.getValue();
+                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                    if (Boolean.TRUE.equals(p.getIsTracked())) {
+                        int onHand = p.getOnHand()!=null?p.getOnHand():0;
+                        p.setOnHand(onHand - qty);
+                        productRepository.save(p);
+                    }
+                });
+            }
+        } else if (prevCompleted && !newCompleted) {
+            // Restore all previous
+            for (java.util.Map.Entry<Long,Integer> e : prevMap.entrySet()) {
+                Long pid = e.getKey(); int qty = e.getValue();
+                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                    if (Boolean.TRUE.equals(p.getIsTracked())) {
+                        int onHand = p.getOnHand()!=null?p.getOnHand():0;
+                        p.setOnHand(onHand + qty);
+                        productRepository.save(p);
+                    }
+                });
+            }
+        }
         return saved;
     }
 

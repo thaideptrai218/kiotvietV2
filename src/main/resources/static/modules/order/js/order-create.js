@@ -331,15 +331,28 @@
     if (!els.searchDropdown) return;
     lastResults = items || [];
     activeIndex = items.length ? 0 : -1;
+    function asQty(p){
+      const keys = ['qty','quantity','stock','stockQuantity','onHand','availableQty','currentStock','inventory'];
+      for (const k of keys) { if (p[k] != null && p[k] !== '') { const n = Number(p[k]); if (Number.isFinite(n)) return n; } }
+      if (p.isAvailable === true) return null; // unknown qty
+      return null;
+    }
     els.searchDropdown.innerHTML = items.map((p, idx) => {
       const sku = p.sku || '';
       const name = p.displayName || p.name || '';
       const price = p.sellingPrice || '';
-      const inStock = p.isAvailable === true;
-      const stockBadge = inStock ? '<span class="badge bg-success stock">In stock</span>' : '<span class="badge bg-secondary stock">Out</span>';
+      const qty = asQty(p);
+      let stockBadge = '';
+      if (qty == null) {
+        stockBadge = '<span class="badge bg-secondary stock">Qty: --</span>';
+      } else if (qty > 0) {
+        stockBadge = `<span class="badge bg-success stock">Qty: ${qty}</span>`;
+      } else {
+        stockBadge = '<span class="badge bg-danger stock">Qty: 0</span>';
+      }
       const cls = idx === 0 ? 'item active' : 'item';
       return `
-        <div class="${cls}" role="option" data-idx="${idx}" data-id="${p.id}" data-sku="${sku}" data-name="${p.name||''}" data-price="${price}">
+        <div class="${cls}" role="option" data-idx="${idx}" data-id="${p.id}" data-sku="${sku}" data-name="${p.name||''}" data-price="${price}" data-qty="${qty ?? ''}">
           <span class="sku">${sku}</span>
           <span class="name">${name}</span>
           <span class="barcode">${p.barcode ? 'Barcode: ' + p.barcode : ''}</span>
