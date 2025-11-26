@@ -13,12 +13,115 @@
     sumChange: document.getElementById('sumChange')
   };
 
+  // Populate current user name from token if available
+  (function setCurrentUserName(){
+    try {
+      const el = document.getElementById('currentUserName');
+      if (!el) return;
+      const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+      if (!t) return;
+      const payload = JSON.parse(atob((t.split('.')[1]||'').replace(/-/g,'+').replace(/_/g,'/')) || '{}');
+      const name = payload.fullName || payload.name || payload.username || payload.sub || '';
+      if (name) el.textContent = name;
+    } catch {}
+  })();
+
   function fmt(n) { try { return Number(n||0).toLocaleString('vi-VN'); } catch { return n; } }
   function parseNumber(n) { const v = Number(n); return Number.isFinite(v) ? v : 0; }
   function parseCurrencyText(text) {
     // Strip all non-digits (treat as VND integer amount)
     const raw = (text || '').toString().replace(/[^0-9]/g, '');
     return Number(raw || '0');
+  }
+
+  // Toast/notification utilities
+  function ensureToastContainer() {
+    let el = document.getElementById('posToastContainer');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'posToastContainer';
+    el.className = 'pos-toast-container';
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function showToast(message, type = 'info', timeoutMs = 3500) {
+    const container = ensureToastContainer();
+    const toast = document.createElement('div');
+    const cls = type === 'success' ? 'pos-toast--success' : type === 'error' ? 'pos-toast--error' : 'pos-toast--info';
+    toast.className = `pos-toast ${cls}`;
+    toast.innerHTML = `<span class="pos-toast__msg">${message}</span><button class="pos-toast__close" aria-label="Close">×</button>`;
+    container.appendChild(toast);
+    const remove = () => { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); };
+    toast.querySelector('.pos-toast__close')?.addEventListener('click', remove);
+    setTimeout(remove, timeoutMs);
+  }
+
+  // Update confirm modal (shown only in update mode)
+  function confirmUpdateProceed() {
+    return new Promise((resolve) => {
+      // Build modal lazily
+      let overlay = document.getElementById('posConfirmOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'posConfirmOverlay';
+        overlay.className = 'pos-modal-backdrop';
+        overlay.innerHTML = `
+          <div class="pos-modal" role="dialog" aria-modal="true" aria-labelledby="posConfirmTitle">
+            <div class="pos-modal__content">
+              <div class="pos-modal__body">
+                <div id="posConfirmTitle" class="fw-semibold mb-2">Promotion programs</div>
+                <div class="pos-modal__msg">
+                  <div>When changing information on the invoice, the system will:</div>
+                  <ul class="mb-2">
+                    <li>Cancel old invoice and create new invoice</li>
+                    <li>If you change product quantity, please make sure there are enough products in stock. The system will not check again.</li>
+                  </ul>
+                  <div>Do you want to continue?</div>
+                </div>
+              </div>
+              <div class="pos-modal__actions">
+                <button type="button" class="btn btn-secondary" id="posConfirmCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="posConfirmOk">Continue</button>
+              </div>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+      }
+      const close = () => { overlay.classList.remove('show'); };
+      const okBtn = overlay.querySelector('#posConfirmOk');
+      const cancelBtn = overlay.querySelector('#posConfirmCancel');
+      const onKey = (e) => { if (e.key === 'Escape') { cleanup(false); } };
+      const cleanup = (val) => {
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        document.removeEventListener('keydown', onKey);
+        close();
+        resolve(val);
+      };
+      const onOk = () => cleanup(true);
+      const onCancel = () => cleanup(false);
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+      document.addEventListener('keydown', onKey);
+      requestAnimationFrame(() => overlay.classList.add('show'));
+    });
+  }
+
+  function getTotals() {
+    let subtotal = 0;
+    els.items?.querySelectorAll('.pos-itemcard').forEach(card => {
+      const unit = parseNumber(card.dataset.unitPrice || '0');
+      const qty = parseInt(card.querySelector('.qty input')?.value || '1', 10) || 1;
+      subtotal += (unit * qty);
+    });
+    const dpRaw = parseFloat(els.orderDiscount?.value || '0');
+    const dp = isNaN(dpRaw) ? 0 : Math.min(Math.max(dpRaw, 0), 100);
+    const discount = Math.round(subtotal * (dp / 100));
+    const total = Math.max(0, subtotal - discount);
+    const paid = parseCurrencyText(els.customerPay?.value || '0');
+    return { subtotal, discount, total, paid, discountPercent: dp };
   }
 
   function tickClock() {
@@ -436,12 +539,20 @@
       };
 
       try {
-        const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-        const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
         // Determine mode: update when orderId is present
         const params = new URLSearchParams(window.location.search || '');
         const orderId = params.get('orderId');
+        if (orderId) {
+          const ok = await confirmUpdateProceed();
+          if (!ok) { return; }
+        }
+        const { total, paid } = getTotals();
+        if (paid < total) {
+          showToast('Customer pays less than total. Order will be saved as DRAFT.', 'error');
+        }
+        const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+        const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const url = orderId ? `/api/orders/${encodeURIComponent(orderId)}` : '/api/orders';
         const method = orderId ? 'PUT' : 'POST';
         const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
@@ -452,13 +563,13 @@
         const body = await res.json();
         const code = body?.data?.orderCode || 'Order';
         if (orderId) {
-          // Update flow: notify and go back to clean create page
-          alert(`Updated ${code} successfully.`);
+          // Update flow: store a flash and go to clean create page
+          try { sessionStorage.setItem('kv.order.flash', JSON.stringify({ message: `Updated ${code} successfully.`, type: 'success' })); } catch {}
           window.location.href = '/order/create';
           return;
         } else {
           // Create flow: stay on page, reset draft
-          alert(`Created ${code} successfully.`);
+          showToast(`Created ${code} successfully.`, 'success');
           if (els.items) els.items.innerHTML = '';
           if (els.customerPay) els.customerPay.value = '';
           calcTotals();
@@ -466,7 +577,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert('Failed to save order.');
+        showToast('Failed to save order.', 'error', 5000);
       }
     });
 
@@ -487,6 +598,15 @@
       if (orderId && els.btnComplete) {
         els.btnComplete.textContent = 'UPDATE';
       }
+      // Flash notification (from update success redirect)
+      try {
+        const f = sessionStorage.getItem('kv.order.flash');
+        if (f) {
+          const { message, type } = JSON.parse(f);
+          if (message) showToast(message, type || 'info');
+          sessionStorage.removeItem('kv.order.flash');
+        }
+      } catch {}
     } catch {}
   });
 })();
