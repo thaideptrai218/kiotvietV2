@@ -82,6 +82,107 @@
     renumberItems();
   }
 
+  // ===== Update mode helpers =====
+  function authHeaders() {
+    const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    const h = { 'Accept': 'application/json' };
+    if (t) h['Authorization'] = `Bearer ${t}`;
+    return h;
+  }
+
+  function upsertUpdateBanner(orderCode) {
+    const container = document.querySelector('.pos-rightpanel .pos-panel') || document.querySelector('.pos-rightpanel');
+    if (!container) return;
+    let b = document.getElementById('updateBanner');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'updateBanner';
+      b.className = 'pos-update-banner';
+      container.prepend(b);
+    }
+    b.textContent = orderCode ? `Update from ${orderCode}` : 'Update';
+  }
+
+  function addExistingItem(it) {
+    if (!els.items) return;
+    const sku = it.productCode || '';
+    const name = it.productName || '';
+    // use salePrice if available so totals reflect any per-item discount
+    const unit = parseNumber((it.salePrice != null ? it.salePrice : (Number(it.unitPrice||0) - Number(it.discount||0))));
+    const qty = Number(it.quantity || 1);
+    const row = document.createElement('div');
+    row.className = 'pos-itemcard d-flex align-items-center';
+    row.dataset.unitPrice = String(unit);
+    row.innerHTML = `
+      <div class="stt"></div>
+      <button class="icon-btn text-danger" title="Remove"><i class="fa fa-trash-can"></i></button>
+      <div class="sku text-muted small">${sku}</div>
+      <div class="name flex-grow-1 fw-semibold">${name}</div>
+      <div class="qty d-flex align-items-center">
+        <button class="btn btn-light btn-sm btn-qty-minus">-</button>
+        <input type="number" class="form-control form-control-sm text-center" value="${qty}" min="1">
+        <button class="btn btn-light btn-sm btn-qty-plus">+</button>
+      </div>
+      <div class="price text-muted small">${fmt(unit)}</div>
+      <div class="line-total fw-bold">${fmt(unit * qty)}</div>
+      <button class="icon-btn" title="More"><i class="fa fa-ellipsis"></i></button>
+    `;
+    els.items.appendChild(row);
+  }
+
+  function prefillFromData(d) {
+    try {
+      if (document.getElementById('customerSearch')) {
+        document.getElementById('customerSearch').value = d.customerName || '';
+      }
+      if (els.orderDiscount) {
+        const dp = d.discountPercent;
+        els.orderDiscount.value = (dp != null && !Number.isNaN(Number(dp))) ? String(dp) : '';
+      }
+      if (els.customerPay) {
+        const pa = d.paidAmount;
+        els.customerPay.value = (pa != null && !Number.isNaN(Number(pa))) ? String(pa) : '';
+      }
+      if (els.items) {
+        els.items.innerHTML = '';
+        (d.items || []).forEach(addExistingItem);
+        renumberItems();
+        calcTotals();
+      }
+      upsertUpdateBanner(d.orderCode || '');
+    } catch (e) { console.error(e); }
+  }
+
+  async function loadExistingOrder(orderId) {
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/detail`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`Failed to load order ${orderId}`);
+      const body = await res.json();
+      const d = body?.data || {};
+      // Prefill header info
+      if (document.getElementById('customerSearch')) {
+        document.getElementById('customerSearch').value = d.customerName || '';
+      }
+      if (els.orderDiscount) {
+        // discountPercent comes from API as number (0-100)
+        els.orderDiscount.value = d.discountPercent != null ? String(d.discountPercent) : '';
+      }
+      if (els.customerPay) {
+        els.customerPay.value = d.paidAmount != null ? String(d.paidAmount) : '';
+      }
+      if (els.items) {
+        els.items.innerHTML = '';
+        (d.items || []).forEach(addExistingItem);
+        renumberItems();
+        calcTotals();
+      }
+      upsertUpdateBanner(d.orderCode || '');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to load order for update.');
+    }
+  }
+
   function renumberItems() {
     if (!els.items) return;
     const cards = els.items.querySelectorAll('.pos-itemcard');
@@ -338,23 +439,54 @@
         const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
         const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch('/api/orders', { method: 'POST', headers, body: JSON.stringify(payload) });
+        // Determine mode: update when orderId is present
+        const params = new URLSearchParams(window.location.search || '');
+        const orderId = params.get('orderId');
+        const url = orderId ? `/api/orders/${encodeURIComponent(orderId)}` : '/api/orders';
+        const method = orderId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
         if (!res.ok) {
           const t = await res.text();
-          throw new Error(`Create failed: ${res.status} ${t}`);
+          throw new Error(`${method==='PUT'?'Update':'Create'} failed: ${res.status} ${t}`);
         }
         const body = await res.json();
         const code = body?.data?.orderCode || 'Order';
-        // Stay on page; show success and reset current draft
-        alert(`Created ${code} successfully.`);
-        if (els.items) els.items.innerHTML = '';
-        if (els.customerPay) els.customerPay.value = '';
-        calcTotals();
-        els.productSearch?.focus();
+        if (orderId) {
+          // Update flow: notify and go back to clean create page
+          alert(`Updated ${code} successfully.`);
+          window.location.href = '/order/create';
+          return;
+        } else {
+          // Create flow: stay on page, reset draft
+          alert(`Created ${code} successfully.`);
+          if (els.items) els.items.innerHTML = '';
+          if (els.customerPay) els.customerPay.value = '';
+          calcTotals();
+          els.productSearch?.focus();
+        }
       } catch (err) {
         console.error(err);
-        alert('Failed to create order.');
+        alert('Failed to save order.');
       }
     });
+
+    // If landing with orderId param, switch to update mode and prefill
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const orderId = params.get('orderId');
+      // Prefer stashed data from the expanded panel to avoid extra fetch
+      const stashRaw = sessionStorage.getItem('kv.order.update');
+      if (stashRaw) {
+        try { const stash = JSON.parse(stashRaw); if (stash && typeof stash === 'object') prefillFromData(stash); } catch {}
+        // clear after use
+        sessionStorage.removeItem('kv.order.update');
+      } else if (orderId) {
+        loadExistingOrder(orderId);
+      }
+      // Adjust button label in update mode
+      if (orderId && els.btnComplete) {
+        els.btnComplete.textContent = 'UPDATE';
+      }
+    } catch {}
   });
 })();

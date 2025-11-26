@@ -140,6 +140,99 @@ public class OrderService {
         return saved;
     }
 
+    @Transactional
+    public Order update(Long companyId, Long orderId, OrderCreateRequest req) {
+        if (orderId == null) throw new IllegalArgumentException("Order id is required");
+        if (req == null || req.getItems() == null || req.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one item");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .filter(o -> o.getCompany() != null && companyId.equals(o.getCompany().getId()))
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        order.setCustomerName(trimToNull(req.getCustomerName()));
+        order.setPhoneNumber(trimToNull(req.getPhoneNumber()));
+
+        try {
+            if (req.getPaymentMethod() != null) {
+                order.setPaymentMethod(Order.PaymentMethod.valueOf(req.getPaymentMethod().trim().toUpperCase()));
+            }
+        } catch (Exception ignored) { }
+
+        java.math.BigDecimal subtotal = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal totalDiscount = java.math.BigDecimal.ZERO;
+
+        java.util.List<OrderItem> items = new java.util.ArrayList<>();
+        for (OrderCreateItem it : req.getItems()) {
+            if (it == null) continue;
+            int qty = Math.max(1, it.getQuantity() != null ? it.getQuantity() : 1);
+            java.math.BigDecimal unit = it.getUnitPrice() != null ? it.getUnitPrice() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal disc = it.getDiscount() != null ? it.getDiscount() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal line = unit.multiply(java.math.BigDecimal.valueOf(qty));
+            subtotal = subtotal.add(line);
+            totalDiscount = totalDiscount.add(disc);
+
+            Product product = null;
+            if (it.getProductId() != null) {
+                product = productRepository.findByIdAndCompany_Id(it.getProductId(), companyId).orElse(null);
+            }
+
+            OrderItem oi = OrderItem.builder()
+                    .company(Company.builder().id(companyId).build())
+                    .order(order)
+                    .product(product)
+                    .sku(it.getSku())
+                    .productName(it.getName())
+                    .quantity(qty)
+                    .unitPrice(unit)
+                    .discount(disc)
+                    .total(line.subtract(disc))
+                    .build();
+            items.add(oi);
+        }
+
+        if (req.getOrderDiscountPercent() != null) {
+            java.math.BigDecimal percent = req.getOrderDiscountPercent();
+            if (percent.compareTo(java.math.BigDecimal.ZERO) < 0) percent = java.math.BigDecimal.ZERO;
+            if (percent.compareTo(new java.math.BigDecimal("100")) > 0) percent = new java.math.BigDecimal("100");
+            java.math.BigDecimal percentAmount = subtotal
+                    .multiply(percent)
+                    .divide(new java.math.BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+            totalDiscount = totalDiscount.add(percentAmount);
+        } else if (req.getOrderDiscount() != null) {
+            totalDiscount = totalDiscount.add(req.getOrderDiscount());
+        }
+        order.setSubtotal(subtotal);
+        order.setDiscount(totalDiscount);
+        java.math.BigDecimal total = subtotal.subtract(totalDiscount);
+        java.math.BigDecimal paid = req.getPaidAmount() != null ? req.getPaidAmount() : java.math.BigDecimal.ZERO;
+        order.setPaidAmount(paid);
+
+        if (paid != null && total != null && paid.compareTo(total) >= 0) {
+            order.setStatus(Order.OrderStatus.COMPLETED);
+        } else {
+            order.setStatus(Order.OrderStatus.DRAFT);
+        }
+
+        Order saved = orderRepository.save(order);
+        // Replace existing items
+        try {
+            orderItemRepository.deleteByOrder_IdAndCompany_Id(saved.getId(), companyId);
+        } catch (Exception e) {
+            // fallback when deleteBy method is not supported by the JPA provider
+            var existing = orderItemRepository.findByOrder_IdAndCompany_Id(saved.getId(), companyId);
+            if (existing != null && !existing.isEmpty()) {
+                orderItemRepository.deleteAll(existing);
+            }
+        }
+        for (OrderItem oi : items) {
+            oi.setOrder(saved);
+        }
+        orderItemRepository.saveAll(items);
+        return saved;
+    }
+
     private LocalDateTime parseDate(String str, boolean startOfDay) {
         if (str == null || str.isBlank()) return null;
         try {

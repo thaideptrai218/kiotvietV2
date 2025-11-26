@@ -71,6 +71,24 @@ public class OrderApiController {
         return ResponseFactory.created(resp, "Order created successfully");
     }
 
+    @PutMapping("/{id}")
+    public SuccessResponse<OrderCreateResponse> updateOrder(@PathVariable Long id, @RequestBody OrderCreateRequest request) {
+        Long companyId = currentCompanyId();
+        Order saved = orderService.update(companyId, id, request);
+        var total = saved.getSubtotal().subtract(saved.getDiscount());
+        OrderCreateResponse resp = OrderCreateResponse.builder()
+                .id(saved.getId())
+                .orderCode(saved.getOrderCode())
+                .status(saved.getStatus() != null ? saved.getStatus().name() : null)
+                .orderDate(saved.getOrderDate())
+                .subtotal(saved.getSubtotal())
+                .discount(saved.getDiscount())
+                .total(total)
+                .paidAmount(saved.getPaidAmount())
+                .build();
+        return ResponseFactory.success(resp, "Order updated successfully");
+    }
+
     @GetMapping("/{id}/detail")
     public SuccessResponse<OrderDetailDto> getOrderDetail(@PathVariable Long id) {
         Long companyId = currentCompanyId();

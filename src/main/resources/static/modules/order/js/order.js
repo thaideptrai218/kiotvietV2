@@ -949,6 +949,30 @@ window.kvOrderToggleDetail = (function(){
           } catch (e) { alert('Failed to delete order'); }
         });
       }
+      // Update button: stash expanded data then navigate to create page for prefill
+      const updBtn = panel.querySelector("[data-action='update']");
+      if (updBtn) {
+        updBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          try {
+            const payload = {
+              id: Number(id),
+              orderCode: d.orderCode || '',
+              customerName: d.customerName || '',
+              discountPercent: d.discountPercent != null ? d.discountPercent : null,
+              paidAmount: d.paidAmount != null ? d.paidAmount : null,
+              items: Array.isArray(d.items) ? d.items : []
+            };
+            sessionStorage.setItem('kv.order.update', JSON.stringify(payload));
+          } catch {}
+          try {
+            const targetUrl = `/order/create?orderId=${encodeURIComponent(id)}`;
+            window.location.href = targetUrl;
+          } catch {
+            window.location.href = '/order/create';
+          }
+        });
+      }
       requestAnimationFrame(()=> panel.classList.add('show'));
     }catch(e){ panel.innerHTML = "<div class='text-danger'>Failed to load order detail.</div>"; }
   }
