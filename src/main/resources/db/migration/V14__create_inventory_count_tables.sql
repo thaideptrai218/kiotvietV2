@@ -1,4 +1,4 @@
-CREATE TABLE inventory_counts (
+CREATE TABLE IF NOT EXISTS inventory_counts (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     code VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE inventory_counts (
     CONSTRAINT uk_inventory_count_company_code UNIQUE (company_id, code)
 );
 
-CREATE TABLE inventory_count_items (
+CREATE TABLE IF NOT EXISTS inventory_count_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     inventory_count_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
