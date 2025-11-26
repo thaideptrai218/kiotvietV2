@@ -1,4 +1,4 @@
-﻿package fa.academy.kiotviet.application.controller.web;
+package fa.academy.kiotviet.application.controller.web;
 
 import fa.academy.kiotviet.application.controller.shared.BaseController;
 import lombok.extern.slf4j.Slf4j;
