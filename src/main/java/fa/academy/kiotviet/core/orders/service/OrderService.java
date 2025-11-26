@@ -153,6 +153,7 @@ public class OrderService {
 
         order.setCustomerName(trimToNull(req.getCustomerName()));
         order.setPhoneNumber(trimToNull(req.getPhoneNumber()));
+        order.setNote(trimToNull(req.getNote()));
 
         try {
             if (req.getPaymentMethod() != null) {

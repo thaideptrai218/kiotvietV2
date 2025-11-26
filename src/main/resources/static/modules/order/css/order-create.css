@@ -46,6 +46,8 @@ body.kv-pos { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 
 .pos-itemcard .qty input { width: 64px; }
 .pos-itemcard .price { width: 110px; text-align: right; }
 .pos-itemcard .line-total { width: 130px; text-align: right; }
+.pos-itemcard .discount { width: 120px; padding: 0 .25rem; }
+.pos-itemcard .discount .item-discount { width: 100%; }
 
 .pos-whitespace { height: 28vh; }
 .pos-note { background: #fff; border: 1px solid #e6ebf2; border-radius: 10px; padding: .75rem; position: sticky; bottom: 90px; }

@@ -13,5 +13,6 @@ public class OrderCreateRequest {
     private BigDecimal paidAmount; // optional
     private BigDecimal orderDiscount; // optional absolute discount (VND)
     private BigDecimal orderDiscountPercent; // optional percentage discount (0-100)
+    private String note; // optional order note
     private List<OrderCreateItem> items;
 }

@@ -876,6 +876,7 @@ window.kvOrderToggleDetail = (function(){
     row.innerHTML = `<td colspan="${cols}"><div class='kv-order-detail kv-slide'><div>Loading...</div></div></td>`;
     tr.after(row); const panel=row.querySelector('.kv-order-detail');
     try{ const res= await fetch(`${api.base}/${id}/detail`,{ headers: api.headers()}); if(!res.ok) throw new Error('fail'); const body= await res.json(); const d=body?.data||{};
+      function currentUser(){ try{ const t=localStorage.getItem('jwtToken')||sessionStorage.getItem('jwtToken')||localStorage.getItem('accessToken')||sessionStorage.getItem('accessToken'); if(!t) return ''; const pay=JSON.parse(atob((t.split('.')[1]||'').replace(/-/g,'+').replace(/_/g,'/'))||'{}'); return pay.fullName||pay.name||pay.username||pay.sub||''; }catch{return '';} }
       const badge = (d.status||'').toUpperCase()==='COMPLETED' ? 'kv-badge kv-badge--completed' : 'kv-badge kv-badge--draft';
       const items = (d.items||[]).map(it=>`<tr><td>${it.productCode||''}</td><td>${it.productName||''}</td><td class='text-end'>${Number(it.quantity||0)}</td><td class='text-end'>${fmt(it.unitPrice)}</td><td class='text-end'>${fmt(it.discount)}</td><td class='text-end'>${fmt(it.salePrice)}</td><td class='text-end'>${fmt(it.total)}</td></tr>`).join('');
       const itemsCount = (d.items||[]).reduce((acc,it)=> acc + Number(it.quantity||0), 0);
@@ -894,11 +895,12 @@ window.kvOrderToggleDetail = (function(){
 <div class='kv-order-detail__grid'>
   <div class='kv-order-detail__section'>
     <h6>Creator</h6>
-    <div class='kv-order-detail__row'><span class='label'>Creator</span><span class='value'>${d.creator||''}</span></div>
+    <div class='kv-order-detail__row'><span class='label'>Creator</span><span class='value'>${currentUser()||'Guest'}</span></div>
     <div class='kv-order-detail__row'><span class='label'>Sale channel</span><span class='value'>
-      <select class='form-select form-select-sm' style='min-width:160px;'>
-        <option selected>Sell in-store</option>
-        <option>Other</option>
+      <select class='form-select form-select-sm kv-sale-channel' style='min-width:180px;'>
+        ${((d.paymentMethod||'').toUpperCase()==='CASH' || (d.paymentMethod||'').toUpperCase()==='COD')
+          ? `<option value="in_store" selected>Sell in-store</option><option value="other">Other</option>`
+          : `<option value="in_store">Sell in-store</option><option value="other" selected>Other</option>`}
       </select>
     </span></div>
   </div>
@@ -917,7 +919,7 @@ window.kvOrderToggleDetail = (function(){
 </div>
 <div class='kv-order-detail__grid' style='margin-top:10px;'>
   <div class='kv-order-detail__note'>
-    <textarea placeholder='Note'></textarea>
+    <textarea class='form-control kv-note' placeholder='Note'>${(d.note||'')}</textarea>
   </div>
   <div class='kv-order-detail__summary'>
     <div class='row'><span class="label">Sub-total (${itemsCount})</span><span class="value">${fmt(d.subtotal)}</span></div>
@@ -930,6 +932,7 @@ window.kvOrderToggleDetail = (function(){
   <div class='kv-order-detail__actions'></div>
   <div class='kv-order-detail__actions'>
     <button class='kv-btn--danger' data-action='delete'>Delete</button>
+    <button class='kv-btn--ghost' data-action='save'>Save</button>
     <button class='kv-btn--primary' data-action='update'>Update</button>
   </div>
 </div>`;
@@ -949,6 +952,40 @@ window.kvOrderToggleDetail = (function(){
           } catch (e) { alert('Failed to delete order'); }
         });
       }
+      // Save button: save sale channel and note only (items unchanged)
+      const saveBtn = panel.querySelector("[data-action='save']");
+      if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+          try {
+            const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+            if (t) headers['Authorization'] = `Bearer ${t}`;
+            const channelVal = panel.querySelector('.kv-sale-channel')?.value || 'in_store';
+            const paymentMethod = channelVal === 'in_store' ? 'CASH' : 'OTHER';
+            const noteVal = panel.querySelector('.kv-note')?.value?.trim() || '';
+            const items = (d.items||[]).map(it=>{
+              const original = Number(it.unitPrice||0);
+              const disc = Number(it.discount||0);
+              const sale = Math.max(0, original - disc);
+              return { productId: null, sku: it.productCode||'', name: it.productName||'', quantity: Number(it.quantity||1), unitPrice: sale, discount: 0 };
+            });
+            const payload = {
+              customerName: d.customerName || 'Guest',
+              phoneNumber: d.phoneNumber || null,
+              paymentMethod,
+              paidAmount: d.paidAmount || 0,
+              orderDiscountPercent: d.discountPercent || 0,
+              note: noteVal,
+              items
+            };
+            const res = await fetch(`/api/orders/${encodeURIComponent(id)}`, { method: 'PUT', headers, body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error('Update failed');
+            alert('Saved successfully.');
+            if (window.kvOrders && typeof window.kvOrders.reload === 'function') window.kvOrders.reload();
+          } catch (e) { console.error(e); alert('Failed to save changes.'); }
+        });
+      }
+
       // Update button: stash expanded data then navigate to create page for prefill
       const updBtn = panel.querySelector("[data-action='update']");
       if (updBtn) {

@@ -81,6 +81,9 @@ public class Order {
     @Column(name = "cashier")
     private String cashier;
 
+    @Column(name = "note", length = 1024)
+    private String note;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

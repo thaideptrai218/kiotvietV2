@@ -24,6 +24,7 @@ public class OrderDetailDto {
     private String branchName;
     private String creator;
     private String seller;
+    private String note;
 
     private BigDecimal subtotal;
     private BigDecimal discountPercent;
@@ -35,4 +36,3 @@ public class OrderDetailDto {
 
     private List<OrderItemDetailDto> items;
 }
-

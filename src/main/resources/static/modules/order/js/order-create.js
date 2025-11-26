@@ -26,6 +26,16 @@
     } catch {}
   })();
 
+  // Default customer to 'Guest' if empty
+  (function setDefaultCustomer(){
+    try {
+      const el = document.getElementById('customerSearch');
+      if (el && (!el.value || el.value.trim() === '')) {
+        el.value = 'Guest';
+      }
+    } catch {}
+  })();
+
   function fmt(n) { try { return Number(n||0).toLocaleString('vi-VN'); } catch { return n; } }
   function parseNumber(n) { const v = Number(n); return Number.isFinite(v) ? v : 0; }
   function parseCurrencyText(text) {
@@ -165,7 +175,8 @@
     const row = document.createElement('div');
     row.className = 'pos-itemcard d-flex align-items-center';
     row.dataset.productId = id;
-    row.dataset.unitPrice = String(price);
+    row.dataset.unitPrice = String(price); // effective sale unit price
+    row.dataset.originalUnitPrice = String(price); // original unit price
     row.innerHTML = `
       <div class="stt"></div>
       <button class="icon-btn text-danger" title="Remove"><i class="fa fa-trash-can"></i></button>
@@ -175,6 +186,9 @@
         <button class="btn btn-light btn-sm btn-qty-minus">-</button>
         <input type="number" class="form-control form-control-sm text-center" value="1" min="1">
         <button class="btn btn-light btn-sm btn-qty-plus">+</button>
+      </div>
+      <div class="discount d-flex align-items-center">
+        <input type="number" class="form-control form-control-sm text-end item-discount" value="0" min="0" max="100" step="0.5" placeholder="discount">
       </div>
       <div class="price text-muted small">${fmt(price)}</div>
       <div class="line-total fw-bold">${fmt(price)}</div>
@@ -210,12 +224,15 @@
     if (!els.items) return;
     const sku = it.productCode || '';
     const name = it.productName || '';
-    // use salePrice if available so totals reflect any per-item discount
-    const unit = parseNumber((it.salePrice != null ? it.salePrice : (Number(it.unitPrice||0) - Number(it.discount||0))));
+    const original = parseNumber(Number(it.unitPrice || 0));
+    const perItemDisc = parseNumber(Number(it.discount || 0));
+    const percent = original > 0 ? Math.min(100, Math.max(0, Math.round((perItemDisc * 10000) / original) / 100)) : 0; // to 2 decimals
+    const unit = Math.max(0, Math.round(original * (1 - (percent / 100)))); // effective sale unit price
     const qty = Number(it.quantity || 1);
     const row = document.createElement('div');
     row.className = 'pos-itemcard d-flex align-items-center';
     row.dataset.unitPrice = String(unit);
+    row.dataset.originalUnitPrice = String(original);
     row.innerHTML = `
       <div class="stt"></div>
       <button class="icon-btn text-danger" title="Remove"><i class="fa fa-trash-can"></i></button>
@@ -225,6 +242,9 @@
         <button class="btn btn-light btn-sm btn-qty-minus">-</button>
         <input type="number" class="form-control form-control-sm text-center" value="${qty}" min="1">
         <button class="btn btn-light btn-sm btn-qty-plus">+</button>
+      </div>
+      <div class="discount d-flex align-items-center">
+        <input type="number" class="form-control form-control-sm text-end item-discount" value="${percent}" min="0" max="100" step="0.5" placeholder="discount">
       </div>
       <div class="price text-muted small">${fmt(unit)}</div>
       <div class="line-total fw-bold">${fmt(unit * qty)}</div>
@@ -236,7 +256,7 @@
   function prefillFromData(d) {
     try {
       if (document.getElementById('customerSearch')) {
-        document.getElementById('customerSearch').value = d.customerName || '';
+        document.getElementById('customerSearch').value = d.customerName || 'Guest';
       }
       if (els.orderDiscount) {
         const dp = d.discountPercent;
@@ -264,7 +284,7 @@
       const d = body?.data || {};
       // Prefill header info
       if (document.getElementById('customerSearch')) {
-        document.getElementById('customerSearch').value = d.customerName || '';
+        document.getElementById('customerSearch').value = d.customerName || 'Guest';
       }
       if (els.orderDiscount) {
         // discountPercent comes from API as number (0-100)
@@ -491,14 +511,34 @@
       }
     });
     els.items?.addEventListener('change', (e) => {
-      const input = e.target.closest('.qty input');
-      if (!input) return;
       const card = e.target.closest('.pos-itemcard');
-      const price = parseNumber(card.dataset.unitPrice || '0');
-      let q = Math.max(1, parseInt(input.value || '1', 10));
-      input.value = String(q);
-      card.querySelector('.line-total').textContent = fmt(price * q);
-      calcTotals();
+      if (!card) return;
+      // Quantity change
+      const qtyInput = e.target.closest('.qty input');
+      if (qtyInput) {
+        const price = parseNumber(card.dataset.unitPrice || '0');
+        let q = Math.max(1, parseInt(qtyInput.value || '1', 10));
+        qtyInput.value = String(q);
+        card.querySelector('.line-total').textContent = fmt(price * q);
+        calcTotals();
+        return;
+      }
+      // Per-item discount change (percent)
+      const discInput = e.target.closest('.item-discount');
+      if (discInput) {
+        const original = parseNumber(card.dataset.originalUnitPrice || card.dataset.unitPrice || '0');
+        let d = parseNumber(discInput.value || '0'); // %
+        if (d < 0) d = 0;
+        if (d > 100) d = 100;
+        discInput.value = String(d);
+        const sale = Math.max(0, Math.round(original * (1 - d/100)));
+        card.dataset.unitPrice = String(sale);
+        const priceEl = card.querySelector('.price');
+        if (priceEl) priceEl.textContent = fmt(sale);
+        const q = Math.max(1, parseInt(card.querySelector('.qty input')?.value || '1', 10));
+        card.querySelector('.line-total').textContent = fmt(sale * q);
+        calcTotals();
+      }
     });
 
     // Discount and customer pay auto-calculation
@@ -514,8 +554,11 @@
         const sku = (card.querySelector('.sku')?.textContent || '').trim();
         const name = (card.querySelector('.name')?.textContent || '').trim();
         const qty = Number(card.querySelector('.qty input')?.value || '1') || 1;
-        const unitPrice = parseNumber(card.dataset.unitPrice || '0');
+        const originalUnitPrice = parseNumber(card.dataset.originalUnitPrice || card.dataset.unitPrice || '0');
+        const percent = parseNumber(card.querySelector('.item-discount')?.value || '0');
+        const unitPrice = Math.max(0, Math.round(originalUnitPrice * (1 - percent/100)));
         const productId = card.dataset.productId ? Number(card.dataset.productId) : null;
+        // Send effective unit price and set discount to 0 to keep backend totals consistent
         items.push({ productId, sku, name, quantity: qty, unitPrice, discount: 0 });
       });
       if (!items.length) {
@@ -530,7 +573,7 @@
         return Math.min(Math.max(v, 0), 100);
       })();
       const payload = {
-        customerName: document.getElementById('customerSearch')?.value || null,
+        customerName: (function(){ const v = document.getElementById('customerSearch')?.value || ''; return v.trim() ? v : 'Guest'; })(),
         phoneNumber: null,
         paymentMethod: 'CASH',
         paidAmount,

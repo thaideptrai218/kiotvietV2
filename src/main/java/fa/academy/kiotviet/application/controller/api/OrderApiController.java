@@ -136,6 +136,7 @@ public class OrderApiController {
                 .branchName("")
                 .creator(o.getCashier())
                 .seller(o.getCashier())
+                .note(o.getNote())
                 .subtotal(sub)
                 .discountPercent(discountPercent)
                 .discountAmount(disc)
