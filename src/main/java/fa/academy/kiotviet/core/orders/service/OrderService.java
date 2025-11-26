@@ -194,9 +194,6 @@ public class OrderService {
             }
         } catch (Exception ignored) { }
 
-        // Capture previous status before any mutation for correct inventory diffing
-        Order.OrderStatus prevStatus = order.getStatus();
-
         java.math.BigDecimal subtotal = java.math.BigDecimal.ZERO;
         java.math.BigDecimal totalDiscount = java.math.BigDecimal.ZERO;
 
@@ -252,8 +249,7 @@ public class OrderService {
         if (markCompleted) order.setStatus(Order.OrderStatus.COMPLETED);
         else order.setStatus(Order.OrderStatus.DRAFT);
 
-        // Capture previous state for inventory adjustments (status before change)
-        Order.OrderStatus oldStatus = prevStatus;
+        // Capture previous items for inventory adjustments (independent of status)
         java.util.List<OrderItem> prevItems = orderItemRepository.findByOrder_IdAndCompany_Id(orderId, companyId);
 
         Order saved = orderRepository.save(order);
@@ -271,9 +267,7 @@ public class OrderService {
         }
         orderItemRepository.saveAll(items);
 
-        // Inventory adjustments with oversell prevention
-        boolean prevCompleted = oldStatus == Order.OrderStatus.COMPLETED;
-        boolean newCompleted = order.getStatus() == Order.OrderStatus.COMPLETED;
+        // Inventory adjustments independent of order status
         java.util.Map<Long, Integer> prevMap = new java.util.HashMap<>();
         if (prevItems != null) {
             for (OrderItem pi : prevItems) {
@@ -287,73 +281,38 @@ public class OrderService {
             newMap.merge(ni.getProduct().getId(), ni.getQuantity()!=null?ni.getQuantity():0, Integer::sum);
         }
 
-        if (prevCompleted && newCompleted) {
-            java.util.Set<Long> keys = new java.util.HashSet<>();
-            keys.addAll(prevMap.keySet());
-            keys.addAll(newMap.keySet());
-            // Validate increases first
-            for (Long pid : keys) {
-                int prevQty = prevMap.getOrDefault(pid, 0);
-                int newQty = newMap.getOrDefault(pid, 0);
-                int diff = newQty - prevQty;
-                if (diff > 0) {
-                    final int need = diff;
-                    productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
-                        if (Boolean.TRUE.equals(p.getIsTracked())) {
-                            int onHand = p.getOnHand()!=null?p.getOnHand():0;
-                            if (onHand < need) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
-                        }
-                    });
-                }
-            }
-            // Apply deltas
-            for (Long pid : keys) {
-                int prevQty = prevMap.getOrDefault(pid, 0);
-                int newQty = newMap.getOrDefault(pid, 0);
-                int diff = newQty - prevQty;
-                if (diff == 0) continue;
-                final int delta = diff;
-                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
-                    if (!Boolean.TRUE.equals(p.getIsTracked())) return;
-                    int onHand = p.getOnHand()!=null?p.getOnHand():0;
-                    p.setOnHand(onHand - delta);
-                    productRepository.save(p);
-                });
-            }
-        } else if (!prevCompleted && newCompleted) {
-            // Validate all
-            for (java.util.Map.Entry<Long,Integer> e : newMap.entrySet()) {
-                Long pid = e.getKey(); int qty = e.getValue();
+        java.util.Set<Long> keys = new java.util.HashSet<>();
+        keys.addAll(prevMap.keySet());
+        keys.addAll(newMap.keySet());
+
+        // Validate increases first (delta > 0 means extra stock consumption)
+        for (Long pid : keys) {
+            int prevQty = prevMap.getOrDefault(pid, 0);
+            int newQty = newMap.getOrDefault(pid, 0);
+            int delta = newQty - prevQty;
+            if (delta > 0) {
+                final int need = delta;
                 productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
                     if (Boolean.TRUE.equals(p.getIsTracked())) {
                         int onHand = p.getOnHand()!=null?p.getOnHand():0;
-                        if (onHand < qty) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
+                        if (onHand < need) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
                     }
                 });
             }
-            // Deduct
-            for (java.util.Map.Entry<Long,Integer> e : newMap.entrySet()) {
-                Long pid = e.getKey(); int qty = e.getValue();
-                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
-                    if (Boolean.TRUE.equals(p.getIsTracked())) {
-                        int onHand = p.getOnHand()!=null?p.getOnHand():0;
-                        p.setOnHand(onHand - qty);
-                        productRepository.save(p);
-                    }
-                });
-            }
-        } else if (prevCompleted && !newCompleted) {
-            // Restore all previous
-            for (java.util.Map.Entry<Long,Integer> e : prevMap.entrySet()) {
-                Long pid = e.getKey(); int qty = e.getValue();
-                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
-                    if (Boolean.TRUE.equals(p.getIsTracked())) {
-                        int onHand = p.getOnHand()!=null?p.getOnHand():0;
-                        p.setOnHand(onHand + qty);
-                        productRepository.save(p);
-                    }
-                });
-            }
+        }
+        // Apply deltas: onHand = onHand + oldQty - newQty => onHand -= (newQty - prevQty)
+        for (Long pid : keys) {
+            int prevQty = prevMap.getOrDefault(pid, 0);
+            int newQty = newMap.getOrDefault(pid, 0);
+            int delta = newQty - prevQty;
+            if (delta == 0) continue;
+            final int applyDelta = delta;
+            productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                if (!Boolean.TRUE.equals(p.getIsTracked())) return;
+                int onHand = p.getOnHand()!=null?p.getOnHand():0;
+                p.setOnHand(onHand - applyDelta);
+                productRepository.save(p);
+            });
         }
         return saved;
     }
