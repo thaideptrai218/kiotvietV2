@@ -188,7 +188,7 @@
         <button class="btn btn-light btn-sm btn-qty-plus">+</button>
       </div>
       <div class="discount d-flex align-items-center">
-        <input type="number" class="form-control form-control-sm text-end item-discount" value="0" min="0" max="100" step="0.5" placeholder="discount">
+        <input type="number" class="form-control form-control-sm text-end item-discount" value="" min="0" max="100" step="1" placeholder="discount">
       </div>
       <div class="price text-muted small">${fmt(price)}</div>
       <div class="line-total fw-bold">${fmt(price)}</div>
@@ -244,9 +244,9 @@
         <button class="btn btn-light btn-sm btn-qty-plus">+</button>
       </div>
       <div class="discount d-flex align-items-center">
-        <input type="number" class="form-control form-control-sm text-end item-discount" value="${percent}" min="0" max="100" step="0.5" placeholder="discount">
+        <input type="number" class="form-control form-control-sm text-end item-discount" value="${percent}" min="0" max="100" step="1" placeholder="discount">
       </div>
-      <div class="price text-muted small">${fmt(unit)}</div>
+      <div class="price text-muted small">${fmt(original)}</div>
       <div class="line-total fw-bold">${fmt(unit * qty)}</div>
       <button class="icon-btn" title="More"><i class="fa fa-ellipsis"></i></button>
     `;
@@ -523,6 +523,27 @@
         calcTotals();
       }
     });
+    // Live update while typing per-item discount
+    els.items?.addEventListener('input', (e) => {
+      const card = e.target.closest('.pos-itemcard');
+      if (!card) return;
+      const discInput = e.target.closest('.item-discount');
+      if (discInput) {
+        const original = parseNumber(card.dataset.originalUnitPrice || card.dataset.unitPrice || '0');
+        // Do not force the input value while typing; just compute within 0-100 bounds
+        let d = parseNumber(discInput.value || '0');
+        if (!Number.isFinite(d)) d = 0;
+        if (d < 0) d = 0;
+        if (d > 100) d = 100;
+        const sale = Math.max(0, Math.round(original * (1 - d/100)));
+        card.dataset.unitPrice = String(sale);
+        // Keep displayed price as original; only update line total
+        const q = Math.max(1, parseInt(card.querySelector('.qty input')?.value || '1', 10));
+        card.querySelector('.line-total').textContent = fmt(sale * q);
+        calcTotals();
+      }
+    });
+
     els.items?.addEventListener('change', (e) => {
       const card = e.target.closest('.pos-itemcard');
       if (!card) return;
@@ -546,8 +567,7 @@
         discInput.value = String(d);
         const sale = Math.max(0, Math.round(original * (1 - d/100)));
         card.dataset.unitPrice = String(sale);
-        const priceEl = card.querySelector('.price');
-        if (priceEl) priceEl.textContent = fmt(sale);
+        // Keep displayed price as original; only update line total
         const q = Math.max(1, parseInt(card.querySelector('.qty input')?.value || '1', 10));
         card.querySelector('.line-total').textContent = fmt(sale * q);
         calcTotals();
