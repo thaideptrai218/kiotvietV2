@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory Check - KiotViet</title>
+
+    <!-- Shared Dashboard CSS -->
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-themes.css}">
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-core.css}">
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-components.css}">
+    <link rel="stylesheet" th:href="@{/css/header-nav.css}">
+    <link rel="stylesheet" th:href="@{/modules/inventory/css/inventory.css}">
+</head>
+
+<body>
+
+<!-- Shared header -->
+<div th:replace="common/header :: dashboardHeader"></div>
+
+<!-- Shared navigation -->
+<div th:replace="common/navigation :: dashboardNav('inventory')"></div>
+
+<!-- MAIN LAYOUT -->
+<div class="inventory-layout" data-page="inventory-list">
+
+    <!-- LEFT FILTER SIDEBAR -->
+    <div class="inventory-filter-sidebar">
+
+<h3 class="filter-title">Created date</h3>
+
+<!-- THIS MONTH -->
+<div class="date-row">
+    <label class="radio-line date-radio">
+        <input type="radio" name="dateRange" checked>
+    </label>
+
+    <div id="datePresetBtn" class="date-select-btn">
+        <span id="selectedDateLabel">This month</span>
+        <i class="fa fa-chevron-right"></i>
+    </div>
+</div>
+
+<!-- CUSTOM DATE -->
+<div class="date-row">
+
+    <label class="radio-line">
+        <input id="customRadio" type="radio" name="dateRange">
+    </label>
+
+    <div id="customTrigger" class="date-custom-box">
+        <span id="customRangeLabel">Custom range</span>
+        <i class="fa fa-calendar"></i>
+    </div>
+</div>
+
+
+
+
+<!-- POPUP -->
+<div id="datePopup" class="date-popup">
+
+
+    <div class="popup-col">
+        <div class="popup-col-title">By day</div>
+        <div class="popup-item" data-range="today">Today</div>
+        <div class="popup-item" data-range="yesterday">Yesterday</div>
+    </div>
+
+    <div class="popup-col">
+        <div class="popup-col-title">By week</div>
+        <div class="popup-item" data-range="thisWeek">This week</div>
+        <div class="popup-item" data-range="lastWeek">Last week</div>
+        <div class="popup-item" data-range="last7">Last 7 days</div>
+    </div>
+
+    <div class="popup-col">
+        <div class="popup-col-title">By month</div>
+        <div class="popup-item selected" data-range="thisMonth">This month</div>
+        <div class="popup-item" data-range="lastMonth">Last month</div>
+        <div class="popup-item" data-range="thisMonthLunar">This month (lunar calendar)</div>
+        <div class="popup-item" data-range="lastMonthLunar">Last month (lunar calendar)</div>
+        <div class="popup-item" data-range="last30">Last 30 days</div>
+    </div>
+
+    <div class="popup-col">
+        <div class="popup-col-title">By quarter</div>
+        <div class="popup-item" data-range="thisQuarter">This quarter</div>
+        <div class="popup-item" data-range="lastQuarter">Last quarter</div>
+    </div>
+
+    <div class="popup-col">
+        <div class="popup-col-title">By year</div>
+        <div class="popup-item" data-range="thisYear">This year</div>
+        <div class="popup-item" data-range="lastYear">Last year</div>
+        <div class="popup-item" data-range="thisYearLunar">This year (lunar calendar)</div>
+        <div class="popup-item" data-range="lastYearLunar">Last year (lunar calendar)</div>
+    </div>
+
+</div>
+
+<!-- CUSTOM DATE POPUP -->
+<div id="customDatePopup" class="custom-date-popup hidden">
+
+    <div class="date-range-header">
+        From date: <b id="fromDateText">--/--/----</b> 
+        – To date: <b id="toDateText">--/--/----</b>
+    </div>
+
+    <div class="date-range-body">
+
+        <!-- LEFT CALENDAR -->
+        <div class="calendar-block">
+            <div class="cal-nav">
+                <button class="cal-prev" data-cal="from">&lt;</button>
+                <span class="cal-title" id="fromCalTitle">November 2025</span>
+                <button class="cal-next" data-cal="from">&gt;</button>
+            </div>
+
+            <div class="cal-grid" id="fromCalendar"></div>
+        </div>
+
+        <!-- RIGHT CALENDAR -->
+        <div class="calendar-block">
+            <div class="cal-nav">
+                <button class="cal-prev" data-cal="to">&lt;</button>
+                <span class="cal-title" id="toCalTitle">November 2025</span>
+                <button class="cal-next" data-cal="to">&gt;</button>
+            </div>
+
+            <div class="cal-grid" id="toCalendar"></div>
+        </div>
+
+    </div>
+
+    <div class="date-range-footer">
+        <button id="customTodayBtn">Today</button>
+        <div class="footer-right">
+            <button id="customCancelBtn">Cancel</button>
+            <button id="customApplyBtn" class="apply-btn">Apply</button>
+        </div>
+    </div>
+
+</div>
+
+
+        <div class="filter-divider"></div>
+
+        <h3 class="filter-title">Status</h3>
+
+        <label class="checkbox-line">
+            <input type="checkbox" class="status-filter" data-status="DRAFT" checked>
+            <span>Draft</span>
+        </label>
+
+        <label class="checkbox-line">
+            <input type="checkbox" class="status-filter" data-status="COMPLETED" checked>
+            <span>Completed</span>
+        </label>
+
+        <label class="checkbox-line">
+            <input type="checkbox" class="status-filter" data-status="CANCELLED">
+            <span>Cancelled</span>
+        </label>
+
+        <div class="filter-divider"></div>
+
+        <h3 class="filter-title">Creator</h3>
+        <input type="text" id="inventoryCreatorFilter" class="creator-input" placeholder="Search by creator id">
+
+        <!-- Hide/Show Sidebar Button -->
+        <div class="filter-toggle">
+            <i class="fa fa-chevron-left"></i>
+        </div>
+
+    </div>
+
+    <!-- RIGHT CONTENT -->
+    <div class="inventory-list-content">
+
+        <!-- TOP SEARCH BAR -->
+        <div class="inventory-top-bar">
+
+            <input type="text" id="inventorySearchInput" class="search-input" placeholder="Search by code or note">
+
+            <button class="btn-icon"><i class="fa fa-sliders-h"></i></button>
+
+            <button class="btn-primary-blue" onclick="goToCreate()">+ Inventory count</button>
+
+            <button class="btn-outline" id="inventoryListExportBtn">
+                Export <i class="fa fa-download"></i>
+            </button>
+
+            <button class="btn-icon"><i class="fa fa-table"></i></button>
+            <button class="btn-icon"><i class="fa fa-cog"></i></button>
+            <button class="btn-icon"><i class="fa fa-question-circle"></i></button>
+
+        </div>
+
+        <!-- TABLE LIST -->
+        <div class="inventory-table-wrapper">
+            <table class="kv-table" id="inventoryMainTable">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Number</th>
+                    <th>Time</th>
+                    <th>Completed time</th>
+                    <th>Total actual count</th>
+                    <th>Total price actual</th>
+                    <th>Total diff. qty</th>
+                    <th>Surplus quantity</th>
+                    <th>Missing quantity</th>
+                    <th>Note</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+
+                <tbody id="inventoryTableBody"></tbody>
+            </table>
+
+            <div id="detailContainer"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Merge floating button -->
+<div id="mergeFloatingBtn" class="merge-floating hidden">
+    <button class="btn-merge" disabled>Merge</button>
+</div>
+
+<!-- Delete floating button -->
+<div id="deleteFloatingBtn" class="delete-floating hidden">
+    <button class="btn-delete" disabled>Delete</button>
+</div>
+
+<!-- Merge modal -->
+<div id="mergeModal" class="merge-modal hidden">
+    <div class="merge-modal-overlay"></div>
+    <div class="merge-modal-dialog">
+        <div class="merge-modal-header">
+            <h3>Merge inventory count</h3>
+            <button class="merge-close" id="mergeCloseBtn">&times;</button>
+        </div>
+        <div class="merge-modal-body">
+            <table class="kv-table merge-table">
+                <thead>
+                <tr>
+                    <th>Product No.</th>
+                    <th>Product name</th>
+                    <th>On hand</th>
+                    <th>Counted</th>
+                    <th>Diff qty</th>
+                </tr>
+                </thead>
+                <tbody id="mergeTableBody">
+                <tr><td colspan="5" class="inventory-empty-row">No data</td></tr>
+                </tbody>
+            </table>
+
+            <div class="merge-summary">
+                <div>Surplus quantity: <span id="mergeSurplus">0</span></div>
+                <div>Missing quantity: <span id="mergeMissing">0</span></div>
+                <div>Total on-hand: <span id="mergeOnHand">0</span></div>
+                <div>Total diff. qty: <span id="mergeDiff">0</span></div>
+            </div>
+        </div>
+        <div class="merge-modal-footer">
+            <button class="btn-save" id="mergeConfirmBtn">Merge</button>
+            <button class="btn-outline" id="mergeCancelBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="/modules/inventory/js/inventory.js"></script>
+
+</body>
+</html>

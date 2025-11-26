@@ -1,0 +1,990 @@
+/* =========================================================
+   LIST PAGE LAYOUT
+   ========================================================= */
+
+.inventory-layout {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* ---------- LEFT SIDEBAR (Filter card) ---------- */
+
+.inventory-filter-sidebar {
+    width: 260px;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    /* cao vừa, giống card bên trái trong ảnh */
+    align-self: flex-start;
+}
+
+.filter-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* hàng radio / checkbox */
+.radio-line,
+.checkbox-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #111827;
+}
+
+.filter-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 15px 0;
+}
+
+.creator-input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+
+.date-picker {
+    margin-left: auto;
+    padding: 4px 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+/* nút tròn mũi tên ở cạnh trái (hiện chỉ là decor) */
+.filter-toggle {
+    margin-top: 20px;
+    width: 32px;
+    height: 32px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* Completed status (green pill) */
+.status-completed {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+/* ---------- RIGHT CONTENT ---------- */
+
+.inventory-list-content {
+    flex: 1;
+}
+
+/* TOP SEARCH BAR */
+.inventory-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+}
+
+/* Buttons */
+.btn-primary-blue {
+    background: #1a73e8;
+    color: #ffffff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+}
+
+.btn-outline {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 8px 14px;
+    border-radius: 8px;
+}
+
+.btn-icon {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* TABLE */
+.kv-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.kv-table th {
+    background: #f8fafc;
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+    text-align: left;
+}
+
+.kv-table td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* =========================================================
+   FORM PAGE LAYOUT
+   ========================================================= */
+
+.inventory-form-layout {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    align-items: flex-start;
+}
+
+/* ---------- LEFT SIDE TABLE ---------- */
+
+.inventory-products {
+    flex: 1;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.inventory-form-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-back {
+    border: none;
+    background: none;
+    font-size: 18px;
+}
+
+/* Tabs */
+.inventory-tabs {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.inventory-tabs span {
+    padding-bottom: 5px;
+    cursor: pointer;
+}
+
+.inventory-tabs .active {
+    border-bottom: 2px solid #1a73e8;
+    color: #1a73e8;
+    font-weight: 600;
+}
+
+/* ---------- RIGHT INFO PANEL ---------- */
+
+.inventory-info {
+    width: 340px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: calc(100vh - 180px);
+}
+
+.info-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 2px 0;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Tag styles */
+.tag {
+    background: #e2e8f0;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.status-draft {
+    color: #1e40af;
+    background: #dbeafe;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+/* Note input */
+.note {
+    width: 100%;
+    height: 70px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    resize: none;
+}
+
+.summary-block {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.note-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.inventory-back-row {
+    width: 100%;
+    padding: 10px 20px 0 20px;
+    margin-bottom: 8px;
+}
+
+.btn-back-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #f8fafc;
+    color: #111827;
+    font-size: 13px;
+}
+
+.btn-back-outline i {
+    color: #6b7280;
+}
+
+/* Activity list */
+.activity-block ul {
+    padding-left: 15px;
+}
+
+/* Save + Complete buttons */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-save {
+    flex: 1;
+    padding: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    border-radius: 8px;
+    border: none;
+}
+
+.btn-complete {
+    flex: 1;
+    padding: 10px;
+    background: #16a34a;
+    color: #ffffff;
+    border-radius: 8px;
+    border: none;
+}
+
+/* ---------- DIFF COLORS ---------- */
+
+.diff-zero {
+    color: #16a34a;
+}
+
+.diff-positive {
+    color: #d97706;
+}
+
+.diff-negative {
+    color: #dc2626;
+}
+
+/* =========================================================
+   DETAIL EXPAND PANEL
+   ========================================================= */
+
+.inventory-detail-box {
+    margin-top: 15px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px; /* 👈 Font nhỏ hơn */
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.detail-header h3 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.detail-meta {
+    margin-top: 10px;
+    color: #4b5563;
+    font-size: 12.5px;
+}
+
+.detail-table-scroll {
+    margin-top: 20px;
+    overflow-x: auto;     /* 👈 scroll ngang giống KiotViet */
+}
+
+.detail-table th,
+.detail-table td {
+    font-size: 13px;
+}
+
+/* Note under table */
+.detail-note {
+    margin-top: 20px;
+    width: 100%;
+    height: 80px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Actions row */
+.detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.detail-actions button {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+}
+
+.detail-actions .btn-save {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+/* Detail block clean layout */
+.inventory-detail-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.detail-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-left: 12px;
+}
+
+.meta-sep {
+    margin: 0 8px;
+    color: #9ca3af;
+}
+
+/* Search inputs inside detail table */
+.detail-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+
+/* Totals bottom-right */
+.detail-totals {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Smaller font for detail */
+.inventory-detail-box table {
+    font-size: 14px;
+}
+
+.date-radio {
+    position: relative;
+}
+
+.date-expand-btn {
+    margin-left: auto;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    width: 28px;
+    height: 26px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.date-expand-btn i {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* POPUP */
+#datePopup {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 800px;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    display: none;
+    z-index: 9999;
+    transform: translateX(260px);
+    gap: 40px;
+}
+
+#datePopup.show {
+    display: flex;
+}
+
+
+.popup-col-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.popup-item {
+    padding: 6px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    margin-bottom: 7px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.popup-item:hover {
+    background: #f3f4f6;
+}
+
+.popup-item.selected {
+    background: #1a73e8;
+    color: white;
+    border-color: #1a73e8;
+}
+
+.date-radio {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.date-select-btn, 
+.date-custom-box {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    padding: 8px 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    cursor: pointer;
+}
+
+.date-select-btn:hover {
+    background: #f1f5f9;
+}
+
+.date-custom-box input[type=date] {
+    border: none;
+    width: 100%;
+}
+
+.date-custom-box i {
+    color: #6b7280;
+}
+.date-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+
+.custom-date-popup {
+    position: absolute;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    z-index: 99999;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.date-range-header {
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.date-range-body {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.calendar-block {
+    width: 50%;
+    min-width: 260px;
+}
+
+.cal-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.cal-title {
+    font-weight: 600;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.cal-day {
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.cal-day:hover {
+    background: #f3f4f6;
+}
+
+.selected-date {
+    background: #1a73e8 !important;
+    color: white;
+}
+
+.date-range-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Footer buttons: Today / Cancel / Apply */
+.date-range-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.footer-right button {
+    margin-left: 10px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #111827;
+}
+
+/* Apply nổi bật */
+.footer-right .apply-btn {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #ffffff;
+}
+
+
+/* Hàng chứa radio + ô chọn ngày */
+.date-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.date-row .date-radio {
+    margin: 0;           /* bỏ margin-bottom cũ của .date-radio */
+}
+
+/* Cho sidebar làm mốc định vị popup */
+.inventory-filter-sidebar {
+    position: relative;
+}
+
+/* =========== MONTH SELECTOR GRID (YEAR VIEW) =========== */
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 cột: Jan–Apr–Jul–Oct */
+    row-gap: 8px;
+    column-gap: 16px;
+    font-size: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+/* mỗi ô tháng */
+.month-item {
+    padding: 4px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.month-item:hover {
+    background: #f3f4f6;
+}
+
+/* giữ chiều cao ổn định cho calendar & month view */
+.cal-grid,
+.month-grid {
+    min-height: 210px;     /* để popup không co giãn khi đổi view */
+}
+
+.search-box {
+    position: relative;
+    width: 350px;
+}
+
+.search-box input {
+    width: 100%;
+    height: 36px;
+    padding-left: 32px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.search-box .search-icon {
+    position: absolute;
+    top: 9px;
+    left: 10px;
+    color: #9ca3af;
+}
+
+.number-input {
+    width: 100%;
+    height: 34px;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    margin-top: 4px;
+}
+
+.activity-adjust {
+    margin-top: 30px;
+    margin-bottom: 80px; /* tạo khoảng cho block nút */
+}
+
+.fixed-bottom-btns {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+/* =========================================================
+   NEW UI ENHANCEMENTS FOR BACKEND-INTEGRATED FEATURES
+   ========================================================= */
+.product-search-results {
+    position: absolute;
+    top: 42px;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 50;
+}
+
+.product-search-results.hidden {
+    display: none;
+}
+
+.product-result-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+}
+
+.product-result-item:last-child {
+    border-bottom: none;
+}
+
+.product-result-item strong {
+    display: block;
+    font-size: 14px;
+    color: #111827;
+}
+
+.product-result-item span {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.kv-table td {
+    vertical-align: middle;
+}
+
+.inventory-empty-row {
+    text-align: center;
+    color: #6b7280;
+}
+
+.inventory-detail-box .detail-note {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 90px;
+}
+
+.inventory-detail-box .detail-actions button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.diff-positive {
+    color: #15803d;
+    font-weight: 600;
+}
+
+.diff-negative {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.detail-loading {
+    padding: 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.btn-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Merge UI */
+.merge-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 60;
+}
+
+.merge-floating.hidden {
+    display: none;
+}
+
+.merge-floating .btn-merge {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(26, 115, 232, 0.35);
+}
+
+.merge-floating .btn-merge[disabled] {
+    background: #cbd5e1;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.delete-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 130px;
+    z-index: 60;
+}
+
+.delete-floating.hidden {
+    display: none;
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(220, 38, 38, 0.35);
+}
+
+.btn-delete[disabled] {
+    background: #fca5a5;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.merge-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 70;
+}
+
+.merge-modal.hidden {
+    display: none;
+}
+
+.merge-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.45);
+}
+
+.merge-modal-dialog {
+    position: relative;
+    background: #fff;
+    width: 720px;
+    max-height: 80vh;
+    border-radius: 14px;
+    padding: 20px;
+    z-index: 71;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.merge-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.merge-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.merge-modal-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.merge-table th, .merge-table td {
+    text-align: left;
+}
+
+.merge-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 20px;
+    margin-top: 12px;
+    font-weight: 600;
+}
+
+.merge-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.merge-positive {
+    color: #1a73e8;
+    font-weight: 600;
+}
+
+.merge-negative {
+    color: #b91c1c;
+    font-weight: 600;
+}
