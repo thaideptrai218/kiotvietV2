@@ -20,7 +20,7 @@
                     Orders
                 </a>
             </li>
-            <li role="presentation">
+            <li role="presentation" class="tabItem hasMega">
                 <a role="tab"
                    aria-selected="${activeLink == 'products'} ? 'true' : 'false'"
                    class="tab"
@@ -28,6 +28,27 @@
                    href="/products">
                     Products
                 </a>
+                <div class="megaDropdown" aria-label="Product mega menu">
+                    <div class="megaGrid">
+                        <div class="megaColumn">
+                            <div class="megaTitle">Product</div>
+                            <a class="megaLink" href="/products">All products</a>
+                            <a class="megaLink" href="/pricebook">Price book</a>
+                            <a class="megaLink" href="/stock">Stock</a>
+                        </div>
+                        <div class="megaColumn">
+                            <div class="megaTitle">Inventory count</div>
+                            <a class="megaLink" href="/inventory">Inventory count</a>
+                            <a class="megaLink" href="/inventory/loss">Loss / Damage</a>
+                        </div>
+                        <div class="megaColumn">
+                            <div class="megaTitle">Purchase</div>
+                            <a class="megaLink" href="/suppliers">Supplier</a>
+                            <a class="megaLink" href="/purchases">Purchase</a>
+                            <a class="megaLink" href="/purchases/return">Purchase return</a>
+                        </div>
+                    </div>
+                </div>
             </li>
             <li role="presentation">
                 <a role="tab"
@@ -95,3 +116,63 @@
         </ul>
     </div>
 </nav>
+<script>
+    (function () {
+        function initMegaNav() {
+            const nav = document.querySelector('.moduleNav');
+            if (!nav || nav.dataset.megaBound === 'true') return;
+            nav.dataset.megaBound = 'true';
+
+            const tabItems = nav.querySelectorAll('.tabList > li');
+            tabItems.forEach((item) => {
+                const dropdown = item.querySelector('.megaDropdown');
+                let openTimer = null;
+                let closeTimer = null;
+
+                const clearTimers = () => {
+                    if (openTimer) {
+                        clearTimeout(openTimer);
+                        openTimer = null;
+                    }
+                    if (closeTimer) {
+                        clearTimeout(closeTimer);
+                        closeTimer = null;
+                    }
+                };
+
+                const open = () => {
+                    clearTimers();
+                    openTimer = setTimeout(() => {
+                        item.classList.add('hovered');
+                        if (dropdown) dropdown.classList.add('open');
+                    }, 180);
+                };
+
+                const close = () => {
+                    clearTimers();
+                    closeTimer = setTimeout(() => {
+                        const hoveringItem = item.matches(':hover');
+                        const hoveringDropdown = dropdown && dropdown.matches(':hover');
+                        if (hoveringItem || hoveringDropdown) return;
+                        item.classList.remove('hovered');
+                        if (dropdown) dropdown.classList.remove('open');
+                    }, 200);
+                };
+
+                item.addEventListener('mouseenter', open);
+                item.addEventListener('mouseleave', close);
+
+                if (dropdown) {
+                    dropdown.addEventListener('mouseenter', open);
+                    dropdown.addEventListener('mouseleave', close);
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMegaNav);
+        } else {
+            initMegaNav();
+        }
+    })();
+</script>
