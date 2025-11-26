@@ -2,6 +2,9 @@ package fa.academy.kiotviet.config;
 
 import fa.academy.kiotviet.application.dto.shared.ErrorResponse;
 import fa.academy.kiotviet.core.shared.exception.KiotvietException;
+import fa.academy.kiotviet.infrastructure.exception.BadRequestException;
+import fa.academy.kiotviet.infrastructure.exception.ConflictException;
+import fa.academy.kiotviet.infrastructure.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -67,6 +70,48 @@ public class GlobalExceptionHandler {
                                 .build();
 
                 return ResponseEntity.status(e.getHttpStatus()).body(errorResponse);
+        }
+
+        @ExceptionHandler(NotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e, HttpServletRequest request) {
+                printStackTraceToConsole(e);
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                                .httpCode(HttpStatus.NOT_FOUND.value())
+                                .message(e.getMessage())
+                                .errorCode(e.getErrorCode())
+                                .path(request.getRequestURI())
+                                .timestamp(LocalDateTime.now())
+                                .stackTrace(getStackTraceAsString(e))
+                                .build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
+        @ExceptionHandler(BadRequestException.class)
+        public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException e, HttpServletRequest request) {
+                printStackTraceToConsole(e);
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                                .httpCode(HttpStatus.BAD_REQUEST.value())
+                                .message(e.getMessage())
+                                .errorCode(e.getErrorCode())
+                                .path(request.getRequestURI())
+                                .timestamp(LocalDateTime.now())
+                                .stackTrace(getStackTraceAsString(e))
+                                .build();
+                return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        @ExceptionHandler(ConflictException.class)
+        public ResponseEntity<ErrorResponse> handleConflict(ConflictException e, HttpServletRequest request) {
+                printStackTraceToConsole(e);
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                                .httpCode(HttpStatus.CONFLICT.value())
+                                .message(e.getMessage())
+                                .errorCode(e.getErrorCode())
+                                .path(request.getRequestURI())
+                                .timestamp(LocalDateTime.now())
+                                .stackTrace(getStackTraceAsString(e))
+                                .build();
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
 
         // Validation errors

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory count - Create - KiotViet</title>
+
+    <!-- Shared Dashboard CSS -->
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-themes.css}">
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-core.css}">
+    <link rel="stylesheet" th:href="@{/modules/dashboard/css/dashboard-components.css}">
+    <link rel="stylesheet" th:href="@{/css/header-nav.css}">
+
+    <!-- Inventory shared CSS (list + create) -->
+    <link rel="stylesheet" th:href="@{/modules/inventory/css/inventory.css}">
+</head>
+
+<body>
+
+<!-- Shared header -->
+<div th:replace="common/header :: dashboardHeader"></div>
+
+<!-- Shared navigation -->
+<div th:replace="common/navigation :: dashboardNav('inventory')"></div>
+
+<!-- MAIN LAYOUT: FORM PAGE -->
+<div class="inventory-form-layout" th:attr="data-mode=${mode},data-inventory-id=${inventoryId}">
+
+    <!-- LEFT: PRODUCTS / TABLE AREA -->
+    <div class="inventory-products">
+
+        <!-- Top bar -->
+        <div class="inventory-form-header">
+    <button class="btn-back-outline" onclick="window.location.href='/inventory'">
+        <i class="fa fa-arrow-left"></i>
+        <span>Inventory count</span>
+    </button>
+
+            <div class="search-box">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" id="productSearchInput" placeholder="Search product number/name">
+                <div class="product-search-results hidden" id="productSearchResults"></div>
+            </div>
+
+            <button class="btn-icon"><i class="fa fa-th-large"></i></button>
+            <button class="btn-icon"><i class="fa fa-plus"></i></button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="inventory-tabs" id="invTabs">
+            <span class="active" data-tab="all">All (0)</span>
+            <span data-tab="matched">Matched (0)</span>
+            <span data-tab="unmatched">Unmatched (0)</span>
+            <span data-tab="notcounted">Not counted (0)</span>
+        </div>
+
+        <!-- Table -->
+        <table class="kv-table" id="invFormTable">
+            <thead>
+            <tr>
+                <th></th>
+                <th>No.</th>
+                <th>Product number</th>
+                <th>Product name</th>
+                <th>Unit</th>
+                <th>On hand</th>
+                <th>Counted</th>
+                <th>Diff. qty</th>
+                <th>Diff. cost</th>
+            </tr>
+            </thead>
+
+            <tbody id="inventoryItemsBody"></tbody>
+        </table>
+
+    </div>
+
+
+    <!-- RIGHT: INFO PANEL -->
+    <div class="inventory-info">
+
+        <div class="info-block">
+
+        <div class="info-line">
+            <span class="info-label">Creator</span>
+            <span class="info-value" id="inventoryCreatorLabel">-</span>
+        </div>
+
+        <div class="info-line">
+            <span class="info-label">Created date</span>
+            <span class="info-value" id="inventoryCreatedAtLabel">-</span>
+        </div>
+
+        <div class="info-line">
+            <span class="info-label">Number</span>
+            <input id="invNumber" class="number-input" placeholder="Generated automatically">
+        </div>
+
+        <div class="info-line status-line">
+            <span class="info-label">Status</span>
+            <span id="inventoryStatusBadge" class="status-draft">Draft</span>
+        </div>
+
+        <div id="diffSummary" class="summary-block" style="display:none;">
+            <div class="info-line">
+                <span class="info-label">Surplus qty</span>
+                <span class="info-value" id="surplusQty">0</span>
+            </div>
+            <div class="info-line">
+                <span class="info-label">Missing qty</span>
+                <span class="info-value" id="missingQty">0</span>
+            </div>
+            <div class="info-line">
+                <span class="info-label">Total diff. quantity</span>
+                <span class="info-value" id="totalDiffQty">0</span>
+            </div>
+        </div>
+
+        <div class="info-line">
+            <span class="info-label">Total on-hand</span>
+            <strong class="info-value" id="inventoryTotalOnHand">0</strong>
+        </div>
+
+        <div class="info-line note-line">
+            <span class="info-label">Note</span>
+            <textarea id="inventoryNote" class="note" placeholder="Note"></textarea>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-buttons fixed-bottom-btns">
+            <button class="btn-save" id="inventorySaveBtn">Save</button>
+            <button class="btn-complete" id="inventoryCompleteBtn">Complete</button>
+        </div>
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- Shared JS for inventory (list + create) -->
+<script src="/modules/inventory/js/inventory.js"></script>
+
+<!-- Small page-specific JS: tabs + created time -->
+<script>
+    // Set "Created time" = current time when page loads for new draft
+    (function () {
+        const label = document.getElementById('inventoryCreatedAtLabel');
+        if (label && !label.dataset.locked) {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const formatted = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ` +
+                `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            label.textContent = formatted;
+        }
+    })();
+
+    // Simple tab active state (visual only)
+    (function () {
+        const tabs = document.querySelectorAll('#invTabs span');
+        if (!tabs.length) return;
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+    })();
+</script>
+
+</body>
+</html>
