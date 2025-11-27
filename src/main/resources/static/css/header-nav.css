@@ -1,11 +1,12 @@
 /* Header Styles - Based on React Component Design */
+
 .header {
     position: sticky;
     top: 0;
     width: 100%;
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
-    z-index: 1500;
+    z-index: 1005;
 }
 
 .headerInner {
@@ -178,8 +179,8 @@
     width: 100%;
     background-color: #0c63ff;
     border-bottom: 1px solid #0946b3;
-    font-family: 'Inter', 'Segoe UI', syst  em-ui, -apple-system, sans-serif;
-    z-index: 1300;
+    font-family: "Inter", "Segoe UI", syst em-ui, -apple-system, sans-serif;
+    z-index: 1004;
     transition: transform 0.3s ease;
     overflow: visible;
 }
@@ -238,7 +239,7 @@
 }
 
 .hasMega .tab {
-    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 .tabList > li:hover .tab,
@@ -307,7 +308,8 @@
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease,
+        transform 0.15s ease;
 }
 
 .megaLink:hover,

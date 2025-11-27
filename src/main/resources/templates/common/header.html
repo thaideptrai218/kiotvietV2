@@ -3,8 +3,13 @@
     <div class="headerInner">
         <!-- Logo Section -->
         <a href="/dashboard" class="logoLink">
-            <i class="fas fa-store" style="font-size: 24px; color: #0c63ff; margin-right: 8px;"></i>
-            <span style="font-size: 20px; font-weight: 600; color: #333;">KiotViet</span>
+            <i
+                class="fas fa-store"
+                style="font-size: 24px; color: #0c63ff; margin-right: 8px"
+            ></i>
+            <span style="font-size: 20px; font-weight: 600; color: #333"
+                >KiotViet</span
+            >
         </a>
 
         <!-- Header Right Section -->
@@ -19,7 +24,11 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#feedback" class="utilityLink" onclick="openFeedbackModal()">
+                        <a
+                            href="#feedback"
+                            class="utilityLink"
+                            onclick="openFeedbackModal()"
+                        >
                             <i class="fas fa-comment-dots utilityIcon"></i>
                             <span>Feedback</span>
                         </a>
@@ -28,69 +37,175 @@
             </nav>
 
             <!-- Global Controls -->
-            <div class="globalControls" style="position: relative;">
+            <div class="globalControls" style="position: relative">
                 <!-- Notifications -->
                 <button class="iconButton" aria-label="Notifications">
                     <i class="fas fa-bell"></i>
                 </button>
 
                 <!-- Settings -->
-                <a th:href="@{/setting}" class="header-btn header-btn-text" aria-label="Settings">
+                <a
+                    th:href="@{/setting}"
+                    class="header-btn header-btn-text"
+                    aria-label="Settings"
+                >
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </a>
 
                 <!-- User Avatar -->
-                <button class="avatarButton" aria-label="User Profile" onclick="toggleUserDropdown()">
+                <button
+                    class="avatarButton"
+                    aria-label="User Profile"
+                    onclick="toggleUserDropdown()"
+                >
                     <i class="fas fa-user"></i>
                 </button>
 
                 <!-- User Dropdown -->
-                <div class="userDropdown" aria-hidden="true"
-                    style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); min-width: 280px; z-index: 1000;">
-                    <div style="padding: 16px; border-bottom: 1px solid #f0f0f0;">
-                        <div style="display: flex; align-items: center;">
+                <div
+                    class="userDropdown"
+                    aria-hidden="true"
+                    style="
+                        display: none;
+                        position: absolute;
+                        top: 100%;
+                        right: 0;
+                        background: white;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                        min-width: 280px;
+                        z-index: 1000;
+                    "
+                >
+                    <div
+                        style="padding: 16px; border-bottom: 1px solid #f0f0f0"
+                    >
+                        <div style="display: flex; align-items: center">
                             <div
-                                style="width: 40px; height: 40px; border-radius: 50%; background-color: #0c63ff; color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                style="
+                                    width: 40px;
+                                    height: 40px;
+                                    border-radius: 50%;
+                                    background-color: #0c63ff;
+                                    color: white;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    margin-right: 12px;
+                                "
+                            >
                                 <i class="fas fa-user"></i>
                             </div>
                             <div>
-                                <div style="font-weight: 600;" id="dropdownUserName">Loading...</div>
-                                <div style="color: #6b7280; font-size: 0.875rem;" id="dropdownUserEmail">Loading...
+                                <div
+                                    style="font-weight: 600"
+                                    id="dropdownUserName"
+                                >
+                                    Loading...
                                 </div>
-                                <div style="color: #6b7280; font-size: 0.875rem;" id="dropdownUserRole">Role: Loading...
+                                <div
+                                    style="color: #6b7280; font-size: 0.875rem"
+                                    id="dropdownUserEmail"
+                                >
+                                    Loading...
+                                </div>
+                                <div
+                                    style="color: #6b7280; font-size: 0.875rem"
+                                    id="dropdownUserRole"
+                                >
+                                    Role: Loading...
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div style="padding: 8px 0;">
-                        <a href="#"
-                            style="display: flex; align-items: center; padding: 12px 16px; color: #333; text-decoration: none; transition: background-color 0.2s ease;"
-                            onclick="openUserProfile()" onmouseover="this.style.backgroundColor='#f8f9fa'"
-                            onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-user-edit" style="margin-right: 8px; width: 16px;"></i>
+                    <div style="padding: 8px 0">
+                        <a
+                            href="#"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                padding: 12px 16px;
+                                color: #333;
+                                text-decoration: none;
+                                transition: background-color 0.2s ease;
+                            "
+                            onclick="openUserProfile()"
+                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                            onmouseout="this.style.backgroundColor='transparent'"
+                        >
+                            <i
+                                class="fas fa-user-edit"
+                                style="margin-right: 8px; width: 16px"
+                            ></i>
                             Edit Profile
                         </a>
-                        <a href="#"
-                            style="display: flex; align-items: center; padding: 12px 16px; color: #333; text-decoration: none; transition: background-color 0.2s ease;"
-                            onclick="openTwoFactorSettings()" onmouseover="this.style.backgroundColor='#f8f9fa'"
-                            onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-shield-alt" style="margin-right: 8px; width: 16px;"></i>
+                        <a
+                            href="#"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                padding: 12px 16px;
+                                color: #333;
+                                text-decoration: none;
+                                transition: background-color 0.2s ease;
+                            "
+                            onclick="openTwoFactorSettings()"
+                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                            onmouseout="this.style.backgroundColor='transparent'"
+                        >
+                            <i
+                                class="fas fa-shield-alt"
+                                style="margin-right: 8px; width: 16px"
+                            ></i>
                             2FA Settings
                         </a>
-                        <a th:href="@{/setting}"
-                            style="display: flex; align-items: center; padding: 12px 16px; color: #333; text-decoration: none; transition: background-color 0.2s ease;"
-                            onclick="openUserSettings()" onmouseover="this.style.backgroundColor='#f8f9fa'"
-                            onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-cog" style="margin-right: 8px; width: 16px;"></i>
+                        <a
+                            th:href="@{/setting}"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                padding: 12px 16px;
+                                color: #333;
+                                text-decoration: none;
+                                transition: background-color 0.2s ease;
+                            "
+                            onclick="openUserSettings()"
+                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                            onmouseout="this.style.backgroundColor='transparent'"
+                        >
+                            <i
+                                class="fas fa-cog"
+                                style="margin-right: 8px; width: 16px"
+                            ></i>
                             Settings
                         </a>
-                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #f0f0f0;">
-                        <a href="#" id="logoutLink"
-                            style="display: flex; align-items: center; padding: 12px 16px; color: #dc3545; text-decoration: none; transition: background-color 0.2s ease;"
+                        <hr
+                            style="
+                                margin: 8px 0;
+                                border: none;
+                                border-top: 1px solid #f0f0f0;
+                            "
+                        />
+                        <a
+                            href="#"
+                            id="logoutLink"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                padding: 12px 16px;
+                                color: #dc3545;
+                                text-decoration: none;
+                                transition: background-color 0.2s ease;
+                            "
                             onmouseover="this.style.backgroundColor='#f8d7da'"
-                            onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-sign-out-alt" style="margin-right: 8px; width: 16px;"></i>
+                            onmouseout="this.style.backgroundColor='transparent'"
+                        >
+                            <i
+                                class="fas fa-sign-out-alt"
+                                style="margin-right: 8px; width: 16px"
+                            ></i>
                             Logout
                         </a>
                     </div>
@@ -98,77 +213,101 @@
             </div>
         </div>
     </div>
+    <script th:src="@{/core/js/auth.js}"></script>
     <script>
         function toggleUserDropdown() {
-            const dropdown = document.querySelector('.userDropdown');
+            const dropdown = document.querySelector(".userDropdown");
             if (dropdown) {
-                const isHidden = dropdown.style.display === 'none';
-                dropdown.style.display = isHidden ? 'block' : 'none';
-                dropdown.setAttribute('aria-hidden', !isHidden);
+                const isHidden = dropdown.style.display === "none";
+                dropdown.style.display = isHidden ? "block" : "none";
+                dropdown.setAttribute("aria-hidden", !isHidden);
             }
         }
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', function (event) {
-            const dropdown = document.querySelector('.userDropdown');
-            const avatarButton = document.querySelector('.avatarButton');
+        document.addEventListener("click", function (event) {
+            const dropdown = document.querySelector(".userDropdown");
+            const avatarButton = document.querySelector(".avatarButton");
 
-            if (dropdown && avatarButton &&
+            if (
+                dropdown &&
+                avatarButton &&
                 !dropdown.contains(event.target) &&
-                !avatarButton.contains(event.target)) {
-                dropdown.style.display = 'none';
-                dropdown.setAttribute('aria-hidden', 'true');
+                !avatarButton.contains(event.target)
+            ) {
+                dropdown.style.display = "none";
+                dropdown.setAttribute("aria-hidden", "true");
             }
         });
 
-        // Load user information
-        function loadUserInfo() {
-            // Try to get username from the page first (passed from controller)
-            const usernameElement = document.querySelector('[data-username]');
-            const username = usernameElement ? usernameElement.getAttribute('data-username') : null;
-
-            // For now, use a simple approach since we're using form-based authentication
-            updateUserInfo({
-                username: username || 'Demo User',
-                email: 'demo@kiotviet.com',
-                role: 'ADMIN'
-            });
+        // Load u qion
+        async function loadUserInfo() {
+            if (typeof kiotVietAuth !== "undefined") {
+                try {
+                    const isAuthenticated =
+                        await kiotVietAuth.isAuthenticated();
+                    if (isAuthenticated) {
+                        const userInfo = kiotVietAuth.getUserInfo();
+                        if (userInfo) {
+                            updateUserInfo(userInfo);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error loading user info:", error);
+                }
+            }
         }
 
         // Update user information in the dropdown
         function updateUserInfo(user) {
-            const userName = document.getElementById('dropdownUserName');
-            const userEmail = document.getElementById('dropdownUserEmail');
-            const userRole = document.getElementById('dropdownUserRole');
+            const userName = document.getElementById("dropdownUserName");
+            const userEmail = document.getElementById("dropdownUserEmail");
+            const userRole = document.getElementById("dropdownUserRole");
 
-            if (userName) userName.textContent = user.username || user.fullName || 'User';
-            if (userEmail) userEmail.textContent = user.email || 'No email';
-            if (userRole) userRole.textContent = `Role: ${user.role || 'USER'}`;
+            if (userName)
+                userName.textContent = user.username || user.fullName || "User";
+            if (userEmail) userEmail.textContent = user.email || "No email";
+            if (userRole) userRole.textContent = `Role: ${user.role || "USER"}`;
         }
 
         // Helper function to get cookies
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
+            if (parts.length === 2) return parts.pop().split(";").shift();
         }
 
         // Placeholder functions for dropdown actions
         function openUserProfile() {
-            window.location.href = '/profile';
+            window.location.href = "/profile";
         }
 
         function openTwoFactorSettings() {
-            window.location.href = '/profile';
+            window.location.href = "/profile";
         }
 
         function openUserSettings() {
-            window.location.href = '/setting';
+            window.location.href = "/setting";
         }
 
         function openFeedbackModal() {
-            alert('Feedback - Coming soon!');
+            alert("Feedback - Coming soon!");
         }
 
+        document.addEventListener("DOMContentLoaded", function () {
+            loadUserInfo();
+
+            const logoutLink = document.getElementById("logoutLink");
+            if (logoutLink) {
+                logoutLink.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    if (typeof kiotVietAuth !== "undefined") {
+                        kiotVietAuth.logout();
+                    } else {
+                        window.location.href = "/login?logout=true";
+                    }
+                });
+            }
+        });
     </script>
 </header>
