@@ -214,7 +214,10 @@
   }
 
   function expandedRow(s) {
-    const toggleLabel = s.isActive ? 'Deactivate' : 'Activate';
+    const isActive = !!s.isActive;
+    const toggleLabel = isActive ? 'Deactivate' : 'Activate';
+    const toggleClass = isActive ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
+    const toggleIcon = isActive ? '<i class="fas fa-pause me-1"></i>' : '<i class="fas fa-play me-1"></i>';
     return `
       <tr class="expanded-row" data-id="${s.id}-exp">
         <td></td>
@@ -228,12 +231,9 @@
                 <div><span class="fw-semibold">Credit limit:</span> ${fmt(s.creditLimit)}</div>
                 <div><span class="fw-semibold">Outstanding:</span> ${fmt(s.outstandingBalance)}</div>
               </div>
-              <div class="col-md-4 d-flex justify-content-between">
-                <button class="btn btn-outline-danger btn-sm" data-act="delete"><i class="far fa-trash-can me-1"></i>Delete</button>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-primary btn-sm" data-act="edit"><i class="far fa-pen-to-square me-1"></i>Update</button>
-                  <button class="btn btn-outline-secondary btn-sm" data-act="toggleActive">${toggleLabel}</button>
-                </div>
+              <div class="col-md-4 d-flex justify-content-end gap-2">
+                <button class="btn btn-primary btn-sm" data-act="edit"><i class="far fa-pen-to-square me-1"></i>Update</button>
+                <button class="${toggleClass}" data-act="toggleActive">${toggleIcon}${toggleLabel}</button>
               </div>
             </div>
           </div>

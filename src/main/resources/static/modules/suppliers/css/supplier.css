@@ -446,3 +446,21 @@ th.sortable.active.desc .sort-icon::before {
     padding: 12px
   }
 }
+
+/* --- Supplier overflow fixes --- */
+/* Ensure expanded supplier info and table cells do not overflow with long tokens */
+.expanded-content {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.kv-table tbody td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Let action buttons wrap onto a new line in the expanded row */
+.expanded-content .col-md-4.d-flex {
+  gap: 8px;
+  flex-wrap: wrap;
+}
