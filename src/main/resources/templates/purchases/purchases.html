@@ -49,13 +49,6 @@
             <!-- Filter Sidebar -->
             <aside class="kv-filter" id="filterPanel">
                 <form class="kv-filter__form" onsubmit="return false;">
-                    <div class="kv-filter__group">
-                        <label class="kv-filter__label">Search</label>
-                        <div class="kv-input-search">
-                            <i class="fas fa-search"></i>
-                            <input id="hdrSearch" type="text" placeholder="Search purchases (code/ref/supplier)..." />
-                        </div>
-                    </div>
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Status</label>
@@ -163,10 +156,11 @@
                             <option value="100">100</option>
                         </select>
                         <span class="small text-muted">per page</span>
-                        <button class="kv-btn kv-btn--ghost kv-btn--sm ms-2" id="prevPage">Prev</button>
-                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="nextPage">Next</button>
                         <div id="pageInfo" class="text-muted small ms-2"></div>
                     </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagi"></ul>
+                    </nav>
                 </div>
             </section>
         </div>
@@ -377,6 +371,9 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core Authentication / Header helpers (keeps profile dropdown from showing 'Loading...') -->
+    <script src="/core/js/auth.js" th:src="@{/core/js/auth.js}"></script>
+    <script src="/modules/dashboard/js/dashboard-core.js" th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
     <script th:src="@{/modules/purchases/js/purchases.js}"></script>
 </body>
 

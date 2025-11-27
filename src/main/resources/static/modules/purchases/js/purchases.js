@@ -41,8 +41,7 @@
     btnRefresh: document.getElementById('btnRefresh'),
     tblBody: document.querySelector('#tbl tbody'),
     pageInfo: document.getElementById('pageInfo'),
-    prev: document.getElementById('prevPage'),
-    next: document.getElementById('nextPage'),
+    pagi: document.getElementById('pagi'),
     sizeSel: document.getElementById('sizeSel'),
 
     // create modal                                                                                                                           
@@ -122,7 +121,8 @@
     if (els.f_supplierId && els.f_supplierId.value) q.append('supplierId', els.f_supplierId.value);
     if (els.from && els.from.value) q.append('from', els.from.value);
     if (els.to && els.to.value) q.append('to', els.to.value);
-    if (els.hdrSearch && els.hdrSearch.value) q.append('search', els.hdrSearch.value);
+    const searchVal = (els.hdrSearch && els.hdrSearch.value) || (els.hdrSearchTop && els.hdrSearchTop.value) || '';
+    if (searchVal) q.append('search', searchVal);
     q.append('page', state.page);
     q.append('size', state.size);
     q.append('sortBy', state.sortBy);
@@ -158,9 +158,11 @@
       )
       .join('');
     els.tblBody.innerHTML = rows || '<tr><td colspan="8" class="text-center text-muted">No data</td></tr>';
-    els.pageInfo.textContent = `Page ${page.number + 1} / ${page.totalPages || 1} • ${page.totalElements} entries`;
-    els.prev.disabled = page.number <= 0;
-    els.next.disabled = page.number >= page.totalPages - 1;
+    const total = page.totalElements ?? 0;
+    const from = total === 0 ? 0 : (page.number * state.size + 1);
+    const to = Math.min((page.number + 1) * state.size, total);
+    els.pageInfo.textContent = `${from}-${to} of ${total}`;
+    renderPagination(page.number, page.totalPages || 1);
 
     applyColumnVisibility();
 
@@ -295,19 +297,33 @@
     }
   }
 
+  function renderPagination(page, totalPages) {
+    if (!els.pagi) return;
+    const p = Math.max(0, page | 0);
+    const t = Math.max(1, totalPages | 0);
+    const items = [];
+    const disabledPrev = p === 0 ? 'disabled' : '';
+    const disabledNext = p >= t - 1 ? 'disabled' : '';
+    items.push(`<li class="page-item ${disabledPrev}"><a class="page-link" data-page="0">First</a></li>`);
+    items.push(`<li class="page-item ${disabledPrev}"><a class="page-link" data-page="${p - 1}">Prev</a></li>`);
+    const start = Math.max(0, p - 2), end = Math.min(t - 1, p + 2);
+    for (let i = start; i <= end; i++) { items.push(`<li class="page-item ${i === p ? 'active' : ''}"><a class="page-link" data-page="${i}">${i + 1}</a></li>`); }
+    items.push(`<li class="page-item ${disabledNext}"><a class="page-link" data-page="${p + 1}">Next</a></li>`);
+    items.push(`<li class="page-item ${disabledNext}"><a class="page-link" data-page="${t - 1}">Last</a></li>`);
+    els.pagi.innerHTML = items.join('');
+  }
+
   function bind() {
     els.btnRefresh?.addEventListener('click', () => {
       state.page = 0;
       list();
     });
-    els.prev?.addEventListener('click', () => {
-      if (state.page > 0) {
-        state.page--;
-        list();
-      }
-    });
-    els.next?.addEventListener('click', () => {
-      state.page++;
+    els.pagi?.addEventListener('click', (e) => {
+      const a = e.target.closest('a.page-link');
+      if (!a) return;
+      const p = parseInt(a.dataset.page, 10);
+      if (isNaN(p) || p < 0) return;
+      state.page = p;
       list();
     });
     els.status?.addEventListener('change', () => {
@@ -517,7 +533,8 @@
       const rows = Array.from(els.tblBody.querySelectorAll('tr.purchase-row')).map((tr) =>
         Array.from(tr.children).map((td) => `"${(td.textContent || '').replace(/"/g, '""')}"`)
       );
-      const header = ['Sel', 'Code', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
+      const header = ['ID', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
+
       const csv = [header, ...rows].map((r) => r.join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);

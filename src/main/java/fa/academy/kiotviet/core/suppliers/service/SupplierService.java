@@ -124,9 +124,11 @@ public class SupplierService {
     public PagedResponse<SupplierDto> list(
             Long companyId,
             String search,
-            String contact,
-            String taxCode,
             Boolean active,
+            java.math.BigDecimal minDebt,
+            java.math.BigDecimal maxDebt,
+            java.time.LocalDate createdFrom,
+            java.time.LocalDate createdTo,
             int page,
             int size,
             String sortBy,
@@ -137,9 +139,9 @@ public class SupplierService {
 
         Specification<Supplier> spec = Specification.where(byCompany(companyId))
                 .and(likeAny(search))
-                .and(likeContact(contact))
-                .and(eqTaxCode(taxCode))
-                .and(eqActive(active));
+                .and(eqActive(active))
+                .and(betweenOutstanding(minDebt, maxDebt))
+                .and(betweenCreated(createdFrom, createdTo));
 
         Page<Supplier> result = supplierRepository.findAll(spec, pageable);
         List<SupplierDto> content = result.getContent().stream().map(this::toDto).collect(Collectors.toList());
@@ -182,24 +184,38 @@ public class SupplierService {
                 cb.like(cb.lower(root.get("taxCode")), pattern));
     }
 
-    private Specification<Supplier> likeContact(String contact) {
-        if (contact == null || contact.isBlank())
-            return null;
-        String pattern = "%" + contact.toLowerCase() + "%";
-        return (root, query, cb) -> cb.like(cb.lower(root.get("contactPerson")), pattern);
-    }
-
     private Specification<Supplier> eqActive(Boolean active) {
         if (active == null)
             return null;
         return (root, query, cb) -> cb.equal(root.get("isActive"), active);
     }
 
-    private Specification<Supplier> eqTaxCode(String taxCode) {
-        if (taxCode == null || taxCode.isBlank())
-            return null;
-        String value = taxCode.toLowerCase();
-        return (root, query, cb) -> cb.equal(cb.lower(root.get("taxCode")), value);
+    private Specification<Supplier> betweenOutstanding(java.math.BigDecimal min, java.math.BigDecimal max) {
+        if (min == null && max == null) return null;
+        return (root, query, cb) -> {
+            if (min != null && max != null) {
+                return cb.between(root.get("outstandingBalance"), min, max);
+            } else if (min != null) {
+                return cb.greaterThanOrEqualTo(root.get("outstandingBalance"), min);
+            } else {
+                return cb.lessThanOrEqualTo(root.get("outstandingBalance"), max);
+            }
+        };
+    }
+
+    private Specification<Supplier> betweenCreated(java.time.LocalDate from, java.time.LocalDate to) {
+        if (from == null && to == null) return null;
+        return (root, query, cb) -> {
+            if (from != null && to != null) {
+                java.time.LocalDateTime start = from.atStartOfDay();
+                java.time.LocalDateTime end = to.atTime(23,59,59);
+                return cb.between(root.get("createdAt"), start, end);
+            } else if (from != null) {
+                return cb.greaterThanOrEqualTo(root.get("createdAt"), from.atStartOfDay());
+            } else {
+                return cb.lessThanOrEqualTo(root.get("createdAt"), to.atTime(23,59,59));
+            }
+        };
     }
 
     private SupplierDto toDto(Supplier s) {
