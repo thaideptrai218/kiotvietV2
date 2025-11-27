@@ -722,7 +722,7 @@
       barcode: els.productBarcode.value.trim() || null,
       name: els.productName.value.trim(),
       description: els.productDescription.value.trim() || null,
-      image: els.productImageUrl.value || null,
+      image: els.productImageUrl.value,
       categoryId: els.productCategory.value || null,
       brandId: els.productBrand.value || null,
       supplierId: els.productSupplier.value || null,
