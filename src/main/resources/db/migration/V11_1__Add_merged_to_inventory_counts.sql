@@ -1,3 +1,10 @@
+-- =============================================
+-- V11_1__Add_merged_to_inventory_counts.sql
+-- Purpose: Add merged_into column to inventory_counts table
+-- This was moved from V6 to ensure table exists before modification
+-- =============================================
+
+-- Add merged_into column to inventory_counts if not exists
 SET @col_exists := (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.COLUMNS
