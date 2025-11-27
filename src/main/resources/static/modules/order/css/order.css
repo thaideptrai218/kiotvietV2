@@ -37,7 +37,7 @@
     border-bottom: 1px solid #e5e7eb;
     position: sticky;
     top: 105px; /* Header (54px) + Nav (47px) */
-    z-index: 1000;
+    z-index: 900; /* Below dropdowns/droplists */
 }
 
 .kv-toolbar__inner {
@@ -1584,7 +1584,7 @@ th.sortable.active.desc .sort-icon::before {
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
     max-height: 200px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 1100; /* Above module headers and cards */
     display: none;
     box-sizing: border-box;
 }

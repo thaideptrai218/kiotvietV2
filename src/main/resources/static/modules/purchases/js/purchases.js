@@ -122,7 +122,8 @@
     if (els.f_supplierId && els.f_supplierId.value) q.append('supplierId', els.f_supplierId.value);
     if (els.from && els.from.value) q.append('from', els.from.value);
     if (els.to && els.to.value) q.append('to', els.to.value);
-    if (els.hdrSearch && els.hdrSearch.value) q.append('search', els.hdrSearch.value);
+    const searchVal = (els.hdrSearch && els.hdrSearch.value) || (els.hdrSearchTop && els.hdrSearchTop.value) || '';
+    if (searchVal) q.append('search', searchVal);
     q.append('page', state.page);
     q.append('size', state.size);
     q.append('sortBy', state.sortBy);
@@ -517,7 +518,8 @@
       const rows = Array.from(els.tblBody.querySelectorAll('tr.purchase-row')).map((tr) =>
         Array.from(tr.children).map((td) => `"${(td.textContent || '').replace(/"/g, '""')}"`)
       );
-      const header = ['Sel', 'Code', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
+      const header = ['ID', 'Supplier', 'Date', 'Total', 'Paid', 'Due', 'Status'];
+
       const csv = [header, ...rows].map((r) => r.join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);

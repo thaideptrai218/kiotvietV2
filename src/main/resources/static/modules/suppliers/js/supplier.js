@@ -10,10 +10,11 @@
   };
 
   const els = {
-    q: document.getElementById('q'),
     active: document.getElementById('active'),
-    contact: document.getElementById('contact'),
-    taxCode: document.getElementById('taxCode'),
+    debtMin: document.getElementById('debtMin'),
+    debtMax: document.getElementById('debtMax'),
+    createdFrom: document.getElementById('createdFrom'),
+    createdTo: document.getElementById('createdTo'),
     btnRefresh: document.getElementById('btnRefresh'),
     btnAdd: document.getElementById('btnAdd'),
     hdrSearch: document.getElementById('hdrSearch'),
@@ -122,12 +123,16 @@
     const sortDir = p.get('sortDir') || state.sortDir;
     const page1 = parseInt(p.get('page') || '1', 10);
     const size = parseInt(p.get('size') || state.size, 10);
-    const contact = p.get('contact') || '';
-    const taxCode = p.get('taxCode') || '';
+    const debtMin = p.get('debtMin') || '';
+    const debtMax = p.get('debtMax') || '';
+    const createdFrom = p.get('createdFrom') || '';
+    const createdTo = p.get('createdTo') || '';
     const active = p.get('active');
-    els.q.value = q; if (els.hdrSearch) els.hdrSearch.value = q;
-    els.contact.value = contact;
-    els.taxCode.value = taxCode;
+    if (els.hdrSearch) els.hdrSearch.value = q;
+    if (els.debtMin) els.debtMin.value = debtMin;
+    if (els.debtMax) els.debtMax.value = debtMax;
+    if (els.createdFrom) els.createdFrom.value = createdFrom;
+    if (els.createdTo) els.createdTo.value = createdTo;
     if (active !== null) els.active.value = active;
     state.sortBy = sortBy || null;
     state.sortDir = sortDir || 'asc';
@@ -138,12 +143,14 @@
 
   function updateUrl() {
     const p = new URLSearchParams();
-    if (els.q.value.trim()) p.set('q', els.q.value.trim());
+    if (els.hdrSearch && els.hdrSearch.value.trim()) p.set('q', els.hdrSearch.value.trim());
     if (state.sortBy) { p.set('sortBy', state.sortBy); p.set('sortDir', state.sortDir); }
     p.set('page', String(state.page + 1));
     p.set('size', String(state.size));
-    if (els.contact.value.trim()) p.set('contact', els.contact.value.trim());
-    if (els.taxCode.value.trim()) p.set('taxCode', els.taxCode.value.trim());
+    if (els.debtMin && els.debtMin.value.trim()) p.set('debtMin', els.debtMin.value.trim());
+    if (els.debtMax && els.debtMax.value.trim()) p.set('debtMax', els.debtMax.value.trim());
+    if (els.createdFrom && els.createdFrom.value) p.set('createdFrom', els.createdFrom.value);
+    if (els.createdTo && els.createdTo.value) p.set('createdTo', els.createdTo.value);
     if (els.active.value !== '') p.set('active', els.active.value);
     const url = `${location.pathname}?${p.toString()}`;
     history.replaceState(null, '', url);
@@ -152,10 +159,12 @@
   async function fetchList() {
     state.loading = true;
     const params = new URLSearchParams();
-    if (els.q.value.trim()) params.set('search', els.q.value.trim());
+    if (els.hdrSearch && els.hdrSearch.value.trim()) params.set('search', els.hdrSearch.value.trim());
     if (els.active.value !== '') params.set('active', els.active.value);
-    if (els.contact.value.trim()) params.set('contact', els.contact.value.trim());
-    if (els.taxCode.value.trim()) params.set('taxCode', els.taxCode.value.trim());
+    if (els.debtMin && els.debtMin.value.trim()) params.set('minDebt', els.debtMin.value.trim());
+    if (els.debtMax && els.debtMax.value.trim()) params.set('maxDebt', els.debtMax.value.trim());
+    if (els.createdFrom && els.createdFrom.value) params.set('createdFrom', els.createdFrom.value);
+    if (els.createdTo && els.createdTo.value) params.set('createdTo', els.createdTo.value);
     params.set('page', state.page);
     params.set('size', state.size);
     if (state.sortBy) { params.set('sortBy', state.sortBy); params.set('sortDir', state.sortDir); }
@@ -258,11 +267,13 @@
     const taxInput = document.getElementById('modalTaxCode');
     const websiteInput = document.getElementById('website');
     const notesInput = document.getElementById('notes');
+    const creditInput = document.getElementById('creditLimit');
     const isActive = document.getElementById('isActive');
     if (taxInput) taxInput.value = data?.taxCode || '';
     if (websiteInput) websiteInput.value = data?.website || '';
     if (notesInput) notesInput.value = data?.notes || '';
     if (isActive) isActive.checked = (data?.isActive ?? true) === true;
+    if (creditInput) creditInput.value = (data?.creditLimit ?? '') || '';
     if (els.btnSaveNew) els.btnSaveNew.classList.toggle('d-none', !!data?.id); 
     if (els.btnSave) els.btnSave.classList.toggle('d-none', !data?.id);
     els.modalErr.classList.add('d-none');
@@ -284,6 +295,17 @@
       notes: (document.getElementById('notes')?.value || '').trim() || null,
       isActive: document.getElementById('isActive')?.checked ?? true
     };
+    // Attach credit limit if provided (validated non-negative number)
+    const clRaw = (document.getElementById('creditLimit')?.value ?? '').toString().trim();
+    if (clRaw !== '') {
+      const clNum = Number(clRaw);
+      if (Number.isNaN(clNum) || clNum < 0) {
+        els.modalErr.textContent = 'Credit limit must be a number >= 0';
+        els.modalErr.classList.remove('d-none');
+        return;
+      }
+      payload.creditLimit = clNum;
+    }
     if (!payload.name) { els.modalErr.textContent = 'Name is required'; els.modalErr.classList.remove('d-none'); return; }
     setSaving(true);
     try {
@@ -322,10 +344,12 @@
 
   function renderChips() {
     const chips = [];
-    if (els.q.value.trim()) chips.push(chip('Search', els.q.value.trim(), () => { els.q.value = ''; fetchList(); }));
+    if (els.hdrSearch && els.hdrSearch.value.trim()) chips.push(chip('Search', els.hdrSearch.value.trim(), () => { els.hdrSearch.value = ''; fetchList(); }));
     if (els.active.value !== '') chips.push(chip('Status', els.active.value === 'true' ? 'Active' : 'Inactive', () => { els.active.value = ''; fetchList(); }));
-    if (els.contact.value.trim()) chips.push(chip('Contact', els.contact.value.trim(), () => { els.contact.value = ''; fetchList(); }));
-    if (els.taxCode.value.trim()) chips.push(chip('Tax', els.taxCode.value.trim(), () => { els.taxCode.value = ''; fetchList(); }));
+    if (els.debtMin && els.debtMin.value.trim()) chips.push(chip('Debt ≥', els.debtMin.value.trim(), () => { els.debtMin.value = ''; fetchList(); }));
+    if (els.debtMax && els.debtMax.value.trim()) chips.push(chip('Debt ≤', els.debtMax.value.trim(), () => { els.debtMax.value = ''; fetchList(); }));
+    if (els.createdFrom && els.createdFrom.value) chips.push(chip('Created from', els.createdFrom.value, () => { els.createdFrom.value = ''; fetchList(); }));
+    if (els.createdTo && els.createdTo.value) chips.push(chip('Created to', els.createdTo.value, () => { els.createdTo.value = ''; fetchList(); }));
     els.chips.innerHTML = chips.join('');
   }
 
@@ -337,12 +361,21 @@
 
   // Events
   els.btnRefresh?.addEventListener('click', () => fetchList());
-  els.q?.addEventListener('input', debounce(() => { state.page = 0; fetchList(); }, 300));
+  // removed sidebar search input
   els.active?.addEventListener('change', () => { state.page = 0; fetchList(); });
   els.contact?.addEventListener('input', debounce(() => { state.page = 0; fetchList(); }, 300));
   els.taxCode?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); state.page = 0; fetchList(); } });
   els.btnApplyFilters?.addEventListener('click', () => { state.page = 0; fetchList(); });
-  els.btnClearFilters?.addEventListener('click', () => { els.q.value = ''; els.active.value = ''; els.contact.value = ''; els.taxCode.value = ''; state.page = 0; fetchList(); });
+  els.btnClearFilters?.addEventListener('click', () => {
+    if (els.hdrSearch) els.hdrSearch.value = '';
+    if (els.active) els.active.value = '';
+    if (els.debtMin) els.debtMin.value = '';
+    if (els.debtMax) els.debtMax.value = '';
+    if (els.createdFrom) els.createdFrom.value = '';
+    if (els.createdTo) els.createdTo.value = '';
+    state.page = 0;
+    fetchList();
+  });
   els.btnToggleFilter?.addEventListener('click', () => els.filterPanel.classList.toggle('collapsed'));
   els.btnCollapseFilter?.addEventListener('click', () => els.filterPanel.classList.toggle('collapsed'));
   els.pagi?.addEventListener('click', (e) => { const a = e.target.closest('a.page-link'); if (!a) return; const p = parseInt(a.dataset.page, 10); if (isNaN(p) || p < 0) return; state.page = p; state.selected.clear(); state.expanded.clear(); fetchList(); });
@@ -366,8 +399,8 @@
   els.chkAll?.addEventListener('change', (e) => { const checks = els.tblBody.querySelectorAll('input.row-check'); if (e.target.checked) { checks.forEach(c => state.selected.add(String(c.closest('tr')?.dataset.id))); } else { checks.forEach(c => state.selected.delete(String(c.closest('tr')?.dataset.id))); } checks.forEach(c => c.checked = e.target.checked); updateHeaderMode(); });
   document.getElementById('btnClearSel')?.addEventListener('click', () => { state.selected.clear(); syncHeaderCheckbox(); updateHeaderMode(); fetchList(); });
   document.getElementById('btnBulkDelete')?.addEventListener('click', async () => { const ids = [...state.selected]; if (!ids.length) return; if (!confirm(`Delete ${ids.length} suppliers?`)) return; try { for (const id of ids) { const resp = await fetch(`${api.base}/${id}`, { method: 'DELETE', headers: api.headers() }); if (!resp.ok) throw new Error('Delete failed'); } showAlert('Deleted selected suppliers', 'success'); state.selected.clear(); updateHeaderMode(); fetchList(); } catch (e2) { showAlert(e2.message || 'Bulk delete failed', 'danger'); } });
-  els.hdrSearch?.addEventListener('input', debounce(() => { els.q.value = els.hdrSearch.value; state.page = 0; fetchList(); }, 300));
-  els.hdrSearch?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.q.value = els.hdrSearch.value; state.page = 0; fetchList(); } });
+  els.hdrSearch?.addEventListener('input', debounce(() => { state.page = 0; fetchList(); }, 300));
+  els.hdrSearch?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); state.page = 0; fetchList(); } });
   els.btnSave?.addEventListener('click', save);
   els.btnSaveNew?.addEventListener('click', async () => { els.supplierId.value = ''; await save(); els.modal.show(); document.getElementById('frm').reset(); document.getElementById('isActive').checked = true; });
   els.btnImport?.addEventListener('click', () => { els.importErr?.classList.add('d-none'); if (els.fileExcel) els.fileExcel.value = ''; els.importModal?.show(); });
