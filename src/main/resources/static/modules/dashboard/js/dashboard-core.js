@@ -1,426 +1,114 @@
 /**
  * Dashboard Core JavaScript
- * Core functionality for dashboard initialization and user management
+ * Handles business overview stats and user initialization
  */
 
 class DashboardCore {
     constructor() {
-        this.apiBaseUrl = '/api/auth';
-        this.userInfo = null;
-        this.isInitialized = false;
+        this.api = {
+            products: '/api/products',
+            categories: '/api/categories',
+            suppliers: '/api/suppliers',
+            lowStock: '/api/products/low-stock',
+            auth: '/api/auth'
+        };
+        this.init();
     }
 
-    /**
-     * Initialize dashboard core functionality
-     */
-    async init() {
-        if (this.isInitialized) return;
-
-        console.log('Dashboard Core: Initializing...');
-
-        try {
-            await this.loadUserInfo();
-            this.updateUI();
-            this.bindEvents();
-            this.isInitialized = true;
-
-            console.log('Dashboard Core: Initialized successfully');
-        } catch (error) {
-            console.error('Dashboard Core: Initialization failed', error);
-        }
+    init() {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.loadUserInfo();
+            this.loadStats();
+        });
     }
 
-    /**
-     * Load user information from authentication manager
-     */
     async loadUserInfo() {
+        // Check if there's a global auth object or fetch from API
+        // For now, we update the welcome message if a user name is present
+        const userNameEl = document.getElementById('welcomeUserName');
+        // This part usually integrates with a shared Auth service
+        // If a global user object exists:
+        if (window.currentUser && window.currentUser.username) {
+            userNameEl.textContent = window.currentUser.username;
+        }
+    }
+
+    async loadStats() {
         try {
-            // Check if shared auth manager is available
-            if (typeof kiotVietAuth !== 'undefined') {
-                const isAuthenticated = await kiotVietAuth.isAuthenticated();
-                if (isAuthenticated) {
-                    this.userInfo = kiotVietAuth.getUserInfo();
-                } else {
-                    console.warn('Dashboard Core: User not authenticated');
-                }
-            } else {
-                console.warn('Dashboard Core: kiotVietAuth not available');
-            }
+            // Parallel fetch for performance
+            const [products, categories, suppliers, lowStock] = await Promise.all([
+                this.fetchTotalProducts(),
+                this.fetchTotalCategories(),
+                this.fetchTotalSuppliers(),
+                this.fetchLowStockCount()
+            ]);
+
+            this.animateValue('totalProducts', products);
+            this.animateValue('totalCategories', categories);
+            this.animateValue('totalSuppliers', suppliers);
+            this.animateValue('lowStockCount', lowStock);
+
         } catch (error) {
-            console.error('Dashboard Core: Failed to load user info', error);
+            console.error('Dashboard Stats Error:', error);
+            // Fallback to 0 or error state
         }
     }
 
-    /**
-     * Update UI with user information
-     */
-    updateUI() {
-        if (!this.userInfo) return;
+    // API Calls
+    async fetchTotalProducts() {
+        // Fetch page 0 size 1 just to get totalElements from metadata
+        const res = await fetch(`${this.api.products}?page=0&size=1`);
+        const json = await res.json();
+        return json.data ? json.data.totalElements : 0;
+    }
 
-        // Update user name elements
-        const userNameElements = ['userName', 'dropdownUserName', 'headerUserName'];
-        userNameElements.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = this.userInfo.username || this.userInfo.email || 'User';
-            }
-        });
+    async fetchTotalCategories() {
+        const res = await fetch(this.api.categories);
+        const json = await res.json();
+        // API returns a tree structure DTO with totalCategories field
+        return json.data ? json.data.totalCategories : 0;
+    }
 
-        // Update welcome message
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        if (welcomeMessage) {
-            const name = this.userInfo.username || this.userInfo.email || 'User';
-            welcomeMessage.textContent = `Welcome back, ${name}! 👋`;
+    async fetchTotalSuppliers() {
+        const res = await fetch(`${this.api.suppliers}?page=0&size=1`);
+        const json = await res.json();
+        // PagedResponse usually has totalElements
+        return json.data ? json.data.totalElements : 0;
+    }
+
+    async fetchLowStockCount() {
+        const res = await fetch(this.api.lowStock);
+        const json = await res.json();
+        // Returns a List<ProductDto>, so we take the length
+        return json.data ? json.data.length : 0;
+    }
+
+    // Animation Utility
+    animateValue(id, end) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+
+        // Handle 0 or invalid
+        if (!end || isNaN(end)) {
+            obj.textContent = '0';
+            return;
         }
 
-        // Update user email elements
-        ['dropdownUserEmail', 'headerUserEmail'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = this.userInfo.email || 'No email';
+        const start = 0;
+        const duration = 1000;
+        let startTimestamp = null;
+        
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
             }
-        });
-
-        // Update user role
-        const roleText = this.userInfo.role || 'User';
-        ['userRole', 'dropdownUserRole'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = id === 'dropdownUserRole' ? `Role: ${roleText}` : roleText;
-            }
-        });
-
-        // Update user avatar
-        this.updateUserAvatar();
-    }
-
-    /**
-     * Update user avatar with user initial
-     */
-    updateUserAvatar() {
-        const avatarElements = document.querySelectorAll('.user-avatar');
-
-        avatarElements.forEach(avatar => {
-            if (this.userInfo && this.userInfo.username && !avatar.querySelector('i')) {
-                const initial = this.userInfo.username.charAt(0).toUpperCase();
-                avatar.textContent = initial;
-            }
-        });
-    }
-
-    /**
-     * Bind core events
-     */
-    bindEvents() {
-        // Logout functionality
-        this.bindLogout();
-
-        // Page visibility change
-        this.bindVisibilityChange();
-
-        // Window resize events
-        this.bindResizeEvents();
-    }
-
-    /**
-     * Bind logout functionality
-     */
-    bindLogout() {
-        // Simple - just bind to the logout link by ID
-        const logoutLink = document.getElementById('logoutLink');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await this.performLogout();
-            });
-        }
-    }
-
-    /**
-     * Perform simple logout
-     */
-    async performLogout() {
-        try {
-            console.log('Logging out...');
-
-            // Call API first
-            const token = localStorage.getItem('jwtToken');
-            if (token) {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-            }
-
-            // Clear storage
-            localStorage.removeItem('jwtToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userInfo');
-
-            // Redirect to login
-            window.location.href = '/login?logout=true';
-        } catch (error) {
-            console.error('Logout failed:', error);
-            // Still clear and redirect on error
-            localStorage.removeItem('jwtToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userInfo');
-            window.location.href = '/login?logout=true';
-        }
-    }
-
-    /**
-     * Bind page visibility change events
-     */
-    bindVisibilityChange() {
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && this.isInitialized) {
-                this.refreshUserInfo();
-            }
-        });
-    }
-
-    /**
-     * Bind window resize events
-     */
-    bindResizeEvents() {
-        let resizeTimeout;
-
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                this.handleResize();
-            }, 250);
-        });
-    }
-
-    /**
-     * Handle window resize
-     */
-    handleResize() {
-        // Close dropdowns on resize to prevent layout issues
-        this.closeAllDropdowns();
-
-        // Adjust mobile layouts if needed
-        this.adjustMobileLayout();
-    }
-
-    /**
-     * Refresh user information
-     */
-    async refreshUserInfo() {
-        try {
-            await this.loadUserInfo();
-            this.updateUI();
-        } catch (error) {
-            console.error('Dashboard Core: Failed to refresh user info', error);
-        }
-    }
-
-    /**
-     * Close all dropdown menus
-     */
-    closeAllDropdowns() {
-        const dropdowns = document.querySelectorAll('.dropdown-menu, .user-dropdown, .theme-switcher, .notification-dropdown');
-
-        dropdowns.forEach(dropdown => {
-            dropdown.style.opacity = '0';
-            dropdown.style.visibility = 'hidden';
-            dropdown.style.transform = 'translateY(-10px)';
-        });
-    }
-
-    /**
-     * Adjust mobile layout
-     */
-    adjustMobileLayout() {
-        const isMobile = window.innerWidth <= 768;
-
-        if (isMobile) {
-            document.body.classList.add('mobile-layout');
-        } else {
-            document.body.classList.remove('mobile-layout');
-        }
-    }
-
-    /**
-     * Get current user information
-     */
-    getUserInfo() {
-        return this.userInfo;
-    }
-
-    /**
-     * Check if user is authenticated
-     */
-    isAuthenticated() {
-        return this.userInfo !== null;
-    }
-
-    /**
-     * Show loading state
-     */
-    showLoading(element) {
-        if (element) {
-            element.disabled = true;
-            element.setAttribute('data-original-text', element.textContent);
-            element.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
-        }
-    }
-
-    /**
-     * Hide loading state
-     */
-    hideLoading(element) {
-        if (element) {
-            element.disabled = false;
-            const originalText = element.getAttribute('data-original-text');
-            if (originalText) {
-                element.textContent = originalText;
-            }
-        }
-    }
-
-    /**
-     * Show success message
-     */
-    showSuccess(message) {
-        this.showToast(message, 'success');
-    }
-
-    /**
-     * Show error message
-     */
-    showError(message) {
-        this.showToast(message, 'error');
-    }
-
-    /**
-     * Show toast notification
-     */
-    showToast(message, type = 'info') {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `dashboard-toast dashboard-toast-${type}`;
-        toast.innerHTML = `
-            <div class="toast-content">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-
-        // Add toast styles if not already present
-        this.addToastStyles();
-
-        // Show toast
-        document.body.appendChild(toast);
-
-        // Trigger animation
-        setTimeout(() => toast.classList.add('show'), 10);
-
-        // Remove toast after delay
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    document.body.removeChild(toast);
-                }
-            }, 300);
-        }, 3000);
-    }
-
-    /**
-     * Add toast styles to document
-     */
-    addToastStyles() {
-        if (document.getElementById('dashboard-toast-styles')) return;
-
-        const styles = document.createElement('style');
-        styles.id = 'dashboard-toast-styles';
-        styles.textContent = `
-            .dashboard-toast {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 0.5rem;
-                padding: 1rem;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                opacity: 0;
-                transform: translateX(100%);
-                transition: all 0.3s ease;
-                min-width: 300px;
-            }
-
-            .dashboard-toast.show {
-                opacity: 1;
-                transform: translateX(0);
-            }
-
-            .dashboard-toast-success {
-                border-left: 4px solid var(--secondary-color);
-            }
-
-            .dashboard-toast-error {
-                border-left: 4px solid #ef4444;
-            }
-
-            .dashboard-toast-info {
-                border-left: 4px solid var(--primary-color);
-            }
-
-            .toast-content {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-
-            .toast-content i {
-                font-size: 1.25rem;
-            }
-
-            .dashboard-toast-success .toast-content i {
-                color: var(--secondary-color);
-            }
-
-            .dashboard-toast-error .toast-content i {
-                color: #ef4444;
-            }
-
-            .dashboard-toast-info .toast-content i {
-                color: var(--primary-color);
-            }
-        `;
-
-        document.head.appendChild(styles);
+        };
+        window.requestAnimationFrame(step);
     }
 }
 
-// Initialize dashboard core when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for kiotVietAuth to be available
-    if (typeof kiotVietAuth !== 'undefined') {
-        window.dashboardCore = new DashboardCore();
-        window.dashboardCore.init();
-    } else {
-        // Retry after a short delay
-        setTimeout(() => {
-            if (typeof kiotVietAuth !== 'undefined') {
-                window.dashboardCore = new DashboardCore();
-                window.dashboardCore.init();
-            } else {
-                console.warn('Dashboard Core: kiotVietAuth not available, initializing without auth');
-                window.dashboardCore = new DashboardCore();
-                window.dashboardCore.init();
-            }
-        }, 100);
-    }
-});
-
-// Export for global access
-window.DashboardCore = DashboardCore;
+// Initialize
+new DashboardCore();
