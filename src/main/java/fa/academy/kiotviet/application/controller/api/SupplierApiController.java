@@ -31,16 +31,19 @@ public class SupplierApiController {
     @GetMapping
     public SuccessResponse<PagedResponse<SupplierDto>> list(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String contact,
-            @RequestParam(required = false) String taxCode,
             @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false, name = "minDebt") java.math.BigDecimal minDebt,
+            @RequestParam(required = false, name = "maxDebt") java.math.BigDecimal maxDebt,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false, name = "createdFrom") java.time.LocalDate createdFrom,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false, name = "createdTo") java.time.LocalDate createdTo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortDir) {
         Long companyId = currentCompanyId();
-        PagedResponse<SupplierDto> data = supplierService.list(companyId, search, contact, taxCode, active, page, size,
-                sortBy, sortDir);
+        PagedResponse<SupplierDto> data = supplierService.list(companyId, search, active, minDebt, maxDebt, createdFrom, createdTo, page, size, sortBy, sortDir);
         return ResponseFactory.success(data, "Suppliers retrieved successfully");
     }
 
@@ -48,14 +51,18 @@ public class SupplierApiController {
     @GetMapping("/search")
     public SuccessResponse<PagedResponse<SupplierDto>> search(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String contact,
-            @RequestParam(required = false) String taxCode,
             @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false, name = "minDebt") java.math.BigDecimal minDebt,
+            @RequestParam(required = false, name = "maxDebt") java.math.BigDecimal maxDebt,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false, name = "createdFrom") java.time.LocalDate createdFrom,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false, name = "createdTo") java.time.LocalDate createdTo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortDir) {
-        return list(search, contact, taxCode, active, page, size, sortBy, sortDir);
+        return list(search, active, minDebt, maxDebt, createdFrom, createdTo, page, size, sortBy, sortDir);
     }
 
     // Get details

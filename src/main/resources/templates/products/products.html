@@ -49,13 +49,7 @@
             <!-- Filter Sidebar (static, no collapse) -->
             <aside class="kv-filter" id="filterPanel">
                 <form class="kv-filter__form" onsubmit="return false;">
-                    <div class="kv-filter__group">
-                        <label class="kv-filter__label">Search</label>
-                        <div class="kv-input-search">
-                            <i class="fas fa-search"></i>
-                            <input id="q" type="text" placeholder="Name, SKU, barcode..." />
-                        </div>
-                    </div>
+                    
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Category</label>
@@ -107,6 +101,15 @@
                             <option value="true">Tracked</option>
                             <option value="false">Not Tracked</option>
                         </select>
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <div class="d-grid gap-2">
+                            <button type="button" class="kv-btn kv-btn--primary" id="btnApplyFilters">
+                                <i class="fas fa-filter me-1"></i>Apply
+                            </button>
+                            <button type="button" class="kv-btn kv-btn--ghost" id="btnClearFilters">Clear</button>
+                        </div>
                     </div>
 
                 </form>

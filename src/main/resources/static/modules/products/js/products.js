@@ -29,6 +29,8 @@
     supplierDropdown: document.getElementById('supplierDropdown'),
     supplierClear: document.querySelector('#supplierId + .kv-autocomplete__clear'),
     btnRefresh: document.getElementById('btnRefresh'),
+    btnApplyFilters: document.getElementById('btnApplyFilters'),
+    btnClearFilters: document.getElementById('btnClearFilters'),
     btnAdd: document.getElementById('btnAdd'),
     hdrSearch: document.getElementById('hdrSearch'),
     btnColumns: document.getElementById('btnColumns'),
@@ -147,7 +149,7 @@
     const supplierId = p.get('supplierId') || '';
     const status = p.get('status') || '';
     const tracked = p.get('tracked') || '';
-    els.q.value = q; if (els.hdrSearch) els.hdrSearch.value = q;
+    if (els.hdrSearch) els.hdrSearch.value = q;
     els.categoryId.value = categoryId;
     els.brandId.value = brandId;
     els.supplierId.value = supplierId;
@@ -162,7 +164,7 @@
 
   function updateUrl() {
     const p = new URLSearchParams();
-    if (els.q.value.trim()) p.set('q', els.q.value.trim());
+    if (els.hdrSearch && els.hdrSearch.value.trim()) p.set('q', els.hdrSearch.value.trim());
     if (state.sortBy) { p.set('sortBy', state.sortBy); p.set('sortDir', state.sortDir); }
     p.set('page', String(state.page + 1));
     p.set('size', String(state.size));
@@ -192,7 +194,7 @@
 
     state.loading = true;
     const params = new URLSearchParams();
-    if (els.q.value.trim()) params.set('search', els.q.value.trim());
+    if (els.hdrSearch && els.hdrSearch.value.trim()) params.set('search', els.hdrSearch.value.trim());
 
     // Use multiple selected items for filters
     if (state.selectedCategories.size > 0) {
@@ -745,8 +747,8 @@
     const chips = [];
 
     // Search chip
-    if (els.q.value.trim()) {
-      chips.push(chip('search', 'Search', els.q.value.trim(), () => { els.q.value = ''; fetchList(); }));
+    if (els.hdrSearch && els.hdrSearch.value.trim()) {
+      chips.push(chip('search', 'Search', els.hdrSearch.value.trim(), () => { els.hdrSearch.value = ''; fetchList(); }));
     }
 
     // Category chips from selectedCategories Map
@@ -1255,7 +1257,27 @@
 
   // Events
   els.btnRefresh?.addEventListener('click', () => fetchList());
-  els.q?.addEventListener('input', debounce(() => { state.page = 0; fetchList(); }, 300));
+  els.btnApplyFilters?.addEventListener('click', () => { state.page = 0; fetchList(); });
+  els.btnClearFilters?.addEventListener('click', () => {
+    // Clear sidebar filters
+    if (els.categoryId) els.categoryId.value = '';
+    if (els.brandId) els.brandId.value = '';
+    if (els.supplierId) els.supplierId.value = '';
+    if (els.status) els.status.value = '';
+    if (els.tracked) els.tracked.value = '';
+
+    // Clear dataset-selected values for autocompletes
+    if (els.categoryAutocomplete) { delete els.categoryAutocomplete.dataset.selectedValue; els.categoryAutocomplete.value=''; }
+    if (els.brandAutocomplete) { delete els.brandAutocomplete.dataset.selectedValue; els.brandAutocomplete.value=''; }
+    if (els.supplierAutocomplete) { delete els.supplierAutocomplete.dataset.selectedValue; els.supplierAutocomplete.value=''; }
+
+    // Clear multi-select maps if used
+    try { state.selectedCategories?.clear(); state.selectedBrands?.clear(); state.selectedSuppliers?.clear(); } catch {}
+
+    state.page = 0;
+    fetchList();
+  });
+  // removed sidebar search input
 
   // Initialize autocomplete components
   if (els.categoryAutocomplete && els.categoryDropdown && els.categoryClear) {
@@ -1308,8 +1330,8 @@
   els.chkAll?.addEventListener('change', (e) => { const checks = els.tblBody.querySelectorAll('input.row-check'); if (e.target.checked) { checks.forEach(c => state.selected.add(String(c.closest('tr')?.dataset.id))); } else { checks.forEach(c => state.selected.delete(String(c.closest('tr')?.dataset.id))); } checks.forEach(c => c.checked = e.target.checked); updateHeaderMode(); });
   document.getElementById('btnClearSel')?.addEventListener('click', () => { state.selected.clear(); syncHeaderCheckbox(); updateHeaderMode(); fetchList(); });
   document.getElementById('btnBulkDelete')?.addEventListener('click', async () => { const ids = [...state.selected]; if (!ids.length) return; if (!confirm(`Delete ${ids.length} products?`)) return; try { for (const id of ids) { const resp = await fetch(`${api.base}/${id}`, { method: 'DELETE', headers: api.headers() }); if (!resp.ok) throw new Error('Delete failed'); } showAlert('Deleted selected products', 'success'); state.selected.clear(); updateHeaderMode(); fetchList(); } catch (e2) { showAlert(e2.message || 'Bulk delete failed', 'danger'); } });
-  els.hdrSearch?.addEventListener('input', debounce(() => { els.q.value = els.hdrSearch.value; state.page = 0; fetchList(); }, 300));
-  els.hdrSearch?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.q.value = els.hdrSearch.value; state.page = 0; fetchList(); } });
+  els.hdrSearch?.addEventListener('input', debounce(() => { state.page = 0; fetchList(); }, 300));
+  els.hdrSearch?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); state.page = 0; fetchList(); } });
   if (els.btnSave) els.btnSave.addEventListener('click', save);
   if (els.btnSaveNew) els.btnSaveNew.addEventListener('click', async () => { els.productId.value = ''; await save(); els.modal.show(); document.getElementById('frm').reset(); els.productIsTracked.checked = true; els.productStatus.value = 'ACTIVE'; });
   els.btnImport?.addEventListener('click', () => { els.importErr?.classList.add('d-none'); if (els.fileExcel) els.fileExcel.value = ''; els.importModal?.show(); });
