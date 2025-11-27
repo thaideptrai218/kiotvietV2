@@ -1,384 +1,183 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - KiotViet</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}">
-    <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
-    <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
-</head>
-<body>
-    <!-- Header Component -->
-    <div th:replace="~{common/header :: dashboardHeader}"></div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dashboard - KiotViet</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+            th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+        />
+        <link
+            rel="stylesheet"
+            href="/css/header-nav.css"
+            th:href="@{/css/header-nav.css}"
+        />
+        <link
+            rel="stylesheet"
+            href="/css/dashboard.css"
+            th:href="@{/css/dashboard.css}"
+        />
+    </head>
+    <body>
+        <!-- Header Component -->
+        <div th:replace="~{common/header :: dashboardHeader}"></div>
 
-    <!-- Navigation Component -->
-    <div th:replace="~{common/navigation :: dashboardNav('dashboard')}"></div>
+        <!-- Navigation Component -->
+        <div
+            th:replace="~{common/navigation :: dashboardNav('dashboard')}"
+        ></div>
 
-    <!-- Main Dashboard Content -->
-    <main class="dashboard-content" th:attr="data-username=${username}">
-        <!-- Welcome Section -->
-        <section class="welcome-section">
-            <div class="welcome-header">
-                <div class="welcome-text">
-                    <h1>Welcome to KiotViet Dashboard</h1>
-                    <p th:text="'Hello, ' + ${username} + '!'">Hello, User!</p>
-                    <p class="welcome-subtitle">Manage your business with powerful analytics and insights</p>
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <h1>
+                        Welcome back,
+                        <span id="welcomeUserName" class="highlight-text"
+                            >User</span
+                        >! 👋
+                    </h1>
+                    <p>Here's what's happening with your business today.</p>
                 </div>
                 <div class="welcome-actions">
-                    <a href="/dashboard/revenue" class="btn btn-primary btn-large">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Revenue Analytics</span>
+                    <a
+                        href="/order/create"
+                        th:href="@{/order/create}"
+                        class="btn btn-light"
+                    >
+                        <i class="fas fa-plus"></i> New Order
                     </a>
-                    <a href="/products" class="btn btn-secondary btn-large">
-                        <i class="fas fa-box"></i>
-                        <span>Manage Products</span>
+                    <a
+                        href="/products"
+                        th:href="@{/products}"
+                        class="btn btn-outline-light"
+                    >
+                        <i class="fas fa-box"></i> Products
                     </a>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Quick Stats Overview -->
-        <section class="quick-stats-section">
-            <div class="section-header">
-                <h2>Business Overview</h2>
-                <p class="section-description">Real-time insights into your business performance</p>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card stat-card-primary">
-                    <div class="stat-icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 class="stat-number" id="totalProducts">0</h3>
-                        <p class="stat-label">Total Products</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>12% from last month</span>
+            <!-- Business Overview (Stats) -->
+            <section class="stats-section">
+                <h2 class="section-title">Business Overview</h2>
+                <div class="stats-grid">
+                    <!-- Total Products -->
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Products</span>
+                            <h3 class="stat-value" id="totalProducts">--</h3>
                         </div>
                     </div>
-                </div>
-                <div class="stat-card stat-card-success">
-                    <div class="stat-icon">
-                        <i class="fas fa-tags"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 class="stat-number" id="totalCategories">0</h3>
-                        <p class="stat-label">Categories</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>3 new this month</span>
+
+                    <!-- Total Categories -->
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Categories</span>
+                            <h3 class="stat-value" id="totalCategories">--</h3>
                         </div>
                     </div>
-                </div>
-                <div class="stat-card stat-card-info">
-                    <div class="stat-icon">
-                        <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 class="stat-number" id="totalSuppliers">0</h3>
-                        <p class="stat-label">Suppliers</p>
-                        <div class="stat-change neutral">
-                            <i class="fas fa-minus"></i>
-                            <span>No change</span>
+
+                    <!-- Total Suppliers -->
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Suppliers</span>
+                            <h3 class="stat-value" id="totalSuppliers">--</h3>
                         </div>
                     </div>
-                </div>
-                <div class="stat-card stat-card-warning">
-                    <div class="stat-icon">
-                        <i class="fas fa-warehouse"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 class="stat-number" id="totalInventory">0</h3>
-                        <p class="stat-label">Inventory Items</p>
-                        <div class="stat-change warning">
+
+                    <!-- Low Stock Alerts -->
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <span>8 low stock items</span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Low Stock Items</span>
+                            <h3 class="stat-value" id="lowStockCount">--</h3>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Quick Actions -->
-        <section class="quick-actions-section">
-            <div class="section-header">
-                <h2>Quick Actions</h2>
-                <p class="section-description">Common tasks and shortcuts</p>
-            </div>
-            <div class="actions-grid">
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-plus-circle"></i>
-                    </div>
-                    <h3>Add Product</h3>
-                    <p>Add new products to your inventory</p>
-                    <a href="/products/new" class="btn btn-outline">Add Product</a>
+            <!-- Quick Actions -->
+            <section class="actions-section">
+                <h2 class="section-title">Quick Actions</h2>
+                <div class="actions-grid">
+                    <a
+                        href="/products"
+                        th:href="@{/products}"
+                        class="action-card"
+                    >
+                        <div class="action-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="action-details">
+                            <h3>Manage Products</h3>
+                            <p>Add, edit, or update inventory</p>
+                        </div>
+                        <i class="fas fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <a
+                        href="/orders/create"
+                        th:href="@{/orders/create}"
+                        class="action-card"
+                    >
+                        <div class="action-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="action-details">
+                            <h3>Create Order</h3>
+                            <p>Process a new sales order</p>
+                        </div>
+                        <i class="fas fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <a
+                        href="/suppliers"
+                        th:href="@{/suppliers}"
+                        class="action-card"
+                    >
+                        <div class="action-icon">
+                            <i class="fas fa-people-carry"></i>
+                        </div>
+                        <div class="action-details">
+                            <h3>Manage Suppliers</h3>
+                            <p>View and manage supplier list</p>
+                        </div>
+                        <i class="fas fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <a
+                        href="/dashboard/revenue"
+                        th:href="@{/dashboard/revenue}"
+                        class="action-card"
+                    >
+                        <div class="action-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="action-details">
+                            <h3>Revenue Reports</h3>
+                            <p>View detailed financial analytics</p>
+                        </div>
+                        <i class="fas fa-chevron-right action-arrow"></i>
+                    </a>
                 </div>
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <h3>Create Order</h3>
-                    <p>Create new sales orders</p>
-                    <a href="/orders/new" class="btn btn-outline">Create Order</a>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3>Manage Customers</h3>
-                    <p>View and manage customer information</p>
-                    <a href="/customers" class="btn btn-outline">View Customers</a>
-                </div>
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h3>View Reports</h3>
-                    <p>Generate detailed business reports</p>
-                    <a href="/dashboard/revenue" class="btn btn-outline">View Reports</a>
-                </div>
-            </div>
-        </section>
+            </section>
+        </main>
 
-        <!-- Recent Activity -->
-        <section class="recent-activity-section">
-            <div class="section-header">
-                <h2>Recent Activity</h2>
-                <p class="section-description">Latest updates from your business</p>
-            </div>
-            <div class="activity-grid">
-                <div class="activity-card">
-                    <div class="activity-icon activity-icon-order">
-                        <i class="fas fa-receipt"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h4>New Order Created</h4>
-                        <p>Order #ORD-001 has been created successfully</p>
-                        <span class="activity-time">2 minutes ago</span>
-                    </div>
-                </div>
-                <div class="activity-card">
-                    <div class="activity-icon activity-icon-product">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h4>Product Added</h4>
-                        <p>New product "Laptop Pro X1" added to inventory</p>
-                        <span class="activity-time">1 hour ago</span>
-                    </div>
-                </div>
-                <div class="activity-card">
-                    <div class="activity-icon activity-icon-supplier">
-                        <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h4>Supplier Updated</h4>
-                        <p>Supplier information updated for Tech Supplies Inc</p>
-                        <span class="activity-time">3 hours ago</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Business Insights -->
-        <section class="insights-section">
-            <div class="section-header">
-                <h2>Business Insights</h2>
-                <p class="section-description">Key metrics and performance indicators</p>
-            </div>
-            <div class="insights-grid">
-                <div class="insight-card">
-                    <div class="insight-header">
-                        <h3>Top Selling Category</h3>
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <div class="insight-content">
-                        <p class="insight-value">Electronics</p>
-                        <p class="insight-description">42% of total sales this month</p>
-                    </div>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-header">
-                        <h3>Average Order Value</h3>
-                        <i class="fas fa-calculator"></i>
-                    </div>
-                    <div class="insight-content">
-                        <p class="insight-value">₫2,450,000</p>
-                        <p class="insight-description">Up 8% from last month</p>
-                    </div>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-header">
-                        <h3>Customer Satisfaction</h3>
-                        <i class="fas fa-smile"></i>
-                    </div>
-                    <div class="insight-content">
-                        <p class="insight-value">4.8/5.0</p>
-                        <p class="insight-description">Based on 127 reviews</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Enhanced Dashboard JavaScript -->
-    <script>
-        // Dashboard initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Dashboard loaded');
-            loadUserInfo();
-            initializeDashboardData();
-            animateStatCards();
-        });
-
-        // User Dropdown functionality
-        function toggleUserDropdown() {
-            const dropdown = document.querySelector('.userDropdown');
-            if (dropdown) {
-                const isHidden = dropdown.style.display === 'none';
-                dropdown.style.display = isHidden ? 'block' : 'none';
-                dropdown.setAttribute('aria-hidden', !isHidden);
-            }
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.querySelector('.userDropdown');
-            const avatarButton = document.querySelector('.avatarButton');
-
-            if (dropdown && avatarButton &&
-                !dropdown.contains(event.target) &&
-                !avatarButton.contains(event.target)) {
-                dropdown.style.display = 'none';
-                dropdown.setAttribute('aria-hidden', 'true');
-            }
-        });
-
-        // Load user information
-        function loadUserInfo() {
-            const usernameElement = document.querySelector('[data-username]');
-            const username = usernameElement ? usernameElement.getAttribute('data-username') : null;
-
-            updateUserInfo({
-                username: username || 'Demo User',
-                email: 'demo@kiotviet.com',
-                role: 'ADMIN'
-            });
-        }
-
-        // Update user information in the dropdown
-        function updateUserInfo(user) {
-            const userName = document.getElementById('dropdownUserName');
-            const userEmail = document.getElementById('dropdownUserEmail');
-            const userRole = document.getElementById('dropdownUserRole');
-
-            if (userName) userName.textContent = user.username || user.fullName || 'User';
-            if (userEmail) userEmail.textContent = user.email || 'No email';
-            if (userRole) userRole.textContent = `Role: ${user.role || 'USER'}`;
-        }
-
-        // Initialize dashboard data from API
-        async function initializeDashboardData() {
-            try {
-                const response = await fetch('/api/dashboard/statistics');
-                if (response.ok) {
-                    const data = await response.json();
-                    updateDashboardStats(data);
-                }
-            } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-                // Use mock data as fallback
-                updateDashboardStats(getMockDashboardData());
-            }
-        }
-
-        // Update dashboard statistics
-        function updateDashboardStats(data) {
-            animateValue('totalProducts', 0, data.totalProducts || 0, 1500);
-            animateValue('totalCategories', 0, data.totalCategories || 0, 1500);
-            animateValue('totalSuppliers', 0, data.totalSuppliers || 0, 1500);
-            animateValue('totalInventory', 0, data.totalInventoryItems || 0, 1500);
-        }
-
-        // Mock dashboard data for development
-        function getMockDashboardData() {
-            return {
-                totalProducts: 1247,
-                totalCategories: 18,
-                totalSuppliers: 45,
-                totalInventoryItems: 8934
-            };
-        }
-
-        // Animate number counting
-        function animateValue(id, start, end, duration) {
-            const element = document.getElementById(id);
-            if (!element) return;
-
-            const startTime = performance.now();
-            const animate = (currentTime) => {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-
-                const value = Math.floor(start + (end - start) * easeOutQuad(progress));
-                element.textContent = value.toLocaleString('vi-VN');
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                }
-            };
-
-            requestAnimationFrame(animate);
-        }
-
-        // Easing function for smooth animations
-        function easeOutQuad(t) {
-            return t * (2 - t);
-        }
-
-        // Animate stat cards on load
-        function animateStatCards() {
-            const cards = document.querySelectorAll('.stat-card, .action-card, .activity-card, .insight-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-
-                setTimeout(() => {
-                    card.style.transition = 'all 0.6s ease-out';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        }
-
-        // Helper function to get cookies
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-
-        // Placeholder functions for dropdown actions
-        function openUserProfile() {
-            window.location.href = '/profile';
-        }
-
-        function openTwoFactorSettings() {
-            window.location.href = '/profile';
-        }
-
-        function openUserSettings() {
-            window.location.href = '/setting';
-        }
-
-        function openFeedbackModal() {
-            alert('Feedback - Coming soon!');
-        }
-    </script>
-
-    <!-- Dashboard Core JavaScript -->
-    <script th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
-</body>
+        <!-- Dashboard Core JavaScript -->
+        <script th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
+    </body>
 </html>

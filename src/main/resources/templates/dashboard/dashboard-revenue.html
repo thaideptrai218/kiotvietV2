@@ -17,312 +17,271 @@
     <!-- Navigation Component -->
     <div th:replace="~{common/navigation :: dashboardNav('revenue')}"></div>
 
-    <!-- Revenue Dashboard Content -->
-    <main class="dashboard-content">
-        <!-- Page Header -->
-        <section class="page-header">
-            <div class="header-content">
-                <div class="header-text">
-                    <h1>Revenue Analytics</h1>
-                    <p>Comprehensive insights into your business performance and financial metrics</p>
-                </div>
-                <div class="header-actions">
-                    <button id="refreshData" class="btn btn-outline">
-                        <i class="fas fa-sync-alt"></i>
-                        <span>Refresh</span>
-                    </button>
-                    <button id="exportReport" class="btn btn-primary">
-                        <i class="fas fa-download"></i>
-                        <span>Export Report</span>
-                    </button>
-                </div>
+    <!-- Main Content -->
+    <main class="dashboard-container">
+        <!-- Top Toolbar: Title & Actions -->
+        <header class="dashboard-header">
+            <div class="header-title-group">
+                <h1>Revenue Analytics</h1>
+                <p class="subtitle">Financial performance and business insights</p>
             </div>
-        </section>
-
-        <!-- Date Range Section -->
-        <section class="date-range-section">
-            <div class="date-range-content">
-                <h2>Analytics Period</h2>
-                <div class="date-range-controls">
-                    <select id="periodSelector" class="period-select">
+            <div class="header-actions-group">
+                <div class="date-controls">
+                    <select id="periodSelector" class="form-select">
                         <option value="today">Today</option>
                         <option value="thisWeek" selected>This Week</option>
                         <option value="thisMonth">This Month</option>
                         <option value="thisQuarter">This Quarter</option>
                         <option value="thisYear">This Year</option>
                     </select>
-                    <div class="date-inputs">
-                        <input type="date" id="startDate" class="date-input">
-                        <span class="date-separator">to</span>
-                        <input type="date" id="endDate" class="date-input">
+                    <div class="date-picker-wrapper">
+                        <input type="date" id="startDate" class="form-input-date">
+                        <span class="separator">-</span>
+                        <input type="date" id="endDate" class="form-input-date">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="refreshData" class="btn btn-secondary btn-icon" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button id="exportReport" class="btn btn-primary">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Grid -->
+        <section class="kpi-grid">
+            <!-- Revenue -->
+            <div class="kpi-card primary">
+                <div class="kpi-icon-wrapper">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Total Revenue</div>
+                    <div class="kpi-value" id="revenueAmount">₫0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-trend" id="growthPercentage">
+                            <i id="growthIcon" class="fas fa-arrow-up"></i> 0%
+                        </span>
+                        <span class="kpi-period" id="revenuePeriod">vs last period</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders -->
+            <div class="kpi-card blue">
+                <div class="kpi-icon-wrapper">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Total Orders</div>
+                    <div class="kpi-value" id="ordersCount">0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-meta" id="ordersPeriod">This Week</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers -->
+            <div class="kpi-card green">
+                <div class="kpi-icon-wrapper">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Customers</div>
+                    <div class="kpi-value" id="customersCount">0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-meta" id="customersPeriod">Active this week</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AOV -->
+            <div class="kpi-card orange">
+                <div class="kpi-icon-wrapper">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Avg. Order Value</div>
+                    <div class="kpi-value" id="averageOrderValue">₫0</div>
+                    <div class="kpi-footer">
+                        <span class="kpi-meta" id="aovPeriod">Per order</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Revenue Overview Cards -->
-        <section class="revenue-overview-section">
-            <div class="revenue-overview-grid">
-                <!-- Total Revenue Card -->
-                <div class="revenue-card primary">
-                    <div class="revenue-card-header">
-                        <h3>Total Revenue</h3>
-                        <div class="revenue-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
-                    <div class="revenue-card-body">
-                        <div class="revenue-amount" id="revenueAmount">₫0</div>
-                        <div class="revenue-period" id="revenuePeriod">This Week</div>
-                        <div class="revenue-growth">
-                            <i id="growthIcon" class="fas fa-arrow-up growth-icon positive"></i>
-                            <span id="growthPercentage" class="growth-value positive">+0%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Orders Card -->
-                <div class="revenue-card secondary">
-                    <div class="revenue-card-header">
-                        <h3>Total Orders</h3>
-                        <div class="revenue-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                    </div>
-                    <div class="revenue-card-body">
-                        <div class="revenue-stat" id="ordersCount">0</div>
-                        <div class="revenue-period" id="ordersPeriod">This Week</div>
-                        <div class="revenue-comparison">
-                            <span class="revenue-value">0</span> orders
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customers Card -->
-                <div class="revenue-card success">
-                    <div class="revenue-card-header">
-                        <h3>Unique Customers</h3>
-                        <div class="revenue-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="revenue-card-body">
-                        <div class="revenue-stat" id="customersCount">0</div>
-                        <div class="revenue-period" id="customersPeriod">This Week</div>
-                        <div class="revenue-comparison">
-                            <span class="revenue-value">0</span> customers
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Average Order Value Card -->
-                <div class="revenue-card warning">
-                    <div class="revenue-card-header">
-                        <h3>Average Order Value</h3>
-                        <div class="revenue-icon">
-                            <i class="fas fa-calculator"></i>
-                        </div>
-                    </div>
-                    <div class="revenue-card-body">
-                        <div class="revenue-amount" id="averageOrderValue">₫0</div>
-                        <div class="revenue-period" id="aovPeriod">This Week</div>
-                        <div class="revenue-growth">
-                            <i class="fas fa-arrow-up growth-icon positive"></i>
-                            <span class="growth-value positive">+0%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Items Sold Card -->
-                <div class="revenue-card info">
-                    <div class="revenue-card-header">
-                        <h3>Items Sold</h3>
-                        <div class="revenue-icon">
-                            <i class="fas fa-box"></i>
-                        </div>
-                    </div>
-                    <div class="revenue-card-body">
-                        <div class="revenue-stat" id="itemsSold">0</div>
-                        <div class="revenue-period" id="itemsPeriod">This Week</div>
-                        <div class="revenue-comparison">
-                            <span class="revenue-value">0</span> items
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Conversion Rate Card -->
-                <div class="revenue-card purple">
-                    <div class="revenue-card-header">
-                        <h3>Conversion Rate</h3>
-                        <div class="revenue-icon">
-                            <i class="fas fa-percentage"></i>
-                        </div>
-                    </div>
-                    <div class="revenue-card-body">
-                        <div class="revenue-stat" id="conversionRate">0%</div>
-                        <div class="revenue-period" id="conversionPeriod">This Week</div>
-                        <div class="revenue-growth">
-                            <i class="fas fa-arrow-up growth-icon positive"></i>
-                            <span class="growth-value positive">+0%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Growth Metrics -->
-        <section class="growth-metrics-section">
-            <div class="metrics-cards">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <h4>Daily Growth</h4>
-                        <i class="fas fa-chart-day"></i>
-                    </div>
-                    <div class="metric-value" id="dailyGrowth">+0%</div>
-                    <div class="metric-description">Compared to yesterday</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <h4>Weekly Growth</h4>
-                        <i class="fas fa-chart-week"></i>
-                    </div>
-                    <div class="metric-value" id="weeklyGrowth">+0%</div>
-                    <div class="metric-description">Compared to last week</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <h4>Monthly Growth</h4>
-                        <i class="fas fa-chart-month"></i>
-                    </div>
-                    <div class="metric-value" id="monthlyGrowth">+0%</div>
-                    <div class="metric-description">Compared to last month</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <h4>Yearly Growth</h4>
-                        <i class="fas fa-chart-year"></i>
-                    </div>
-                    <div class="metric-value" id="yearlyGrowth">+0%</div>
-                    <div class="metric-description">Compared to last year</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Charts Section -->
-        <section class="charts-section">
-            <!-- Revenue Trend Chart -->
-            <div class="chart-container">
-                <h3>Revenue Trend</h3>
-                <div class="chart-controls">
-                    <select id="revenueChartType" class="chart-select">
-                        <option value="line">Line Chart</option>
-                        <option value="bar">Bar Chart</option>
-                        <option value="area">Area Chart</option>
+        <!-- Main Charts Section -->
+        <section class="charts-grid">
+            <div class="card chart-card main-chart">
+                <div class="card-header">
+                    <h3>Revenue Trend</h3>
+                    <select id="revenueChartType" class="chart-select-sm">
+                        <option value="line">Line</option>
+                        <option value="bar">Bar</option>
+                        <option value="area">Area</option>
                     </select>
                 </div>
-                <div class="chart-wrapper">
+                <div class="card-body chart-body-lg">
                     <canvas id="revenueTrendChart"></canvas>
                 </div>
             </div>
 
-            <!-- Payment Methods Chart -->
-            <div class="chart-container">
-                <h3>Payment Methods</h3>
-                <div class="chart-wrapper">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h3>Payment Methods</h3>
+                </div>
+                <div class="card-body chart-body-sm">
                     <canvas id="paymentMethodsChart"></canvas>
                 </div>
             </div>
         </section>
 
-        <!-- Top Performers Section -->
-        <section class="top-performers-section">
-            <!-- Top Products -->
-            <div class="performers-container">
-                <h3>Top Products</h3>
-                <div class="performers-list" id="topProductsList">
-                    <!-- Products will be loaded dynamically -->
-                    <div class="skeleton-item"></div>
-                    <div class="skeleton-item"></div>
-                    <div class="skeleton-item"></div>
+        <!-- Secondary Metrics Grid (Growth & Inventory) -->
+        <section class="secondary-grid">
+            <!-- Growth Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Growth Tracker</h3>
                 </div>
-                <div class="performers-footer">
-                    <a href="/products" class="btn btn-outline">View All Products</a>
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="list-content">
+                            <span class="list-title">Daily Growth</span>
+                            <span class="list-subtitle">vs Yesterday</span>
+                        </div>
+                        <div class="list-value" id="dailyGrowth">--</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-content">
+                            <span class="list-title">Weekly Growth</span>
+                            <span class="list-subtitle">vs Last Week</span>
+                        </div>
+                        <div class="list-value" id="weeklyGrowth">--</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-content">
+                            <span class="list-title">Monthly Growth</span>
+                            <span class="list-subtitle">vs Last Month</span>
+                        </div>
+                        <div class="list-value" id="monthlyGrowth">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Health -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Inventory Health</h3>
+                </div>
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="list-content">
+                            <span class="list-title">Total Products</span>
+                        </div>
+                        <div class="list-value" id="totalProducts">0</div>
+                    </div>
+                    <div class="list-item warning-bg">
+                        <div class="list-content">
+                            <span class="list-title">Low Stock</span>
+                            <span class="list-subtitle">Restock needed</span>
+                        </div>
+                        <div class="list-value text-warning" id="lowStockCount">0</div>
+                    </div>
+                    <div class="list-item danger-bg">
+                        <div class="list-content">
+                            <span class="list-title">Out of Stock</span>
+                            <span class="list-subtitle">Missed opportunity</span>
+                        </div>
+                        <div class="list-value text-danger" id="outOfStockCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Overview</h3>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-col">
+                        <span class="stat-label">Suppliers</span>
+                        <span class="stat-num" id="totalSuppliers">0</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-label">Total Customers</span>
+                        <span class="stat-num" id="totalCustomers">0</span>
+                    </div>
+                </div>
+                <div class="stat-full">
+                    <span class="stat-label">Est. Inventory Value</span>
+                    <span class="stat-num primary-text" id="totalInventoryValue">₫0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Performers Tables -->
+        <section class="tables-grid">
+            <!-- Top Products -->
+            <div class="card table-card">
+                <div class="card-header">
+                    <h3>Top Products</h3>
+                    <a href="/products" class="link-sm">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="custom-table" id="topProductsList">
+                        <!-- JS Populated -->
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Top Categories -->
-            <div class="performers-container">
-                <h3>Top Categories</h3>
-                <div class="performers-list" id="topCategoriesList">
-                    <!-- Categories will be loaded dynamically -->
-                    <div class="skeleton-item"></div>
-                    <div class="skeleton-item"></div>
-                    <div class="skeleton-item"></div>
+            <div class="card table-card">
+                <div class="card-header">
+                    <h3>Top Categories</h3>
+                    <a href="/categories" class="link-sm">View All</a>
                 </div>
-                <div class="performers-footer">
-                    <a href="/categories" class="btn btn-outline">View All Categories</a>
+                <div class="card-body p-0">
+                    <div class="custom-table" id="topCategoriesList">
+                        <!-- JS Populated -->
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
+                </div>
+            </div>
+             <!-- Top Customers -->
+             <div class="card table-card">
+                <div class="card-header">
+                    <h3>Top Customers</h3>
+                    <a href="/customers" class="link-sm">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="custom-table" id="topCustomersList">
+                        <!-- JS Populated -->
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Business Overview -->
-        <section class="business-overview-section">
-            <div class="business-overview-grid">
-                <!-- Inventory Status -->
-                <div class="overview-card">
-                    <h4>Inventory Status</h4>
-                    <div class="overview-metrics">
-                        <div class="metric">
-                            <span class="metric-label">Total Products</span>
-                            <span class="metric-value" id="totalProducts">0</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Low Stock Items</span>
-                            <span class="metric-value warning" id="lowStockCount">0</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Out of Stock</span>
-                            <span class="metric-value danger" id="outOfStockCount">0</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- Hidden fields for JS compatibility if needed -->
+        <div style="display:none;">
+            <span id="itemsSold"></span>
+            <span id="itemsPeriod"></span>
+            <span id="conversionRate"></span>
+            <span id="conversionPeriod"></span>
+            <span id="yearlyGrowth"></span>
+        </div>
 
-                <!-- Business Metrics -->
-                <div class="overview-card">
-                    <h4>Business Overview</h4>
-                    <div class="overview-metrics">
-                        <div class="metric">
-                            <span class="metric-label">Total Suppliers</span>
-                            <span class="metric-value" id="totalSuppliers">0</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Inventory Value</span>
-                            <span class="metric-value" id="totalInventoryValue">₫0</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Total Customers</span>
-                            <span class="metric-value" id="totalCustomers">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Top Customers -->
-                <div class="overview-card">
-                    <h4>Top Customers</h4>
-                    <div class="customers-list" id="topCustomersList">
-                        <!-- Customers will be loaded dynamically -->
-                        <div class="skeleton-item"></div>
-                        <div class="skeleton-item"></div>
-                    </div>
-                    <div class="performers-footer">
-                        <a href="/customers" class="btn btn-outline">View All Customers</a>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
-    <!-- Revenue Dashboard JavaScript -->
     <script th:src="@{/modules/dashboard/js/dashboard-revenue.js}"></script>
 </body>
 </html>
