@@ -140,35 +140,33 @@ public class OrderService {
         }
         orderItemRepository.saveAll(items);
 
-        // Inventory: if order is COMPLETED, validate and deduct stock for tracked products
-        if (order.getStatus() == Order.OrderStatus.COMPLETED) {
-            // Validate first
-            for (OrderItem oi : items) {
-                if (oi.getProduct() == null || oi.getQuantity() == null) continue;
-                Long pid = oi.getProduct().getId();
-                if (pid == null) continue;
-                final int qty = oi.getQuantity();
-                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
-                    if (Boolean.TRUE.equals(p.getIsTracked())) {
-                        int onHand = p.getOnHand() != null ? p.getOnHand() : 0;
-                        if (onHand < qty) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
-                    }
-                });
-            }
-            // Deduct
-            for (OrderItem oi : items) {
-                if (oi.getProduct() == null || oi.getQuantity() == null) continue;
-                Long pid = oi.getProduct().getId();
-                if (pid == null) continue;
-                final int qty = oi.getQuantity();
-                productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
-                    if (Boolean.TRUE.equals(p.getIsTracked())) {
-                        int onHand = p.getOnHand() != null ? p.getOnHand() : 0;
-                        p.setOnHand(onHand - qty);
-                        productRepository.save(p);
-                    }
-                });
-            }
+        // Inventory adjustments independent of order status on create
+        // Validate first for tracked products
+        for (OrderItem oi : items) {
+            if (oi.getProduct() == null || oi.getQuantity() == null) continue;
+            Long pid = oi.getProduct().getId();
+            if (pid == null) continue;
+            final int qty = oi.getQuantity();
+            productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                if (Boolean.TRUE.equals(p.getIsTracked())) {
+                    int onHand = p.getOnHand() != null ? p.getOnHand() : 0;
+                    if (onHand < qty) throw new IllegalStateException("Insufficient stock for product " + (p.getSku()!=null?p.getSku():p.getName()));
+                }
+            });
+        }
+        // Deduct stock for tracked products
+        for (OrderItem oi : items) {
+            if (oi.getProduct() == null || oi.getQuantity() == null) continue;
+            Long pid = oi.getProduct().getId();
+            if (pid == null) continue;
+            final int qty = oi.getQuantity();
+            productRepository.findWithLockByIdAndCompany_Id(pid, companyId).ifPresent(p -> {
+                if (Boolean.TRUE.equals(p.getIsTracked())) {
+                    int onHand = p.getOnHand() != null ? p.getOnHand() : 0;
+                    p.setOnHand(onHand - qty);
+                    productRepository.save(p);
+                }
+            });
         }
         return saved;
     }
