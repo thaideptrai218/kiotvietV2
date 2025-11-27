@@ -181,6 +181,7 @@
                                 <th style="width:38px"><input type="checkbox" id="chkAll"
                                         title="Select current page only"></th>
 
+                                <th style="width: 50px;">Image</th>
                                 <th data-sort="sku" data-col="sku" class="sortable" aria-sort="none">
                                     <span>SKU <i class="sort-icon"></i></span>
                                 </th>
@@ -244,19 +245,47 @@
                 <div class="modal-body">
                     <form id="frm">
                         <input type="hidden" id="productId">
+                        <input type="hidden" id="productImageUrl">
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">SKU *</label>
-                                <input id="productSku" class="form-control" maxlength="50" required>
+                            <!-- Image Upload Section -->
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Product Image</label>
+                                    <div class="image-upload-container text-center border rounded p-3 bg-light position-relative">
+                                        <div id="imagePreview" class="mb-2">
+                                            <i class="fas fa-image text-muted fa-3x"></i>
+                                        </div>
+                                        <img id="imgDisplay" src="" class="img-fluid rounded d-none" style="max-height: 150px; object-fit: contain;">
+                                        <div class="mt-2">
+                                            <label for="fileImage" class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="fas fa-upload me-1"></i> Choose
+                                            </label>
+                                            <input type="file" id="fileImage" class="d-none" accept="image/*">
+                                        </div>
+                                        <button type="button" id="btnRemoveImage" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 d-none" title="Remove image">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Barcode</label>
-                                <input id="productBarcode" class="form-control" maxlength="100">
+
+                            <div class="col-md-9">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">SKU *</label>
+                                        <input id="productSku" class="form-control" maxlength="50" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Barcode</label>
+                                        <input id="productBarcode" class="form-control" maxlength="100">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                                        <input id="productName" class="form-control" maxlength="255" required>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label">Product Name <span class="text-danger">*</span></label>
-                                <input id="productName" class="form-control" maxlength="255" required>
-                            </div>
+
                             <div class="col-12">
                                 <label class="form-label">Description</label>
                                 <textarea id="productDescription" class="form-control" rows="3"></textarea>

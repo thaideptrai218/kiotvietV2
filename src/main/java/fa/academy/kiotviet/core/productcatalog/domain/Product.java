@@ -70,6 +70,9 @@ public class Product {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "image")
+    private String image;
+
     @NotNull(message = "Selling price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Selling price must be greater than 0")
     @Digits(integer = 10, fraction = 2, message = "Selling price must have up to 10 digits and 2 decimal places")

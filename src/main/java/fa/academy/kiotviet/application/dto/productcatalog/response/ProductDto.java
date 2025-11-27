@@ -24,6 +24,7 @@ public class ProductDto {
     private String name;
     private String barcode;
     private String description;
+    private String image;
     private BigDecimal sellingPrice;
     private BigDecimal costPrice;
     private BigDecimal profitAmount;

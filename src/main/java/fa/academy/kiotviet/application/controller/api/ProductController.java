@@ -9,12 +9,14 @@ import fa.academy.kiotviet.application.service.ResponseFactory;
 import fa.academy.kiotviet.core.productcatalog.domain.Product;
 import fa.academy.kiotviet.core.productcatalog.service.ProductService;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
+import fa.academy.kiotviet.infrastructure.storage.FileStorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final FileStorageService fileStorageService;
 
     /**
      * Get products with pagination, filtering, and sorting
@@ -76,6 +79,16 @@ public class ProductController {
         Long companyId = currentCompanyId();
         ProductDto product = productService.create(companyId, request);
         return ResponseFactory.created(product, "Product created successfully");
+    }
+
+    /**
+     * Upload product image
+     */
+    @PostMapping("/upload-image")
+    public SuccessResponse<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        Long companyId = currentCompanyId();
+        String imageUrl = fileStorageService.storeProductImage(companyId, file);
+        return ResponseFactory.success(imageUrl, "Image uploaded successfully");
     }
 
     /**

@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -54,34 +55,62 @@ public class FileStorageService {
 
         Path target = companyDir.resolve("logo.png");
         try {
-            BufferedImage image;
-            try (InputStream inputStream = file.getInputStream()) {
-                image = ImageIO.read(inputStream);
-            }
-            if (image == null) {
-                throw new IllegalArgumentException("Invalid image file");
-            }
-            try (OutputStream outputStream = Files.newOutputStream(
-                    target,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING,
-                    StandardOpenOption.WRITE)) {
-                ImageIO.write(image, "png", outputStream);
-            }
+            saveImage(file, target);
         } catch (IOException e) {
             log.error("Failed to store company logo for id {}", companyId, e);
             throw new IllegalStateException("Failed to store company logo", e);
         }
 
-        return buildPublicUrl(companyId);
+        return buildPublicUrl("/company/" + companyId + "/logo.png");
+    }
+
+    public String storeProductImage(Long companyId, MultipartFile file) {
+        validateLogo(file); // Reuse validation for now (2MB, png/jpg)
+
+        Path productsDir = rootLocation.resolve("products").resolve(String.valueOf(companyId));
+        try {
+            Files.createDirectories(productsDir);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not create directory for product images", e);
+        }
+
+        String filename = UUID.randomUUID().toString() + ".png"; // Force PNG for consistency or keep original? 
+        // ImageIO.write(image, "png", ...) converts to PNG. So filename should be .png
+        
+        Path target = productsDir.resolve(filename);
+        try {
+            saveImage(file, target);
+        } catch (IOException e) {
+            log.error("Failed to store product image for company {}", companyId, e);
+            throw new IllegalStateException("Failed to store product image", e);
+        }
+
+        return buildPublicUrl("/products/" + companyId + "/" + filename);
+    }
+
+    private void saveImage(MultipartFile file, Path target) throws IOException {
+        BufferedImage image;
+        try (InputStream inputStream = file.getInputStream()) {
+            image = ImageIO.read(inputStream);
+        }
+        if (image == null) {
+            throw new IllegalArgumentException("Invalid image file");
+        }
+        try (OutputStream outputStream = Files.newOutputStream(
+                target,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE)) {
+            ImageIO.write(image, "png", outputStream);
+        }
     }
 
     private void validateLogo(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Logo file is required");
+            throw new IllegalArgumentException("File is required");
         }
         if (file.getSize() > MAX_LOGO_SIZE) {
-            throw new IllegalArgumentException("Logo file must be 2 MB or smaller");
+            throw new IllegalArgumentException("File must be 2 MB or smaller");
         }
         String contentType = file.getContentType();
         if (contentType != null) {
@@ -102,16 +131,16 @@ public class FileStorageService {
         return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg");
     }
 
-    private String buildPublicUrl(Long companyId) {
-        String relativePath = UPLOADS_PREFIX + "/company/" + companyId + "/logo.png";
+    private String buildPublicUrl(String relativePath) {
+        String fullPath = UPLOADS_PREFIX + relativePath;
         if (publicBaseUrl.isBlank()) {
-            return relativePath;
+            return fullPath;
         }
         String base = stripTrailingSlashes(publicBaseUrl);
         if (base.endsWith(UPLOADS_PREFIX)) {
-            return base + relativePath.substring(UPLOADS_PREFIX.length());
+            return base + relativePath;
         }
-        return base + relativePath;
+        return base + fullPath;
     }
 
     private String stripTrailingSlashes(String value) {

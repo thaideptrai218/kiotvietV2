@@ -79,7 +79,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/mfa/verify").permitAll()
 
                 // Permit static resources
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico").permitAll()
 
                 // Permit public web pages
                 .requestMatchers("/", "/home", "/about", "/landing").permitAll()
