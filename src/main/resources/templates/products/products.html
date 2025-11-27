@@ -52,7 +52,12 @@
                     
 
                     <div class="kv-filter__group">
-                        <label class="kv-filter__label">Category</label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="kv-filter__label mb-0">Category</label>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageCategory" style="font-size: 0.85rem;">
+                                <i class="fas fa-cog me-1"></i>Manage
+                            </button>
+                        </div>
                         <div class="kv-autocomplete">
                             <input id="categoryId" type="text" class="kv-input" placeholder="Search category..." autocomplete="off">
                             <button type="button" class="kv-autocomplete__clear" aria-label="Clear category" title="Clear category">
@@ -63,7 +68,12 @@
                     </div>
 
                     <div class="kv-filter__group">
-                        <label class="kv-filter__label">Brand</label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="kv-filter__label mb-0">Brand</label>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageBrand" style="font-size: 0.85rem;">
+                                <i class="fas fa-cog me-1"></i>Manage
+                            </button>
+                        </div>
                         <div class="kv-autocomplete">
                             <input id="brandId" type="text" class="kv-input" placeholder="Search brand..." autocomplete="off">
                             <button type="button" class="kv-autocomplete__clear" aria-label="Clear brand" title="Clear brand">
@@ -74,7 +84,12 @@
                     </div>
 
                     <div class="kv-filter__group">
-                        <label class="kv-filter__label">Supplier</label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="kv-filter__label mb-0">Supplier</label>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageSupplier" style="font-size: 0.85rem;">
+                                <i class="fas fa-cog me-1"></i>Manage
+                            </button>
+                        </div>
                         <div class="kv-autocomplete">
                             <input id="supplierId" type="text" class="kv-input" placeholder="Search supplier..." autocomplete="off">
                             <button type="button" class="kv-autocomplete__clear" aria-label="Clear supplier" title="Clear supplier">
@@ -390,6 +405,176 @@
                     <button class="kv-btn kv-btn--primary" id="btnImportUpload">
                         <i class="fas fa-upload me-1"></i>Upload
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Manage Categories -->
+    <div class="modal fade" id="categoryManageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title">Manage Categories</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- List View -->
+                    <div id="cat-list-view" class="p-3">
+                        <div class="d-flex justify-content-between mb-3">
+                            <input type="text" class="form-control form-control-sm me-2" id="cat-search" placeholder="Search categories...">
+                            <button class="kv-btn kv-btn--primary kv-btn--sm" id="cat-btn-add">
+                                <i class="fas fa-plus"></i> New
+                            </button>
+                        </div>
+                        <div class="list-group list-group-flush border rounded overflow-auto" style="max-height: 400px;" id="cat-list">
+                            <!-- Items will be loaded here -->
+                            <div class="text-center p-3 text-muted">Loading...</div>
+                        </div>
+                    </div>
+
+                    <!-- Form View (Hidden by default) -->
+                    <div id="cat-form-view" class="d-none p-3">
+                        <h6 class="mb-3 border-bottom pb-2" id="cat-form-title">Create Category</h6>
+                        <form id="cat-form">
+                            <input type="hidden" id="cat-id">
+                            <div class="mb-3">
+                                <label class="form-label small">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="cat-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Parent Category</label>
+                                <select class="form-select form-select-sm" id="cat-parent">
+                                    <option value="">None (Root)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Description</label>
+                                <textarea class="form-control form-control-sm" id="cat-desc" rows="2"></textarea>
+                            </div>
+                            <div class="alert alert-danger d-none small" id="cat-err"></div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="kv-btn kv-btn--ghost kv-btn--sm" id="cat-btn-cancel">Cancel</button>
+                                <button type="submit" class="kv-btn kv-btn--primary kv-btn--sm" id="cat-btn-save">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Manage Brands -->
+    <div class="modal fade" id="brandManageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title">Manage Brands</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- List View -->
+                    <div id="brand-list-view" class="p-3">
+                        <div class="d-flex justify-content-between mb-3">
+                            <input type="text" class="form-control form-control-sm me-2" id="brand-search" placeholder="Search brands...">
+                            <button class="kv-btn kv-btn--primary kv-btn--sm" id="brand-btn-add">
+                                <i class="fas fa-plus"></i> New
+                            </button>
+                        </div>
+                        <div class="list-group list-group-flush border rounded overflow-auto" style="max-height: 400px;" id="brand-list">
+                            <div class="text-center p-3 text-muted">Loading...</div>
+                        </div>
+                    </div>
+
+                    <!-- Form View -->
+                    <div id="brand-form-view" class="d-none p-3">
+                        <h6 class="mb-3 border-bottom pb-2" id="brand-form-title">Create Brand</h6>
+                        <form id="brand-form">
+                            <input type="hidden" id="brand-id">
+                            <div class="mb-3">
+                                <label class="form-label small">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="brand-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Website</label>
+                                <input type="url" class="form-control form-control-sm" id="brand-website">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Description</label>
+                                <textarea class="form-control form-control-sm" id="brand-desc" rows="2"></textarea>
+                            </div>
+                            <div class="alert alert-danger d-none small" id="brand-err"></div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="kv-btn kv-btn--ghost kv-btn--sm" id="brand-btn-cancel">Cancel</button>
+                                <button type="submit" class="kv-btn kv-btn--primary kv-btn--sm" id="brand-btn-save">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Manage Suppliers -->
+    <div class="modal fade" id="supplierManageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title">Manage Suppliers</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- List View -->
+                    <div id="supp-list-view" class="p-3">
+                        <div class="d-flex justify-content-between mb-3">
+                            <input type="text" class="form-control form-control-sm me-2" id="supp-search" placeholder="Search suppliers...">
+                            <button class="kv-btn kv-btn--primary kv-btn--sm" id="supp-btn-add">
+                                <i class="fas fa-plus"></i> New
+                            </button>
+                        </div>
+                        <div class="list-group list-group-flush border rounded overflow-auto" style="max-height: 400px;" id="supp-list">
+                            <div class="text-center p-3 text-muted">Loading...</div>
+                        </div>
+                    </div>
+
+                    <!-- Form View -->
+                    <div id="supp-form-view" class="d-none p-3">
+                        <h6 class="mb-3 border-bottom pb-2" id="supp-form-title">Create Supplier</h6>
+                        <form id="supp-form">
+                            <input type="hidden" id="supp-id">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="supp-name" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Tax Code</label>
+                                    <input type="text" class="form-control form-control-sm" id="supp-tax">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Contact Person</label>
+                                    <input type="text" class="form-control form-control-sm" id="supp-contact">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Phone</label>
+                                    <input type="text" class="form-control form-control-sm" id="supp-phone">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Email</label>
+                                    <input type="email" class="form-control form-control-sm" id="supp-email">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small">Address</label>
+                                    <input type="text" class="form-control form-control-sm" id="supp-address">
+                                </div>
+                            </div>
+                            <div class="alert alert-danger d-none small mt-2" id="supp-err"></div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="kv-btn kv-btn--ghost kv-btn--sm" id="supp-btn-cancel">Cancel</button>
+                                <button type="submit" class="kv-btn kv-btn--primary kv-btn--sm" id="supp-btn-save">Save</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
