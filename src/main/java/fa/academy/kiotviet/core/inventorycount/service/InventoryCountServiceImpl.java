@@ -13,6 +13,7 @@ import fa.academy.kiotviet.application.mapper.inventorycount.InventoryCountMappe
 import fa.academy.kiotviet.core.inventorycount.domain.InventoryCount;
 import fa.academy.kiotviet.core.inventorycount.domain.InventoryCountItem;
 import fa.academy.kiotviet.core.inventorycount.domain.InventoryCountStatus;
+import fa.academy.kiotviet.core.productcatalog.service.ProductService;
 import fa.academy.kiotviet.core.inventorycount.repository.InventoryCountItemRepository;
 import fa.academy.kiotviet.core.inventorycount.repository.InventoryCountRepository;
 import fa.academy.kiotviet.core.inventorycount.repository.InventoryCountSpecifications;
@@ -50,6 +51,7 @@ public class InventoryCountServiceImpl implements InventoryCountService {
     private final InventoryCountItemRepository inventoryCountItemRepository;
     private final InventoryCountMapper inventoryCountMapper;
     private final InventoryCountCodeGenerator inventoryCountCodeGenerator;
+    private final ProductService productService;
 
     @Override
     @Transactional(readOnly = true)
@@ -138,11 +140,15 @@ public class InventoryCountServiceImpl implements InventoryCountService {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Inventory count item not found", "INVENTORY_COUNT_ITEM_NOT_FOUND"));
 
+        Integer previousCounted = item.getCounted();
         item.setCounted(request.getCounted());
         recalculateItem(item);
         recalculateTotals(inventoryCount);
 
         InventoryCount saved = inventoryCountRepository.save(inventoryCount);
+        if (!Objects.equals(previousCounted, item.getCounted())) {
+            syncProductStockIfActive(inventoryCount, item);
+        }
         return inventoryCountMapper.toResponse(saved, true);
     }
 
@@ -150,10 +156,12 @@ public class InventoryCountServiceImpl implements InventoryCountService {
     public InventoryCountResponse addItem(Long companyId, Long inventoryCountId, InventoryCountItemRequest request) {
         InventoryCount inventoryCount = fetchAggregate(companyId, inventoryCountId);
 
-        inventoryCount.addItem(toEntity(request, companyId, inventoryCount));
+        InventoryCountItem newItem = toEntity(request, companyId, inventoryCount);
+        inventoryCount.addItem(newItem);
         recalculateTotals(inventoryCount);
 
         InventoryCount saved = inventoryCountRepository.save(inventoryCount);
+        syncProductStockIfActive(inventoryCount, newItem);
         return inventoryCountMapper.toResponse(saved, true);
     }
 
@@ -179,6 +187,7 @@ public class InventoryCountServiceImpl implements InventoryCountService {
         inventoryCount.setCompletedAt(LocalDateTime.now());
 
         InventoryCount saved = inventoryCountRepository.save(inventoryCount);
+        syncAllProductStocks(inventoryCount);
         return inventoryCountMapper.toResponse(saved, true);
     }
 
@@ -411,5 +420,19 @@ public class InventoryCountServiceImpl implements InventoryCountService {
         if (item.getDiffCost() == null) {
             item.setDiffCost(BigDecimal.ZERO);
         }
+    }
+
+    private void syncAllProductStocks(InventoryCount inventoryCount) {
+        for (InventoryCountItem item : inventoryCount.getItems()) {
+            syncProductStockIfActive(inventoryCount, item);
+        }
+    }
+
+    private void syncProductStockIfActive(InventoryCount inventoryCount, InventoryCountItem item) {
+        if (inventoryCount.getStatus() == InventoryCountStatus.DRAFT) {
+            return;
+        }
+        int counted = item.getCounted() != null ? item.getCounted() : 0;
+        productService.updateCurrentStock(item.getProductId(), counted);
     }
 }
