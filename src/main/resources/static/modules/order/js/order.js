@@ -667,9 +667,11 @@ function format(d) {
     btnRefresh: document.getElementById('btnRefresh'),
     pageInfo: document.getElementById('pageInfo'),
     sizeSel: document.getElementById('sizeSel'),
-    pagi: document.getElementById('pagi')
+    pagi: document.getElementById('pagi'),
+    hdrSearch: document.getElementById('hdrSearch'),
+    hdrSearchIcon: document.querySelector('#hdrNormal .kv-input-search i'),
+    status: document.getElementById('status')
   };
-  els.status = document.getElementById('status');
 
   const state = {
     page: 0,
@@ -679,8 +681,18 @@ function format(d) {
     loading: false,
     fromDate: null,
     toDate: null,
-    status: ''
+    status: '',
+    q: ''
   };
+
+  // Debounce helper
+  function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(null, args), wait);
+    };
+  }
 
   function fmtMoney(v) {
     try {
@@ -794,6 +806,7 @@ function format(d) {
       if (state.fromDate) url += `&fromDate=${encodeURIComponent(state.fromDate)}`;
       if (state.toDate) url += `&toDate=${encodeURIComponent(state.toDate)}`;
       if (state.status) url += `&status=${encodeURIComponent(state.status)}`;
+      if (state.q) url += `&q=${encodeURIComponent(state.q)}`;
       const res = await fetch(url, { headers: api.headers() });
       if (!res.ok) throw new Error(`Failed to load orders: ${res.status}`);
       const body = await res.json();
@@ -816,6 +829,29 @@ function format(d) {
     els.btnRefresh?.addEventListener('click', (e) => { e.preventDefault(); load(); });
     els.sizeSel?.addEventListener('change', () => { state.size = parseInt(els.sizeSel.value, 10) || 25; state.page = 0; load(); });
     els.status?.addEventListener('change', () => { state.page = 0; state.status = els.status.value || ''; load(); });
+    // Search by order code: Enter
+    els.hdrSearch?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        state.page = 0;
+        state.q = (els.hdrSearch.value || '').trim();
+        load();
+      }
+    });
+    // Search-as-you-type (debounced)
+    const doSearch = debounce(() => {
+      state.page = 0;
+      state.q = (els.hdrSearch.value || '').trim();
+      load();
+    }, 300);
+    els.hdrSearch?.addEventListener('input', doSearch);
+    // Click on search icon triggers search
+    els.hdrSearchIcon?.addEventListener('click', (e) => {
+      e.preventDefault();
+      state.page = 0;
+      state.q = (els.hdrSearch.value || '').trim();
+      load();
+    });
     els.pagi?.addEventListener('click', (e) => {
       const a = e.target.closest('a');
       if (!a) return;
@@ -835,6 +871,10 @@ function format(d) {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     state.fromDate = `${firstOfMonth.getFullYear()}-${String(firstOfMonth.getMonth()+1).padStart(2,'0')}-${String(firstOfMonth.getDate()).padStart(2,'0')}`;
     state.toDate = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth()+1).padStart(2,'0')}-${String(endOfMonth.getDate()).padStart(2,'0')}`;
+    // Initialize q from existing input value
+    if (els.hdrSearch && els.hdrSearch.value) {
+      state.q = (els.hdrSearch.value || '').trim();
+    }
     bindEvents();
     load();
   });
