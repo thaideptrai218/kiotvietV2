@@ -15,6 +15,8 @@ import java.util.List;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> findByOrder_IdAndCompany_Id(Long orderId, Long companyId);
 
+    void deleteByOrder_IdAndCompany_Id(Long orderId, Long companyId);
+
     @Query("select oi.product as product, sum(oi.quantity) as totalSold, sum(oi.total) as totalRevenue " +
             "from OrderItem oi where oi.order.company.id = :companyId and oi.order.status = 'COMPLETED' " +
             "group by oi.product order by totalRevenue desc")
