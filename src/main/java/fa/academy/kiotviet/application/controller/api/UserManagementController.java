@@ -234,13 +234,13 @@ public class UserManagementController {
     }
 
     private UserInfo.UserRole parseRole(String role) {
-        if (!StringUtils.hasText(role)) {
+        if (!StringUtils.hasText(role) || "all".equalsIgnoreCase(role.trim())) {
             return null;
         }
         try {
             return UserInfo.UserRole.fromValue(role.trim());
         } catch (IllegalArgumentException ex) {
-            throw new BusinessRuleException("Invalid role filter", "ROLE_INVALID");
+            throw new BusinessRuleException("Invalid role filter: " + role, "ROLE_INVALID");
         }
     }
 

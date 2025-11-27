@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - KiotViet</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}">
-  <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
-  <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
-  </head>
+    <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
+    <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
+</head>
 <body>
     <!-- Header Component -->
     <div th:replace="~{common/header :: dashboardHeader}"></div>
@@ -17,36 +17,220 @@
 
     <!-- Main Dashboard Content -->
     <main class="dashboard-content" th:attr="data-username=${username}">
-        <div class="welcome-section">
-            <h1>Welcome to KiotViet Dashboard</h1>
-            <p th:text="'Hello, ' + ${username} + '!'">Hello, User!</p>
-        </div>
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <div class="welcome-header">
+                <div class="welcome-text">
+                    <h1>Welcome to KiotViet Dashboard</h1>
+                    <p th:text="'Hello, ' + ${username} + '!'">Hello, User!</p>
+                    <p class="welcome-subtitle">Manage your business with powerful analytics and insights</p>
+                </div>
+                <div class="welcome-actions">
+                    <a href="/dashboard/revenue" class="btn btn-primary btn-large">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Revenue Analytics</span>
+                    </a>
+                    <a href="/products" class="btn btn-secondary btn-large">
+                        <i class="fas fa-box"></i>
+                        <span>Manage Products</span>
+                    </a>
+                </div>
+            </div>
+        </section>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>0</h3>
-                <p>Total Products</p>
+        <!-- Quick Stats Overview -->
+        <section class="quick-stats-section">
+            <div class="section-header">
+                <h2>Business Overview</h2>
+                <p class="section-description">Real-time insights into your business performance</p>
             </div>
-            <div class="stat-card">
-                <h3>0</h3>
-                <p>Categories</p>
+            <div class="stats-grid">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="totalProducts">0</h3>
+                        <p class="stat-label">Total Products</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>12% from last month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="totalCategories">0</h3>
+                        <p class="stat-label">Categories</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>3 new this month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-info">
+                    <div class="stat-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="totalSuppliers">0</h3>
+                        <p class="stat-label">Suppliers</p>
+                        <div class="stat-change neutral">
+                            <i class="fas fa-minus"></i>
+                            <span>No change</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="totalInventory">0</h3>
+                        <p class="stat-label">Inventory Items</p>
+                        <div class="stat-change warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>8 low stock items</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3>0</h3>
-                <p>Suppliers</p>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions-section">
+            <div class="section-header">
+                <h2>Quick Actions</h2>
+                <p class="section-description">Common tasks and shortcuts</p>
             </div>
-            <div class="stat-card">
-                <h3>0</h3>
-                <p>Inventory Items</p>
+            <div class="actions-grid">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h3>Add Product</h3>
+                    <p>Add new products to your inventory</p>
+                    <a href="/products/new" class="btn btn-outline">Add Product</a>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h3>Create Order</h3>
+                    <p>Create new sales orders</p>
+                    <a href="/orders/new" class="btn btn-outline">Create Order</a>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Manage Customers</h3>
+                    <p>View and manage customer information</p>
+                    <a href="/customers" class="btn btn-outline">View Customers</a>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>View Reports</h3>
+                    <p>Generate detailed business reports</p>
+                    <a href="/dashboard/revenue" class="btn btn-outline">View Reports</a>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="recent-activity-section">
+            <div class="section-header">
+                <h2>Recent Activity</h2>
+                <p class="section-description">Latest updates from your business</p>
+            </div>
+            <div class="activity-grid">
+                <div class="activity-card">
+                    <div class="activity-icon activity-icon-order">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>New Order Created</h4>
+                        <p>Order #ORD-001 has been created successfully</p>
+                        <span class="activity-time">2 minutes ago</span>
+                    </div>
+                </div>
+                <div class="activity-card">
+                    <div class="activity-icon activity-icon-product">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Product Added</h4>
+                        <p>New product "Laptop Pro X1" added to inventory</p>
+                        <span class="activity-time">1 hour ago</span>
+                    </div>
+                </div>
+                <div class="activity-card">
+                    <div class="activity-icon activity-icon-supplier">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Supplier Updated</h4>
+                        <p>Supplier information updated for Tech Supplies Inc</p>
+                        <span class="activity-time">3 hours ago</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Business Insights -->
+        <section class="insights-section">
+            <div class="section-header">
+                <h2>Business Insights</h2>
+                <p class="section-description">Key metrics and performance indicators</p>
+            </div>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <h3>Top Selling Category</h3>
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="insight-content">
+                        <p class="insight-value">Electronics</p>
+                        <p class="insight-description">42% of total sales this month</p>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <h3>Average Order Value</h3>
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="insight-content">
+                        <p class="insight-value">₫2,450,000</p>
+                        <p class="insight-description">Up 8% from last month</p>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <h3>Customer Satisfaction</h3>
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="insight-content">
+                        <p class="insight-value">4.8/5.0</p>
+                        <p class="insight-description">Based on 127 reviews</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
+    <!-- Enhanced Dashboard JavaScript -->
     <script>
         // Dashboard initialization
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard loaded');
             loadUserInfo();
+            initializeDashboardData();
+            animateStatCards();
         });
 
         // User Dropdown functionality
@@ -74,11 +258,9 @@
 
         // Load user information
         function loadUserInfo() {
-            // Try to get username from the page first (passed from controller)
             const usernameElement = document.querySelector('[data-username]');
             const username = usernameElement ? usernameElement.getAttribute('data-username') : null;
 
-            // For now, use a simple approach since we're using form-based authentication
             updateUserInfo({
                 username: username || 'Demo User',
                 email: 'demo@kiotviet.com',
@@ -95,6 +277,80 @@
             if (userName) userName.textContent = user.username || user.fullName || 'User';
             if (userEmail) userEmail.textContent = user.email || 'No email';
             if (userRole) userRole.textContent = `Role: ${user.role || 'USER'}`;
+        }
+
+        // Initialize dashboard data from API
+        async function initializeDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/statistics');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboardStats(data);
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                // Use mock data as fallback
+                updateDashboardStats(getMockDashboardData());
+            }
+        }
+
+        // Update dashboard statistics
+        function updateDashboardStats(data) {
+            animateValue('totalProducts', 0, data.totalProducts || 0, 1500);
+            animateValue('totalCategories', 0, data.totalCategories || 0, 1500);
+            animateValue('totalSuppliers', 0, data.totalSuppliers || 0, 1500);
+            animateValue('totalInventory', 0, data.totalInventoryItems || 0, 1500);
+        }
+
+        // Mock dashboard data for development
+        function getMockDashboardData() {
+            return {
+                totalProducts: 1247,
+                totalCategories: 18,
+                totalSuppliers: 45,
+                totalInventoryItems: 8934
+            };
+        }
+
+        // Animate number counting
+        function animateValue(id, start, end, duration) {
+            const element = document.getElementById(id);
+            if (!element) return;
+
+            const startTime = performance.now();
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const value = Math.floor(start + (end - start) * easeOutQuad(progress));
+                element.textContent = value.toLocaleString('vi-VN');
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            };
+
+            requestAnimationFrame(animate);
+        }
+
+        // Easing function for smooth animations
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+
+        // Animate stat cards on load
+        function animateStatCards() {
+            const cards = document.querySelectorAll('.stat-card, .action-card, .activity-card, .insight-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
         }
 
         // Helper function to get cookies
@@ -120,8 +376,7 @@
         function openFeedbackModal() {
             alert('Feedback - Coming soon!');
         }
-
-      </script>
+    </script>
 
     <!-- Dashboard Core JavaScript -->
     <script th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>

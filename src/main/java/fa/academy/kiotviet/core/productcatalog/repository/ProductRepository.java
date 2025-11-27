@@ -50,6 +50,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findByCompany_IdAndIsTrackedTrue(Long companyId);
 
+    long countByCompanyId(Long companyId);
+
+    long countByCompanyIdAndIsTrackedTrue(Long companyId);
+
     // Category-based queries
     List<Product> findByCompany_IdAndCategoryId(Long companyId, Long categoryId);
 
@@ -151,6 +155,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("select count(p) from Product p where p.company.id = :companyId and p.onHand = 0")
     long countOutOfStockProducts(@Param("companyId") Long companyId);
+
+    @Query("select sum(p.onHand * p.sellingPrice) from Product p where p.company.id = :companyId")
+    java.math.BigDecimal getTotalInventoryValue(@Param("companyId") Long companyId);
 
     @Query("select count(p) from Product p where p.company.id = :companyId and p.isTracked = true and p.onHand <= p.minLevel")
     long countLowStockProducts(@Param("companyId") Long companyId);

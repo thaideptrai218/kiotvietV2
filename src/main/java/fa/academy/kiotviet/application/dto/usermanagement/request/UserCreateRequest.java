@@ -30,7 +30,7 @@ public class UserCreateRequest {
     private String phone;
 
     @NotBlank(message = "Role is required")
-    private String role = "User";
+    private String role = "user";
 
     @NotBlank(message = "Status is required")
     private String status = "Active";
