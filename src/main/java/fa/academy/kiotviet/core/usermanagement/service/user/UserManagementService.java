@@ -224,7 +224,7 @@ public class UserManagementService {
         try {
             return UserRole.fromValue(role.trim());
         } catch (IllegalArgumentException ex) {
-            throw new BusinessRuleException("Invalid role value", "ROLE_INVALID");
+            throw new BusinessRuleException("Invalid role value: " + role, "ROLE_INVALID");
         }
     }
 

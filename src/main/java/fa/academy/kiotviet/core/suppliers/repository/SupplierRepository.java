@@ -38,4 +38,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long>, JpaSp
            " or lower(s.taxCode) like lower(concat('%', :q, '%'))) " +
            "order by s.name asc")
     List<Supplier> searchAutocomplete(@Param("companyId") Long companyId, @Param("q") String q, Pageable pageable);
+
+    // Dashboard methods
+    long countByCompanyId(Long companyId);
 }

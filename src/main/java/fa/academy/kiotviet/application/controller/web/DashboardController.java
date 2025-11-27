@@ -40,4 +40,24 @@ public class DashboardController {
 
         return "dashboard/dashboard";
     }
+
+    @GetMapping("/revenue")
+    public String revenueDashboard(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Add user information to model
+        if (authentication != null && authentication.isAuthenticated() &&
+            !"anonymousUser".equals(authentication.getPrincipal())) {
+
+            // Add user details to model if available
+            model.addAttribute("username", authentication.getName());
+
+            // If authentication contains more user details, add them too
+            if (authentication.getPrincipal() != null) {
+                model.addAttribute("userDetails", authentication.getPrincipal());
+            }
+        }
+
+        return "dashboard/dashboard-revenue";
+    }
 }
