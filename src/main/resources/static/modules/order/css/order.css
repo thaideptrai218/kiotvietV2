@@ -1967,8 +1967,8 @@ th.sortable.active.desc .sort-icon::before {
 
 .kv-order-detail__footer { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #eef2f7; margin-top: 10px; }
 .kv-order-detail__actions { display: flex; gap: 8px; }
-.kv-btn--ghost { background: transparent; border: 1px solid #e5e7eb; color: #374151; border-radius: 6px; padding: 6px 10px; }
-.kv-btn--primary { background: #0d6efd; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; }
+.kv-btn--ghost { background: transparent; border: 1px solid #e5e7eb; color: #374151; border-radius: 999px; padding: 6px 10px; }
+.kv-btn--primary { background: #0d6efd; color: #fff; border: none; border-radius: 999px; padding: 6px 12px; }
 
 .kv-slide { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
 .kv-order-detail__summary .row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; font-size: 13px; }
