@@ -278,6 +278,19 @@ public class ProductService {
         return products.stream().map(this::toDto).collect(Collectors.toList());
     }
 
+    @Transactional
+    public void updateCurrentStock(Long productId, int newStock) {
+        if (newStock < 0) {
+            throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found", "PRODUCT_NOT_FOUND"));
+
+        product.setOnHand(newStock);
+        productRepository.save(product);
+    }
+
     // Private helper methods
     private ProductDto toDto(Product product) {
         return ProductDto.builder()
