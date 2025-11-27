@@ -639,6 +639,89 @@ document.getElementById("customCancelBtn").addEventListener("click", () => {
     customPopup.classList.add("hidden");
 });
 
+// Reset date UI to default (This month) and apply to list
+try {
+  window.kvOrders = window.kvOrders || {};
+  window.kvOrders.resetDateUIToDefault = function() {
+    try {
+      const now = new Date();
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      const last = new Date(now.getFullYear(), now.getMonth()+1, 0);
+      // Radios
+      const customRadioEl = document.getElementById('customRadio');
+      if (customRadioEl) customRadioEl.checked = false;
+      const presetRadio = document.querySelector("input[name='dateRange']");
+      if (presetRadio) presetRadio.checked = true;
+      // Labels and popups
+      const label = document.getElementById('selectedDateLabel');
+      if (label) label.textContent = 'This month';
+      const customRangeLbl = document.getElementById('customRangeLabel');
+      if (customRangeLbl) customRangeLbl.textContent = 'Custom range';
+      document.getElementById('customDatePopup')?.classList.add('hidden');
+      document.getElementById('datePopup')?.classList.remove('show');
+      // Internal picker state and texts
+      if (typeof fromDate !== 'undefined') fromDate = first;
+      if (typeof toDate !== 'undefined') toDate = last;
+      // Sync calendar navigation state back to current month (day view)
+      try {
+        if (typeof currentYearFrom !== 'undefined') currentYearFrom = first.getFullYear();
+        if (typeof currentMonthFrom !== 'undefined') currentMonthFrom = first.getMonth();
+        if (typeof currentYearTo !== 'undefined') currentYearTo = last.getFullYear();
+        if (typeof currentMonthTo !== 'undefined') currentMonthTo = last.getMonth();
+        if (typeof viewModeFrom !== 'undefined') viewModeFrom = 'day';
+        if (typeof viewModeTo !== 'undefined') viewModeTo = 'day';
+      } catch {}
+      const fromText = document.getElementById('fromDateText');
+      const toText = document.getElementById('toDateText');
+      try { if (fromText) fromText.textContent = format(first); } catch {}
+      try { if (toText) toText.textContent = format(last); } catch {}
+      // Re-render calendars
+      try { if (typeof renderView === 'function') { renderView('from'); renderView('to'); } } catch {}
+      // Highlight preset item
+      try {
+        document.querySelectorAll('#datePopup .popup-item').forEach(i => i.classList.remove('selected'));
+        const item = Array.from(document.querySelectorAll('#datePopup .popup-item')).find(i => (i.textContent||'').toLowerCase().includes('this month'));
+        if (item) item.classList.add('selected');
+      } catch {}
+      // Apply to list
+      const fromIso = `${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(first.getDate()).padStart(2,'0')}`;
+      const toIso = `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+      if (window.kvOrders && typeof window.kvOrders.setDateRange === 'function') {
+        window.kvOrders.setDateRange(fromIso, toIso);
+      }
+    } catch {}
+  };
+  // Reset to All time: clear any date selection and show full data
+  window.kvOrders.resetDateUIToAllTime = function() {
+    try {
+      // Uncheck both radios
+      try {
+        const presetRadio = document.querySelector("input[name='dateRange']");
+        const customRadioEl = document.getElementById('customRadio');
+        if (presetRadio) presetRadio.checked = false;
+        if (customRadioEl) customRadioEl.checked = false;
+      } catch {}
+      // Labels
+      try {
+        const lbl = document.getElementById('selectedDateLabel');
+        if (lbl) lbl.textContent = 'All time';
+        const customLbl = document.getElementById('customRangeLabel');
+        if (customLbl) customLbl.textContent = 'Custom range';
+      } catch {}
+      // Hide popups
+      document.getElementById('customDatePopup')?.classList.add('hidden');
+      document.getElementById('datePopup')?.classList.remove('show');
+      // Clear internal picker values (keep calendar nav as-is)
+      try { if (typeof fromDate !== 'undefined') fromDate = null; } catch {}
+      try { if (typeof toDate !== 'undefined') toDate = null; } catch {}
+      // Apply no date filter to list
+      if (window.kvOrders && typeof window.kvOrders.setDateRange === 'function') {
+        window.kvOrders.setDateRange(null, null);
+      }
+    } catch {}
+  };
+} catch {}
+
 /* =====================================================
    FORMAT DATE
 ===================================================== */
@@ -861,6 +944,44 @@ function format(d) {
       if (nav === 'prev' && state.page > 0) { state.page -= 1; load(); }
       else if (nav === 'next' && state.page < state.totalPages - 1) { state.page += 1; load(); }
       else if (p != null) { state.page = parseInt(p, 10) || 0; load(); }
+    });
+
+    // Apply/Clear filters (match Purchases behavior)
+    const btnApply = document.getElementById('btnApplyFilters');
+    const btnClear = document.getElementById('btnClearFilters');
+    btnApply?.addEventListener('click', () => {
+      state.page = 0;
+      state.status = els.status?.value || '';
+      state.q = (els.hdrSearch?.value || '').trim();
+      load();
+    });
+    btnClear?.addEventListener('click', () => {
+      // Reset inputs
+      if (els.status) els.status.value = '';
+      if (els.hdrSearch) els.hdrSearch.value = '';
+      // Clear all text/number inputs inside the filter form (Customer, Cashier, Phone, etc.)
+      try {
+        const filterForm = document.querySelector('.kv-filter__form');
+        if (filterForm) {
+          filterForm.querySelectorAll("input[type='text'], input[type='number'], select").forEach((el) => {
+            if (el.id === 'status') return; // handled above
+            el.value = '';
+          });
+        }
+      } catch {}
+      // Reset date UI and reload
+      try { if (window.kvOrders && typeof window.kvOrders.resetDateUIToDefault === 'function') { window.kvOrders.resetDateUIToDefault(); return; } } catch {}
+      // Fallback: default month
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      state.fromDate = `${firstOfMonth.getFullYear()}-${String(firstOfMonth.getMonth()+1).padStart(2,'0')}-${String(firstOfMonth.getDate()).padStart(2,'0')}`;
+      state.toDate = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth()+1).padStart(2,'0')}-${String(endOfMonth.getDate()).padStart(2,'0')}`;
+      state.status = '';
+      state.q = '';
+      state.page = 0;
+      try { document.getElementById('selectedDateLabel').textContent = 'This month'; } catch {}
+      load();
     });
   }
 

@@ -37,10 +37,22 @@ public class OrderApiController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate
+            @RequestParam(required = false) String toDate,
+            // Purchases-style aliases
+            @RequestParam(required = false, name = "search") String search,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false, name = "from") java.time.LocalDate from,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false, name = "to") java.time.LocalDate to
     ) {
         Long companyId = currentCompanyId();
-        Page<Order> paged = orderService.list(companyId, page, size, q, status, fromDate, toDate);
+        // Allow purchases-style params: search, from, to
+        String effectiveQ = (q != null && !q.isBlank()) ? q : (search != null && !search.isBlank() ? search : null);
+        String effectiveFrom = fromDate;
+        String effectiveTo = toDate;
+        if ((effectiveFrom == null || effectiveFrom.isBlank()) && from != null) effectiveFrom = from.toString();
+        if ((effectiveTo == null || effectiveTo.isBlank()) && to != null) effectiveTo = to.toString();
+        Page<Order> paged = orderService.list(companyId, page, size, effectiveQ, status, effectiveFrom, effectiveTo);
         List<OrderListItemDto> items = paged.getContent().stream().map(this::toListDto).collect(Collectors.toList());
         PagedResponse<OrderListItemDto> response = PagedResponse.of(items, paged.getNumber(), paged.getSize(), paged.getTotalElements());
         return ResponseFactory.success(response, "Orders retrieved successfully");
