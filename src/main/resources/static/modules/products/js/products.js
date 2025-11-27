@@ -1475,6 +1475,282 @@
     }
   });
 
+  // --- Mini Management Logic ---
+  const miniState = {
+    cat: { list: [], loading: false, modal: null },
+    brand: { list: [], loading: false, modal: null },
+    supp: { list: [], loading: false, modal: null }
+  };
+
+  function initMiniManagers() {
+    // Initialize Modals
+    const catEl = document.getElementById('categoryManageModal');
+    const brandEl = document.getElementById('brandManageModal');
+    const suppEl = document.getElementById('supplierManageModal');
+
+    if (catEl) miniState.cat.modal = new bootstrap.Modal(catEl);
+    if (brandEl) miniState.brand.modal = new bootstrap.Modal(brandEl);
+    if (suppEl) miniState.supp.modal = new bootstrap.Modal(suppEl);
+
+    // Bind Open Buttons
+    document.getElementById('btnManageCategory')?.addEventListener('click', () => openMiniManager('cat'));
+    document.getElementById('btnManageBrand')?.addEventListener('click', () => openMiniManager('brand'));
+    document.getElementById('btnManageSupplier')?.addEventListener('click', () => openMiniManager('supp'));
+
+    // Bind Common Actions
+    ['cat', 'brand', 'supp'].forEach(type => {
+      document.getElementById(`${type}-btn-add`)?.addEventListener('click', () => showMiniForm(type));
+      document.getElementById(`${type}-btn-cancel`)?.addEventListener('click', () => showMiniList(type));
+      document.getElementById(`${type}-form`)?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveMiniItem(type);
+      });
+      document.getElementById(`${type}-search`)?.addEventListener('input', debounce((e) => {
+        renderMiniList(type, e.target.value);
+      }, 300));
+    });
+  }
+
+  function openMiniManager(type) {
+    miniState[type].modal?.show();
+    loadMiniList(type);
+    showMiniList(type);
+  }
+
+  async function loadMiniList(type) {
+    const listEl = document.getElementById(`${type}-list`);
+    listEl.innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</div>';
+    
+    try {
+      let url = '';
+      if (type === 'cat') url = '/api/categories';
+      else if (type === 'brand') url = '/api/brands/active/list';
+      else if (type === 'supp') url = '/api/suppliers?size=1000';
+
+      const resp = await fetch(url, { headers: api.headers() }).then(authGuard);
+      const body = await resp.json();
+      
+      let items = [];
+      // Normalize response data
+      if (type === 'cat') {
+         // Handle CategoryTreeDto or List<Category>
+         items = body.data?.categories || body.data || [];
+      } else if (type === 'brand') {
+         items = body.data || [];
+      } else if (type === 'supp') {
+         items = body.data?.content || body.data?.items || [];
+      }
+
+      miniState[type].list = items;
+      renderMiniList(type);
+
+      // Update Parent Category Dropdown if type is cat
+      if (type === 'cat') {
+        updateCatParentDropdown(items);
+      }
+
+    } catch (e) {
+      listEl.innerHTML = `<div class="text-center p-3 text-danger">Failed to load: ${e.message}</div>`;
+    }
+  }
+
+  function renderMiniList(type, query = '') {
+    const listEl = document.getElementById(`${type}-list`);
+    let items = miniState[type].list;
+
+    if (query) {
+      const q = query.toLowerCase();
+      items = items.filter(i => (i.name || '').toLowerCase().includes(q));
+    }
+
+    if (!items.length) {
+      listEl.innerHTML = '<div class="text-center p-3 text-muted">No items found</div>';
+      return;
+    }
+
+    listEl.innerHTML = items.map(item => {
+      let badge = '';
+      if (type === 'cat') {
+         // Add indent based on level if available
+         const level = item.level || 0;
+         const indent = '&nbsp;&nbsp;'.repeat(level);
+         const folder = level > 0 ? '<i class="fas fa-level-up-alt fa-rotate-90 me-1 text-muted small"></i>' : '';
+         return `
+          <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+            <div class="text-truncate" title="${item.name}">
+              ${indent}${folder} ${item.name}
+            </div>
+            <div class="d-flex gap-1">
+               <button class="btn btn-light btn-sm py-0 px-1" onclick="window.editMiniItem('${type}', ${item.id})" title="Edit"><i class="fas fa-pen text-primary" style="font-size:10px"></i></button>
+               <button class="btn btn-light btn-sm py-0 px-1" onclick="window.deleteMiniItem('${type}', ${item.id})" title="Delete"><i class="fas fa-trash text-danger" style="font-size:10px"></i></button>
+            </div>
+          </div>`;
+      }
+      
+      // Brand & Supplier
+      return `
+        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+          <span class="text-truncate">${item.name}</span>
+          <div class="d-flex gap-1">
+             <button class="btn btn-light btn-sm py-0 px-1" onclick="window.editMiniItem('${type}', ${item.id})" title="Edit"><i class="fas fa-pen text-primary" style="font-size:10px"></i></button>
+             <button class="btn btn-light btn-sm py-0 px-1" onclick="window.deleteMiniItem('${type}', ${item.id})" title="Delete"><i class="fas fa-trash text-danger" style="font-size:10px"></i></button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function updateCatParentDropdown(items) {
+      const el = document.getElementById('cat-parent');
+      if (!el) return;
+      let html = '<option value="">None (Root)</option>';
+      // Flattened tree is assumed to be sorted by path/hierarchy
+      items.forEach(i => {
+         const level = i.level || 0;
+         const prefix = '- '.repeat(level);
+         html += `<option value="${i.id}">${prefix}${i.name}</option>`;
+      });
+      el.innerHTML = html;
+  }
+
+  function showMiniList(type) {
+    document.getElementById(`${type}-list-view`).classList.remove('d-none');
+    document.getElementById(`${type}-form-view`).classList.add('d-none');
+    document.getElementById(`${type}-err`).classList.add('d-none');
+  }
+
+  function showMiniForm(type, data = null) {
+    document.getElementById(`${type}-list-view`).classList.add('d-none');
+    document.getElementById(`${type}-form-view`).classList.remove('d-none');
+    
+    const isEdit = !!data;
+    document.getElementById(`${type}-form-title`).textContent = isEdit ? `Edit ${type === 'cat' ? 'Category' : type === 'brand' ? 'Brand' : 'Supplier'}` : `Create ${type === 'cat' ? 'Category' : type === 'brand' ? 'Brand' : 'Supplier'}`;
+    document.getElementById(`${type}-id`).value = data?.id || '';
+    document.getElementById(`${type}-name`).value = data?.name || '';
+    document.getElementById(`${type}-err`).classList.add('d-none');
+
+    if (type === 'cat') {
+        document.getElementById('cat-parent').value = data?.parentId || '';
+        document.getElementById('cat-desc').value = data?.description || '';
+        // Disable parent select if editing and it would cause cycle (simple check: can't select self)
+        const parentSel = document.getElementById('cat-parent');
+        Array.from(parentSel.options).forEach(opt => {
+            opt.disabled = isEdit && opt.value == data.id;
+        });
+    } else if (type === 'brand') {
+        document.getElementById('brand-website').value = data?.website || '';
+        document.getElementById('brand-desc').value = data?.description || '';
+    } else if (type === 'supp') {
+        document.getElementById('supp-tax').value = data?.taxCode || '';
+        document.getElementById('supp-contact').value = data?.contactPerson || '';
+        document.getElementById('supp-phone').value = data?.phone || '';
+        document.getElementById('supp-email').value = data?.email || '';
+        document.getElementById('supp-address').value = data?.address || '';
+    }
+  }
+
+  window.editMiniItem = (type, id) => {
+      const item = miniState[type].list.find(i => i.id == id);
+      if (item) showMiniForm(type, item);
+  };
+
+  window.deleteMiniItem = async (type, id) => {
+      if (!confirm('Are you sure you want to delete this item?')) return;
+      
+      let url = '';
+      if (type === 'cat') url = `/api/categories/${id}`;
+      else if (type === 'brand') url = `/api/brands/${id}`;
+      else if (type === 'supp') url = `/api/suppliers/${id}`;
+
+      try {
+          const resp = await fetch(url, { method: 'DELETE', headers: api.headers() }).then(authGuard);
+          if (resp.ok) {
+              showAlert('Deleted successfully', 'success');
+              loadMiniList(type);
+              refreshGlobalLookups(type);
+          } else {
+              const body = await resp.json().catch(() => ({}));
+              showAlert(body.message || 'Delete failed', 'danger');
+          }
+      } catch (e) {
+          showAlert(e.message || 'Delete failed', 'danger');
+      }
+  };
+
+  async function saveMiniItem(type) {
+      const id = document.getElementById(`${type}-id`).value;
+      const name = document.getElementById(`${type}-name`).value.trim();
+      if (!name) {
+          const errEl = document.getElementById(`${type}-err`);
+          errEl.textContent = 'Name is required';
+          errEl.classList.remove('d-none');
+          return;
+      }
+
+      let payload = { name };
+      let url = '';
+      let method = id ? 'PUT' : 'POST';
+
+      if (type === 'cat') {
+          url = id ? `/api/categories/${id}` : '/api/categories';
+          payload.description = document.getElementById('cat-desc').value.trim() || null;
+          payload.parentId = document.getElementById('cat-parent').value || null;
+      } else if (type === 'brand') {
+          url = id ? `/api/brands/${id}` : '/api/brands';
+          payload.website = document.getElementById('brand-website').value.trim() || null;
+          payload.description = document.getElementById('brand-desc').value.trim() || null;
+          payload.isActive = true;
+      } else if (type === 'supp') {
+          url = id ? `/api/suppliers/${id}` : '/api/suppliers';
+          payload.taxCode = document.getElementById('supp-tax').value.trim() || null;
+          payload.contactPerson = document.getElementById('supp-contact').value.trim() || null;
+          payload.phone = document.getElementById('supp-phone').value.trim() || null;
+          payload.email = document.getElementById('supp-email').value.trim() || null;
+          payload.address = document.getElementById('supp-address').value.trim() || null;
+      }
+
+      const btnSave = document.getElementById(`${type}-btn-save`);
+      const originalText = btnSave.textContent;
+      btnSave.disabled = true;
+      btnSave.textContent = 'Saving...';
+
+      try {
+          const resp = await fetch(url, { 
+              method: method, 
+              headers: api.headers(), 
+              body: JSON.stringify(payload) 
+          }).then(authGuard);
+          
+          const body = await resp.json();
+          if (resp.ok) {
+              showAlert('Saved successfully', 'success');
+              loadMiniList(type);
+              showMiniList(type);
+              refreshGlobalLookups(type);
+          } else {
+              const errEl = document.getElementById(`${type}-err`);
+              errEl.textContent = body.message || 'Save failed';
+              errEl.classList.remove('d-none');
+          }
+      } catch (e) {
+          const errEl = document.getElementById(`${type}-err`);
+          errEl.textContent = e.message || 'Save failed';
+          errEl.classList.remove('d-none');
+      } finally {
+          btnSave.disabled = false;
+          btnSave.textContent = originalText;
+      }
+  }
+
+  function refreshGlobalLookups(type) {
+      // Refresh the main dropdowns and autocomplete data
+      if (type === 'cat') fetchCategories();
+      if (type === 'brand') fetchBrands();
+      if (type === 'supp') fetchSuppliers();
+  }
+
+  // Call init
+  initMiniManagers();
+
   // Init
   console.log('Initializing products page');
 
