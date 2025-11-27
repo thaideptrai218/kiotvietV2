@@ -57,7 +57,7 @@ public class ProductService {
                 .name(req.getName())
                 .barcode(req.getBarcode())
                 .description(req.getDescription())
-                .image(req.getImage())
+                .image(req.getImage() != null && req.getImage().isEmpty() ? null : req.getImage())
                 .sellingPrice(req.getSellingPrice())
                 .costPrice(req.getCostPrice())
                 .onHand(req.getOnHand() != null ? req.getOnHand() : 0)
@@ -112,7 +112,9 @@ public class ProductService {
         // Update basic fields
         if (req.getName() != null) product.setName(req.getName());
         if (req.getDescription() != null) product.setDescription(req.getDescription());
-        if (req.getImage() != null) product.setImage(req.getImage());
+        if (req.getImage() != null) {
+            product.setImage(req.getImage().isEmpty() ? null : req.getImage());
+        }
         if (req.getSellingPrice() != null) product.setSellingPrice(req.getSellingPrice());
         if (req.getCostPrice() != null) product.setCostPrice(req.getCostPrice());
         if (req.getStatus() != null) product.setStatus(req.getStatus());
