@@ -106,8 +106,13 @@
                 <label for="customerPay" class="form-label small text-muted">Customer pays</label>
                 <input id="customerPay" type="number" class="form-control" min="0" step="1000" placeholder="0">
               </div>
+              <!-- Update mode: additional payment -->
+              <div class="mt-2" id="addPayContainer" style="display:none;">
+                <label for="additionalPay" class="form-label small text-muted">Additional payment</label>
+                <input id="additionalPay" type="number" class="form-control" min="0" step="1000" placeholder="0">
+              </div>
               <div class="d-flex justify-content-between py-1 mt-2">
-                <span class="text-muted">Change</span>
+                <span class="text-muted" id="sumChangeLabel">Change</span>
                 <span id="sumChange" class="fw-semibold">0</span>
               </div>
             </div>

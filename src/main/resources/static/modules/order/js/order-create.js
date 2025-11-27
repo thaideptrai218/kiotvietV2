@@ -10,7 +10,10 @@
     sumTotal: document.getElementById('sumTotal'),
     customerPay: document.getElementById('customerPay'),
     orderDiscount: document.getElementById('orderDiscount'),
-    sumChange: document.getElementById('sumChange')
+    sumChange: document.getElementById('sumChange'),
+    sumChangeLabel: document.getElementById('sumChangeLabel'),
+    addPayContainer: document.getElementById('addPayContainer'),
+    additionalPay: document.getElementById('additionalPay')
   };
 
   // Populate current user name from token if available
@@ -156,12 +159,19 @@
     if (els.sumSubtotal) els.sumSubtotal.textContent = fmt(subtotal);
     if (els.sumDiscount) els.sumDiscount.textContent = fmt(discount);
     if (els.sumTotal) els.sumTotal.textContent = fmt(total);
-    const paid = parseCurrencyText(els.customerPay?.value || '0');
-    const change = paid - total;
+    // Determine mode
+    const params = new URLSearchParams(window.location.search || '');
+    const isUpdate = !!params.get('orderId');
+    const basePaid = parseCurrencyText(els.customerPay?.value || '0');
+    const addPaid = parseCurrencyText(els.additionalPay?.value || '0');
+    const effectivePaid = isUpdate ? (basePaid + addPaid) : basePaid;
+    const delta = effectivePaid - total;
+    if (els.sumChangeLabel) els.sumChangeLabel.textContent = isUpdate ? 'Remaining' : 'Change';
     if (els.sumChange) {
-      els.sumChange.textContent = fmt(change);
-      els.sumChange.classList.toggle('text-danger', change < 0);
-      els.sumChange.classList.toggle('text-success', change >= 0);
+      const show = isUpdate ? Math.max(0, total - effectivePaid) : delta;
+      els.sumChange.textContent = fmt(show);
+      els.sumChange.classList.toggle('text-danger', isUpdate ? false : (delta < 0));
+      els.sumChange.classList.toggle('text-success', isUpdate ? false : (delta >= 0));
     }
   }
 
@@ -273,6 +283,8 @@
         calcTotals();
       }
       upsertUpdateBanner(d.orderCode || '');
+      if (els.addPayContainer) els.addPayContainer.style.display = '';
+      if (els.additionalPay) els.additionalPay.value = '';
     } catch (e) { console.error(e); }
   }
 
@@ -300,6 +312,9 @@
         calcTotals();
       }
       upsertUpdateBanner(d.orderCode || '');
+      // Show additional payment field in update mode
+      if (els.addPayContainer) els.addPayContainer.style.display = '';
+      if (els.additionalPay) els.additionalPay.value = '';
     } catch (e) {
       console.error(e);
       alert('Failed to load order for update.');
@@ -577,6 +592,7 @@
     // Discount and customer pay auto-calculation
     els.orderDiscount?.addEventListener('input', () => { calcTotals(); });
     els.customerPay?.addEventListener('input', () => { calcTotals(); });
+    els.additionalPay?.addEventListener('input', () => { calcTotals(); });
 
     els.btnComplete?.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -599,7 +615,11 @@
         return;
       }
 
-      const paidAmount = parseCurrencyText(els.customerPay?.value || '0');
+      const params = new URLSearchParams(window.location.search || '');
+      const orderId = params.get('orderId');
+      const basePaidAmount = parseCurrencyText(els.customerPay?.value || '0');
+      const addPaidAmount = parseCurrencyText(els.additionalPay?.value || '0');
+      const paidAmount = orderId ? (basePaidAmount + addPaidAmount) : basePaidAmount;
       const orderDiscountPercent = (function(){
         const v = parseFloat(els.orderDiscount?.value || '0');
         if (isNaN(v)) return 0;
@@ -616,14 +636,14 @@
 
       try {
         // Determine mode: update when orderId is present
-        const params = new URLSearchParams(window.location.search || '');
-        const orderId = params.get('orderId');
+        // orderId already computed above
         if (orderId) {
           const ok = await confirmUpdateProceed();
           if (!ok) { return; }
         }
-        const { total, paid } = getTotals();
-        if (paid < total) {
+        const { total } = getTotals();
+        const effectivePaidCheck = paidAmount; // already includes additional in update
+        if (effectivePaidCheck < total) {
           showToast('Customer pays less than total. Order will be saved as DRAFT.', 'error');
         }
         const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
