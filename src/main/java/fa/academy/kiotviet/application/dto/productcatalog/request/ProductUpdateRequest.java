@@ -25,6 +25,8 @@ public class ProductUpdateRequest {
     @Size(max = 2000, message = "Description must not exceed 2000 characters")
     private String description;
 
+    private String image;
+
     @DecimalMin(value = "0.01", message = "Selling price must be greater than 0")
     @Digits(integer = 10, fraction = 2, message = "Selling price must have up to 10 digits and 2 decimal places")
     private BigDecimal sellingPrice;

@@ -75,6 +75,11 @@
     productMaxLevel: document.getElementById('productMaxLevel'),
     productIsTracked: document.getElementById('productIsTracked'),
     productStatus: document.getElementById('productStatus'),
+    productImageFile: document.getElementById('fileImage'),
+    productImageUrl: document.getElementById('productImageUrl'),
+    productImagePreview: document.getElementById('imgDisplay'),
+    productImagePlaceholder: document.getElementById('imagePreview'),
+    btnRemoveImage: document.getElementById('btnRemoveImage'),
     btnSave: document.getElementById('btnSave'),
     btnSaveNew: document.getElementById('btnSaveNew'),
 
@@ -97,12 +102,12 @@
         const payload = JSON.parse(atob(token.split('.')[1]));
         return `products.columns.v1.${payload.companyId || 'default'}`;
       }
-    } catch { }
+    } catch { } // eslint-disable-line no-empty
     return 'products.columns.v1.default';
   };
 
   function loadColumns() {
-    try { const saved = JSON.parse(localStorage.getItem(storageKey()) || '{}'); if (saved && typeof saved === 'object') state.columns = { ...state.columns, ...saved }; } catch { }
+    try { const saved = JSON.parse(localStorage.getItem(storageKey()) || '{}'); if (saved && typeof saved === 'object') state.columns = { ...state.columns, ...saved }; } catch { } // eslint-disable-line no-empty
     els.colSku.checked = !!state.columns.sku;
     els.colName.checked = !!state.columns.name;
     els.colCategory.checked = !!state.columns.category;
@@ -265,7 +270,7 @@
 
     if (!items.length) {
       console.log('No items to render, showing empty message');
-      els.tblBody.innerHTML = `<tr><td colspan="9" class="table-empty"><i class="far fa-box-open me-2"></i> No products found</td></tr>`;
+      els.tblBody.innerHTML = `<tr><td colspan="10" class="table-empty"><i class="far fa-box-open me-2"></i> No products found</td></tr>`;
       return;
     }
 
@@ -277,6 +282,11 @@
       rows.push(`
         <tr data-id="${p.id}" tabindex="0" aria-expanded="${isExpanded}">
           <td><input type="checkbox" class="row-check" ${checked}></td>
+          <td>
+            <div style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                ${p.image ? `<img src="${p.image}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-image text-muted"></i>`}
+            </div>
+          </td>
           <td data-col="sku" title="${fmt(p.sku)}">${fmt(p.sku)}</td>
           <td class="fw-semibold" data-col="name" title="${fmt(p.name)}">${fmt(p.name)}</td>
           <td data-col="category" title="${fmt(p.category?.name)}">${fmt(p.category?.name)}</td>
@@ -308,7 +318,7 @@
 
     return `
       <tr class="expanded-row" data-id="${p.id}-exp">
-        <td colspan="9">
+        <td colspan="10">
           <div class="expanded-wrapper">
             <!-- Tab Navigation -->
             <ul class="nav nav-tabs" id="productTabs-${p.id}" role="tablist">
@@ -352,10 +362,13 @@
                     <!-- Product Image -->
                     <div class="col-md-3">
                       <div class="product-image-container">
-                        <div class="product-image-placeholder d-flex align-items-center justify-content-center bg-light border rounded"
-                             style="width: 120px; height: 120px;">
-                          <i class="fas fa-image text-muted fa-2x"></i>
-                        </div>
+                        ${p.image ? 
+                            `<img src="${p.image}" class="img-fluid rounded border" style="width: 100%; max-height: 200px; object-fit: cover;">` :
+                            `<div class="product-image-placeholder d-flex align-items-center justify-content-center bg-light border rounded"
+                                 style="width: 100%; height: 150px;">
+                              <i class="fas fa-image text-muted fa-3x"></i>
+                            </div>`
+                        }
                       </div>
                     </div>
 
@@ -660,6 +673,21 @@
     els.productIsTracked.checked = (data?.isTracked ?? true) === true;
     els.productStatus.value = data?.status || 'ACTIVE';
 
+    // Image handling
+    els.productImageFile.value = ''; // Reset file input
+    els.productImageUrl.value = data?.image || '';
+    if (data?.image) {
+      els.productImagePreview.src = data.image;
+      els.productImagePreview.style.display = 'block';
+      els.productImagePlaceholder.style.display = 'none';
+      els.btnRemoveImage.style.display = 'block';
+    } else {
+      els.productImagePreview.src = '';
+      els.productImagePreview.style.display = 'none';
+      els.productImagePlaceholder.style.display = 'flex';
+      els.btnRemoveImage.style.display = 'none';
+    }
+
     // Show/hide appropriate buttons based on edit vs create mode
     const isEdit = !!data?.id;
     if (els.btnSave) {
@@ -694,6 +722,7 @@
       barcode: els.productBarcode.value.trim() || null,
       name: els.productName.value.trim(),
       description: els.productDescription.value.trim() || null,
+      image: els.productImageUrl.value || null,
       categoryId: els.productCategory.value || null,
       brandId: els.productBrand.value || null,
       supplierId: els.productSupplier.value || null,
@@ -1300,7 +1329,7 @@
     }
 
     // toggle expand/collapse on row click
-    if (state.expanded.has(id)) { state.expanded.clear(); }
+    if (state.expanded.has(id)) { state.expanded.clear(); } // eslint-disable-line no-unused-expressions
     else { state.expanded.clear(); state.expanded.add(id); }
     fetchList();
   });
@@ -1322,6 +1351,48 @@
       if (!resp.ok) { const body = await resp.json().catch(() => ({})); throw new Error(body?.message || 'Upload failed'); }
       els.importModal?.hide(); showAlert('Import started', 'success'); fetchList();
     } catch (e2) { if (els.importErr) { els.importErr.textContent = e2.message || 'Upload failed'; els.importErr.classList.remove('d-none'); } }
+  });
+
+  // Image Upload Handler
+  els.productImageFile?.addEventListener('change', async () => {
+      const file = els.productImageFile.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+          const resp = await fetch(`${api.base}/upload-image`, {
+              method: 'POST',
+              headers: { 'Authorization': api.headers().Authorization },
+              body: formData
+          }).then(authGuard);
+
+          const body = await resp.json();
+          if (resp.ok) {
+              const imageUrl = body.data;
+              els.productImageUrl.value = imageUrl;
+              els.productImagePreview.src = imageUrl;
+              els.productImagePreview.classList.remove('d-none');
+              els.productImagePlaceholder.classList.add('d-none');
+              els.btnRemoveImage.classList.remove('d-none');
+          } else {
+              throw new Error(body.message || 'Image upload failed');
+          }
+      } catch (e) {
+          showAlert(e.message, 'danger');
+          els.productImageFile.value = '';
+      }
+  });
+
+  // Remove Image Handler
+  els.btnRemoveImage?.addEventListener('click', () => {
+      els.productImageUrl.value = '';
+      els.productImageFile.value = '';
+      els.productImagePreview.src = '';
+      els.productImagePreview.classList.add('d-none');
+      els.productImagePlaceholder.classList.remove('d-none');
+      els.btnRemoveImage.classList.add('d-none');
   });
 
   function bindColToggle(input, key) { input?.addEventListener('change', () => { state.columns[key] = input.checked; if (!input.checked && state.sortBy === key) { state.sortBy = null; updateSortHeaders(); } saveColumns(); applyColumnVisibility(); fetchList(); }); }
