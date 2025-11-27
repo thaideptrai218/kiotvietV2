@@ -200,7 +200,7 @@
               (l) => `
             <tr>
               <td>${l.productName || l.productId}</td>
-              <td class="text-end">${(l.qtyOrdered ?? 0)}/${(l.qtyReceived ?? 0)}</td>
+              <td class="text-end">${(l.qtyReceived ?? 0)}/${(l.qtyOrdered ?? 0)}</td>
               <td class="text-end">${fmtMoney(l.unitCost)}</td>
               <td class="text-end">${fmtMoney(l.discountAmount)}</td>
               <td class="text-end">${l.taxPercent || 0}%</td>
@@ -251,7 +251,7 @@
                   <thead>
                     <tr>
                       <th>Product</th>
-                      <th class="text-end">Qty (O/R)</th>
+                      <th class="text-end">Qty (R/O)</th>
                       <th class="text-end">Unit Cost</th>
                       <th class="text-end">Discount</th>
                       <th class="text-end">Tax %</th>
