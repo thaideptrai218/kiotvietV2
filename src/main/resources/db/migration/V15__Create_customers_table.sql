@@ -1,6 +1,6 @@
 CREATE TABLE customers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    account_id BIGINT NOT NULL,
+    company_id BIGINT NOT NULL,
     code VARCHAR(50),
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
@@ -17,8 +17,8 @@ CREATE TABLE customers (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (account_id) REFERENCES companies(id),
-    UNIQUE KEY uk_customers_account_code (account_id, code),
-    INDEX idx_customers_account_phone (account_id, phone),
-    INDEX idx_customers_account_name (account_id, name)
+    FOREIGN KEY (company_id) REFERENCES companies(id),
+    UNIQUE KEY uk_customers_company_code (company_id, code),
+    INDEX idx_customers_company_phone (company_id, phone),
+    INDEX idx_customers_company_name (company_id, name)
 );

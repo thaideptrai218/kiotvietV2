@@ -37,7 +37,7 @@ public class Customer {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false, foreignKey = @ForeignKey(name = "fk_customers_company"))
+    @JoinColumn(name = "company_id", nullable = false, foreignKey = @ForeignKey(name = "fk_customers_company"))
     private Company company;
 
     @Size(max = 50, message = "Code must not exceed 50 characters")

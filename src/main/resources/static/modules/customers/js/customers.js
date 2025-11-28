@@ -256,7 +256,13 @@
             renderTable(items);
             renderPagination(result.data);
             const totalCountEl = document.getElementById('totalCount');
-            if (totalCountEl) totalCountEl.textContent = items.length ?? 0;
+            if (totalCountEl) totalCountEl.textContent = '...';
+            // Compute total ACTIVE count across all pages (respecting search)
+            countActiveTotal(nameFilter, phoneFilter).then((cnt) => {
+                if (totalCountEl) totalCountEl.textContent = String(cnt);
+            }).catch(() => {
+                if (totalCountEl) totalCountEl.textContent = String(result.data.totalElements ?? items.length ?? 0);
+            });
             applyColumnVisibility();
         } catch (error) {
             showAlert('danger', error.message);
@@ -310,18 +316,56 @@
         const disabledNext = p >= t - 1 ? 'disabled' : '';
         items.push(`<li class="page-item ${disabledPrev}"><a class="page-link" data-page="0">First</a></li>`);
         items.push(`<li class="page-item ${disabledPrev}"><a class="page-link" data-page="${p - 1}">Prev</a></li>`);
-        // Show current page only (keep simple like request)
-        items.push(`<li class="page-item active"><a class="page-link" data-page="${p}">${p + 1}</a></li>`);
+        // Current page as dropdown to select any page
+        const pages = Array.from({ length: t }, (_, i) => `<li><a class="dropdown-item" data-page="${i}">${i + 1}</a></li>`).join('');
+        items.push(
+            `<li class="page-item dropdown active">
+                <a class="page-link dropdown-toggle" href="#" id="pgSelect" data-bs-toggle="dropdown" aria-expanded="false">${p + 1}</a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="pgSelect">${pages}</ul>
+            </li>`
+        );
         items.push(`<li class="page-item ${disabledNext}"><a class="page-link" data-page="${p + 1}">Next</a></li>`);
         items.push(`<li class="page-item ${disabledNext}"><a class="page-link" data-page="${t - 1}">Last</a></li>`);
         pagiContainer.innerHTML = items.join('');
     }
 
+    async function countActiveTotal(nameFilter, phoneFilter) {
+        // Derive search term same as in load
+        const search = (phoneFilter || nameFilter || currentSearch || '').trim();
+        const size = pageSize;
+        // Build base URL without page
+        let urlBase = `${API_URL}?size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
+        if (search) urlBase += `&search=${encodeURIComponent(search)}`;
+        const token =
+            localStorage.getItem('jwtToken') ||
+            sessionStorage.getItem('jwtToken') ||
+            localStorage.getItem('accessToken') ||
+            sessionStorage.getItem('accessToken');
+        const headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        // First page to learn totalPages
+        let res = await fetch(urlBase + `&page=0`, { headers });
+        if (!res.ok) throw new Error('Count fetch failed');
+        let body = await res.json();
+        let totalPages = body.data?.totalPages ?? 1;
+        let count = 0;
+        let content = body.data?.content || [];
+        count += content.filter(c => c.status === 'ACTIVE').length;
+        for (let p = 1; p < totalPages; p++) {
+            res = await fetch(urlBase + `&page=${p}`, { headers });
+            if (!res.ok) break;
+            body = await res.json();
+            content = body.data?.content || [];
+            count += content.filter(c => c.status === 'ACTIVE').length;
+        }
+        return count;
+    }
+
     // Delegate pagination clicks
     pagiContainer?.addEventListener('click', (e) => {
-        const a = e.target.closest('a.page-link');
+        const a = e.target.closest('[data-page]');
         if (!a) return;
-        const p = parseInt(a.dataset.page, 10);
+        const p = parseInt(a.getAttribute('data-page'), 10);
         if (isNaN(p) || p < 0) return;
         currentPage = p;
         loadCustomers();
