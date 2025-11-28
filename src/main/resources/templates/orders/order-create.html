@@ -82,9 +82,10 @@
             <div class="pos-row mt-3">
               <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-user"></i></span>
-                <input id="customerSearch" type="text" class="form-control" placeholder="Search customer (F4)">
+                <input id="customerSearch" type="text" class="form-control" placeholder="Search customer" list="customerOptions" value="Guest" aria-describedby="customerError">
                 <button class="btn btn-outline-primary" id="btnAddCustomer" title="Add customer"><i class="fa fa-plus"></i></button>
               </div>
+              <datalist id="customerOptions"></datalist>
             </div>
 
             <!-- Order summary -->

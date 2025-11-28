@@ -76,6 +76,62 @@
     }
   }
 
+  // ---- Customer validation helpers ----
+  function normName(s){ return (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim(); }
+  function isCustomerValueEmptyOrGuest(v) {
+    const s = (v || '').trim();
+    return !s || s.toLowerCase() === 'guest';
+  }
+
+  function isCustomerInDatalist(val) {
+    const list = document.getElementById('customerOptions');
+    const v = normName(val);
+    if (!list || !v) return false;
+    const opts = Array.from(list.options || []);
+    return opts.some(o => normName(o.value) === v);
+  }
+
+  async function resolveCustomerFromServer(val) {
+    const name = (val || '').trim();
+    if (!name) return { ok: true, name: 'Guest', phone: null };
+    try {
+      const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`/api/customers/autocomplete?query=${encodeURIComponent(name)}&limit=10`, { headers });
+      if (!res.ok) return { ok: false };
+      const body = await res.json();
+      const items = body?.data || [];
+      if (!Array.isArray(items) || !items.length) return { ok: false };
+      const n = normName(name);
+      const match = items.find(c => normName(c?.name) === n);
+      if (!match) return { ok: false };
+      return { ok: true, name: match.name || name, phone: match.phone || null };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  function showCustomerError(msg) {
+    const err = document.getElementById('customerError');
+    const input = document.getElementById('customerSearch');
+    // Never show error for Guest/empty
+    if (isCustomerValueEmptyOrGuest(input?.value || '')) { clearCustomerError(); return; }
+    if (err) {
+      err.textContent = msg || 'Customer not found';
+      err.style.display = 'block';
+    }
+    if (input) input.classList.add('is-invalid');
+    try { showToast(msg || 'Customer not found', 'error'); } catch {}
+  }
+
+  function clearCustomerError() {
+    const err = document.getElementById('customerError');
+    if (err) err.style.display = 'none';
+    const input = document.getElementById('customerSearch');
+    if (input) input.classList.remove('is-invalid');
+  }
+
   // Toast/notification utilities
   function ensureToastContainer() {
     let el = document.getElementById('posToastContainer');
@@ -629,6 +685,68 @@
     els.customerPay?.addEventListener('input', () => { calcTotals(); });
     els.additionalPay?.addEventListener('input', () => { calcTotals(); });
 
+    // Customer autocomplete (populate datalist from server)
+    (function initCustomerAutocomplete(){
+      const input = document.getElementById('customerSearch');
+      const list = document.getElementById('customerOptions');
+      if (!input || !list) return;
+      let timer = null;
+      async function run(q){
+        try {
+          const query = (q || '').trim();
+          // Always seed Guest option; no error on empty
+          list.innerHTML = '<option value="Guest"></option>';
+          if (!query) { return; }
+          const headers = { 'Accept': 'application/json' };
+          try {
+            const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            if (t) headers['Authorization'] = `Bearer ${t}`;
+          } catch {}
+          const res = await fetch(`/api/customers/autocomplete?query=${encodeURIComponent(query)}&limit=10`, { headers });
+          if (!res.ok) return;
+          const body = await res.json();
+          const items = Array.isArray(body?.data) ? body.data : [];
+          if (!items.length) return;
+          const opts = items.map(c => {
+            const name = (c?.name || '').toString();
+            const phone = (c?.phone || '').toString();
+            const value = name; // enforce selection by name
+            const label = phone ? `${name} (${phone})` : name;
+            return `<option value="${value}">${label}</option>`;
+          }).join('');
+          list.insertAdjacentHTML('beforeend', opts);
+        } catch {}
+      }
+      input.addEventListener('input', (e) => {
+        clearTimeout(timer);
+        clearCustomerError(); // do not show error while typing
+        timer = setTimeout(() => run(e.target.value), 250);
+      });
+      input.addEventListener('change', () => { clearCustomerError(); });
+      // Initial seed
+      run('');
+    })();
+
+    // Validate/default customer on blur and typing
+    try {
+      const cInput = document.getElementById('customerSearch');
+      cInput?.addEventListener('blur', async () => {
+        const vRaw = cInput.value || '';
+        const v = vRaw.trim();
+        // Empty -> set Guest, no error
+        if (!v) { cInput.value = 'Guest'; clearCustomerError(); return; }
+        // Guest string -> always valid, no error
+        if (isCustomerValueEmptyOrGuest(vRaw)) { clearCustomerError(); return; }
+        // If listed in datalist -> valid
+        if (isCustomerInDatalist(v)) { clearCustomerError(); return; }
+        // Otherwise, verify with server
+        const resolved = await resolveCustomerFromServer(v);
+        if (resolved.ok) { clearCustomerError(); }
+        else { showCustomerError('Customer not found'); }
+      });
+      cInput?.addEventListener('input', () => { clearCustomerError(); });
+    } catch {}
+
     els.btnComplete?.addEventListener('click', async (e) => {
       e.preventDefault();
 
@@ -660,9 +778,29 @@
         if (isNaN(v)) return 0;
         return Math.min(Math.max(v, 0), 100);
       })();
+      // Resolve customer per rules: empty -> Guest; else must exist
+      const rawCustomer = (document.getElementById('customerSearch')?.value || '').trim();
+      let resolvedName = 'Guest';
+      let resolvedPhone = null;
+      if (!isCustomerValueEmptyOrGuest(rawCustomer)) {
+        if (isCustomerInDatalist(rawCustomer)) {
+          resolvedName = rawCustomer;
+        } else {
+          const resolved = await resolveCustomerFromServer(rawCustomer);
+          if (!resolved.ok) { showCustomerError('Customer not found'); return; }
+          resolvedName = resolved.name || 'Guest';
+          resolvedPhone = resolved.phone || null;
+        }
+      } else {
+        // ensure UI shows Guest for clarity
+        const cInput = document.getElementById('customerSearch');
+        if (cInput && !cInput.value.trim()) cInput.value = 'Guest';
+      }
+      clearCustomerError();
+
       const payload = {
-        customerName: (function(){ const v = document.getElementById('customerSearch')?.value || ''; return v.trim() ? v : 'Guest'; })(),
-        phoneNumber: null,
+        customerName: resolvedName,
+        phoneNumber: resolvedPhone,
         paymentMethod: 'CASH',
         paidAmount,
         orderDiscountPercent,
@@ -741,3 +879,4 @@
     } catch {}
   });
 })();
+    
