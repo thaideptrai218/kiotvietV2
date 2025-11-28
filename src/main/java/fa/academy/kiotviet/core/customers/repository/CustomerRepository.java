@@ -21,4 +21,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
     Page<Customer> findByCompany_Id(Long companyId, Pageable pageable);
     
     long countByCompanyId(Long companyId);
+
+    @org.springframework.data.jpa.repository.Query("select c from Customer c " +
+           "where c.company.id = :companyId and c.status = 'ACTIVE' and " +
+           "(lower(c.name) like lower(concat('%', :q, '%')) " +
+           " or lower(c.phone) like lower(concat('%', :q, '%')) " +
+           " or lower(c.code) like lower(concat('%', :q, '%'))) " +
+           "order by c.name asc")
+    java.util.List<Customer> searchAutocomplete(@org.springframework.data.repository.query.Param("companyId") Long companyId, @org.springframework.data.repository.query.Param("q") String q, Pageable pageable);
 }

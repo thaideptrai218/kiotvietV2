@@ -16,6 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import fa.academy.kiotviet.application.dto.customers.CustomerAutocompleteItem;
+
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor
@@ -39,6 +42,16 @@ public class CustomerApiController {
 
         Page<CustomerDto> customers = customerService.list(companyId, search, pageable);
         return ResponseFactory.success(customers, "Customers retrieved successfully");
+    }
+
+    @GetMapping("/autocomplete")
+    public SuccessResponse<List<CustomerAutocompleteItem>> autocompleteCustomers(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        Long companyId = currentCompanyId();
+        List<CustomerAutocompleteItem> customers = customerService.autocomplete(companyId, query, limit);
+        return ResponseFactory.success(customers, "Customer autocomplete results");
     }
 
     @GetMapping("/{id}")

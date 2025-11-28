@@ -16,6 +16,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import fa.academy.kiotviet.application.dto.customers.CustomerAutocompleteItem;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -106,6 +110,20 @@ public class CustomerService {
         return customerRepository.findAll(spec, pageable).map(this::toDto);
     }
 
+    public List<CustomerAutocompleteItem> autocomplete(Long companyId, String query, int limit) {
+        int effectiveLimit = limit <= 0 ? 10 : Math.min(limit, 50);
+        Pageable pageable = PageRequest.of(0, effectiveLimit);
+        String q = query == null ? "" : query.trim();
+
+        if (q.isEmpty()) {
+            return List.of();
+        }
+
+        return customerRepository.searchAutocomplete(companyId, q, pageable).stream()
+                .map(this::toAutocompleteItem)
+                .collect(Collectors.toList());
+    }
+
     // Helper methods
     private CustomerDto toDto(Customer customer) {
         return CustomerDto.builder()
@@ -125,6 +143,15 @@ public class CustomerService {
                 .status(customer.getStatus())
                 .createdAt(customer.getCreatedAt())
                 .updatedAt(customer.getUpdatedAt())
+                .build();
+    }
+
+    private CustomerAutocompleteItem toAutocompleteItem(Customer customer) {
+        return CustomerAutocompleteItem.builder()
+                .id(customer.getId())
+                .name(customer.getName())
+                .phone(customer.getPhone())
+                .code(customer.getCode())
                 .build();
     }
 
