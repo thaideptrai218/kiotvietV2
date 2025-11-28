@@ -76,9 +76,10 @@
 
   function fmtMoney(n) {
     try {
-      return new Intl.NumberFormat('vi-VN').format(n ?? 0);
+      const v = Number(n ?? 0);
+      return v.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
     } catch (e) {
-      return n;
+      return '0,00 $';
     }
   }
 
