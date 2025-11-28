@@ -113,6 +113,12 @@
   }
 
   function fmt(val) { return val ?? ''; }
+  function fmtMoney(v) {
+    try {
+      const n = Number(v || 0);
+      return n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+    } catch (_) { return '0,00 $'; }
+  }
 
   function authGuard(resp) { if (resp.status === 401) throw new Error('Unauthorized. Please login again.'); return resp; }
 
@@ -228,8 +234,8 @@
                 <div><span class="fw-semibold">Tax code:</span> ${fmt(s.taxCode)}</div>
                 <div><span class="fw-semibold">Website:</span> ${fmt(s.website)}</div>
                 <div><span class="fw-semibold">Notes:</span> ${fmt(s.notes)}</div>
-                <div><span class="fw-semibold">Credit limit:</span> ${fmt(s.creditLimit)}</div>
-                <div><span class="fw-semibold">Outstanding:</span> ${fmt(s.outstandingBalance)}</div>
+                <div><span class="fw-semibold">Credit limit:</span> ${fmtMoney(s.creditLimit)}</div>
+                <div><span class="fw-semibold">Outstanding:</span> ${fmtMoney(s.outstandingBalance)}</div>
               </div>
               <div class="col-md-4 d-flex justify-content-end gap-2">
                 <button class="btn btn-primary btn-sm" data-act="edit"><i class="far fa-pen-to-square me-1"></i>Update</button>

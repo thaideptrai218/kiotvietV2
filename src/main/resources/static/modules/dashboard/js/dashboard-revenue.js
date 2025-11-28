@@ -191,8 +191,8 @@ class RevenueDashboard {
     updateRevenueCards(periodData) {
         // Update revenue amount with animation
         this.animateNumber("revenueAmount", periodData.totalRevenue, 0, {
-            prefix: "₫",
-            decimals: 0,
+            suffix: " $",
+            decimals: 2,
         });
 
         // Update orders count
@@ -218,8 +218,8 @@ class RevenueDashboard {
             periodData.averageOrderValue,
             0,
             {
-                prefix: "₫",
-                decimals: 0,
+                suffix: " $",
+                decimals: 2,
             }
         );
 
@@ -443,8 +443,8 @@ class RevenueDashboard {
             this.currentData.totalInventoryValue,
             0,
             {
-                prefix: "₫",
-                decimals: 0,
+                suffix: " $",
+                decimals: 2,
             }
         );
         this.animateNumber(
@@ -960,6 +960,7 @@ class RevenueDashboard {
         const duration = 1000;
         const startTime = performance.now();
         const prefix = options.prefix || "";
+        const suffix = options.suffix || "";
         const decimals = options.decimals !== undefined ? options.decimals : 0;
 
         const animate = (currentTime) => {
@@ -974,7 +975,7 @@ class RevenueDashboard {
                 currentValue.toLocaleString("vi-VN", {
                     minimumFractionDigits: decimals,
                     maximumFractionDigits: decimals,
-                });
+                }) + suffix;
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
@@ -992,18 +993,18 @@ class RevenueDashboard {
     }
 
     /**
-     * Format currency with Vietnamese Dong
+     * Format currency with USD suffix
      */
     formatCurrency(value, shortFormat = false) {
-        if (shortFormat && value > 1000000) {
-            return `${(value / 1000000).toFixed(1)}M ₫`;
+        try {
+            const n = Number(value || 0);
+            if (shortFormat && n >= 1_000_000) {
+                return `${(n / 1_000_000).toFixed(1)}M $`;
+            }
+            return n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+        } catch (_) {
+            return '0,00 $';
         }
-        return new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(value);
     }
 
     /**
@@ -1083,17 +1084,15 @@ const DashboardUtils = {
         }).format(number);
     },
 
-    // Format currency with Vietnamese Dong
+    // Format currency with USD suffix
     formatCurrency(amount, shortFormat = false) {
-        if (shortFormat && amount > 1000000) {
-            return `${(amount / 1000000).toFixed(1)}M ₫`;
-        }
-        return new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount);
+        try {
+            const n = Number(amount || 0);
+            if (shortFormat && n >= 1_000_000) {
+                return `${(n / 1_000_000).toFixed(1)}M $`;
+            }
+            return n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+        } catch (_) { return '0,00 $'; }
     },
 
     // Get date range for selected period

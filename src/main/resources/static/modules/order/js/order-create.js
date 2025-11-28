@@ -39,12 +39,41 @@
     } catch {}
   })();
 
-  function fmt(n) { try { return Number(n||0).toLocaleString('vi-VN'); } catch { return n; } }
+  function fmt(n) {
+    try {
+      return Number(n || 0).toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+    } catch { return n; }
+  }
   function parseNumber(n) { const v = Number(n); return Number.isFinite(v) ? v : 0; }
+  function toMoney(n) { const v = Number(n); return Number.isFinite(v) ? Math.round(v * 100) / 100 : 0; }
   function parseCurrencyText(text) {
-    // Strip all non-digits (treat as VND integer amount)
-    const raw = (text || '').toString().replace(/[^0-9]/g, '');
-    return Number(raw || '0');
+    // Robustly parse strings like "2,18", "1.234,56", "1,234.56", or plain digits
+    let s = (text ?? '').toString().trim();
+    if (!s) return 0;
+    let sign = 1;
+    if (s.startsWith('-')) { sign = -1; s = s.slice(1); }
+    s = s.replace(/[^0-9,\.]/g, '');
+    const hasComma = s.includes(',');
+    const hasDot = s.includes('.');
+    let decSep = null;
+    if (hasComma && hasDot) {
+      decSep = s.lastIndexOf(',') > s.lastIndexOf('.') ? ',' : '.';
+    } else if (hasComma) {
+      decSep = ',';
+    } else if (hasDot) {
+      decSep = '.';
+    }
+    if (decSep) {
+      const i = s.lastIndexOf(decSep);
+      const intPart = s.slice(0, i).replace(/[^0-9]/g, '');
+      const fracPart = s.slice(i + 1).replace(/[^0-9]/g, '');
+      const num = parseFloat((intPart || '0') + '.' + (fracPart || '0'));
+      return sign * (Number.isFinite(num) ? num : 0);
+    } else {
+      const intPart = s.replace(/[^0-9]/g, '');
+      const num = parseFloat(intPart || '0');
+      return sign * (Number.isFinite(num) ? num : 0);
+    }
   }
 
   // Toast/notification utilities
@@ -129,10 +158,11 @@
       const qty = parseInt(card.querySelector('.qty input')?.value || '1', 10) || 1;
       subtotal += (unit * qty);
     });
+    subtotal = toMoney(subtotal);
     const dpRaw = parseFloat(els.orderDiscount?.value || '0');
     const dp = isNaN(dpRaw) ? 0 : Math.min(Math.max(dpRaw, 0), 100);
-    const discount = Math.round(subtotal * (dp / 100));
-    const total = Math.max(0, subtotal - discount);
+    const discount = toMoney(subtotal * (dp / 100));
+    const total = toMoney(Math.max(0, subtotal - discount));
     const paid = parseCurrencyText(els.customerPay?.value || '0');
     return { subtotal, discount, total, paid, discountPercent: dp };
   }
@@ -146,32 +176,37 @@
   }
 
   function calcTotals() {
-    // Placeholder calculation: sum visible items' line totals if any numeric present
-    let subtotal = 0;
-    els.items?.querySelectorAll('.pos-itemcard .line-total').forEach(el => {
-      const v = parseCurrencyText(el.textContent);
-      if (!Number.isNaN(v)) subtotal += v;
-    });
-    const discountPercentRaw = parseFloat(els.orderDiscount?.value || '0');
-    const discountPercent = isNaN(discountPercentRaw) ? 0 : Math.min(Math.max(discountPercentRaw, 0), 100);
-    const discount = Math.round(subtotal * (discountPercent / 100));
-    const total = Math.max(0, subtotal - discount);
+    // Compute from numeric card data, not formatted text
+    const { subtotal, discount, total } = getTotals();
     if (els.sumSubtotal) els.sumSubtotal.textContent = fmt(subtotal);
     if (els.sumDiscount) els.sumDiscount.textContent = fmt(discount);
     if (els.sumTotal) els.sumTotal.textContent = fmt(total);
-    // Determine mode
+    // Determine mode and show Remaining/Change appropriately
     const params = new URLSearchParams(window.location.search || '');
     const isUpdate = !!params.get('orderId');
     const basePaid = parseCurrencyText(els.customerPay?.value || '0');
     const addPaid = parseCurrencyText(els.additionalPay?.value || '0');
     const effectivePaid = isUpdate ? (basePaid + addPaid) : basePaid;
-    const delta = effectivePaid - total;
-    if (els.sumChangeLabel) els.sumChangeLabel.textContent = isUpdate ? 'Remaining' : 'Change';
-    if (els.sumChange) {
-      const show = isUpdate ? Math.max(0, total - effectivePaid) : delta;
-      els.sumChange.textContent = fmt(show);
-      els.sumChange.classList.toggle('text-danger', isUpdate ? false : (delta < 0));
-      els.sumChange.classList.toggle('text-success', isUpdate ? false : (delta >= 0));
+    const delta = toMoney(effectivePaid - total);
+    if (els.sumChangeLabel && els.sumChange) {
+      if (isUpdate) {
+        if (delta >= 0) {
+          els.sumChangeLabel.textContent = 'Change';
+          els.sumChange.textContent = fmt(delta);
+          els.sumChange.classList.toggle('text-danger', false);
+          els.sumChange.classList.toggle('text-success', true);
+        } else {
+          els.sumChangeLabel.textContent = 'Remaining';
+          els.sumChange.textContent = fmt(toMoney(-delta));
+          els.sumChange.classList.toggle('text-danger', true);
+          els.sumChange.classList.toggle('text-success', false);
+        }
+      } else {
+        els.sumChangeLabel.textContent = 'Change';
+        els.sumChange.textContent = fmt(delta);
+        els.sumChange.classList.toggle('text-danger', delta < 0);
+        els.sumChange.classList.toggle('text-success', delta >= 0);
+      }
     }
   }
 
@@ -180,7 +215,7 @@
     const id = prod.id ?? '';
     const sku = prod.sku ?? '';
     const name = prod.name ?? prod.displayName ?? '';
-    const price = parseNumber((prod.sellingPrice || '').toString().replace(/[^0-9.-]/g, ''));
+    const price = parseCurrencyText(prod.sellingPrice ?? '');
 
     const row = document.createElement('div');
     row.className = 'pos-itemcard d-flex align-items-center';
@@ -234,10 +269,10 @@
     if (!els.items) return;
     const sku = it.productCode || '';
     const name = it.productName || '';
-    const original = parseNumber(Number(it.unitPrice || 0));
-    const perItemDisc = parseNumber(Number(it.discount || 0));
+    const original = parseNumber(it.unitPrice || 0);
+    const perItemDisc = parseNumber(it.discount || 0);
     const percent = original > 0 ? Math.min(100, Math.max(0, Math.round((perItemDisc * 10000) / original) / 100)) : 0; // to 2 decimals
-    const unit = Math.max(0, Math.round(original * (1 - (percent / 100)))); // effective sale unit price
+    const unit = Math.max(0, toMoney(original * (1 - (percent / 100)))); // effective sale unit price
     const qty = Number(it.quantity || 1);
     const row = document.createElement('div');
     row.className = 'pos-itemcard d-flex align-items-center';
@@ -257,7 +292,7 @@
         <input type="number" class="form-control form-control-sm text-end item-discount" value="${percent}" min="0" max="100" step="1" placeholder="discount">
       </div>
       <div class="price text-muted small">${fmt(original)}</div>
-      <div class="line-total fw-bold">${fmt(unit * qty)}</div>
+      <div class="line-total fw-bold">${fmt(toMoney(unit * qty))}</div>
       <button class="icon-btn" title="More"><i class="fa fa-ellipsis"></i></button>
     `;
     els.items.appendChild(row);
@@ -373,7 +408,7 @@
           <span class="barcode">${p.barcode ? 'Barcode: ' + p.barcode : ''}</span>
           <span class="ms-auto meta">
             ${stockBadge}
-            <span class="price">${price}</span>
+            <span class="price">${fmt(price)}</span>
           </span>
         </div>`;
     }).join('');
@@ -526,7 +561,7 @@
         const price = parseNumber(card.dataset.unitPrice || '0');
         let q = Math.max(1, parseInt(input.value || '1', 10) - 1);
         input.value = String(q);
-        card.querySelector('.line-total').textContent = fmt(price * q);
+        card.querySelector('.line-total').textContent = fmt(toMoney(price * q));
         calcTotals();
       }
       if (e.target.closest('.btn-qty-plus')) {
@@ -534,7 +569,7 @@
         const price = parseNumber(card.dataset.unitPrice || '0');
         let q = Math.max(1, parseInt(input.value || '1', 10) + 1);
         input.value = String(q);
-        card.querySelector('.line-total').textContent = fmt(price * q);
+        card.querySelector('.line-total').textContent = fmt(toMoney(price * q));
         calcTotals();
       }
     });
@@ -550,11 +585,11 @@
         if (!Number.isFinite(d)) d = 0;
         if (d < 0) d = 0;
         if (d > 100) d = 100;
-        const sale = Math.max(0, Math.round(original * (1 - d/100)));
+        const sale = Math.max(0, toMoney(original * (1 - d/100)));
         card.dataset.unitPrice = String(sale);
         // Keep displayed price as original; only update line total
         const q = Math.max(1, parseInt(card.querySelector('.qty input')?.value || '1', 10));
-        card.querySelector('.line-total').textContent = fmt(sale * q);
+        card.querySelector('.line-total').textContent = fmt(toMoney(sale * q));
         calcTotals();
       }
     });
@@ -568,7 +603,7 @@
         const price = parseNumber(card.dataset.unitPrice || '0');
         let q = Math.max(1, parseInt(qtyInput.value || '1', 10));
         qtyInput.value = String(q);
-        card.querySelector('.line-total').textContent = fmt(price * q);
+        card.querySelector('.line-total').textContent = fmt(toMoney(price * q));
         calcTotals();
         return;
       }
@@ -580,11 +615,11 @@
         if (d < 0) d = 0;
         if (d > 100) d = 100;
         discInput.value = String(d);
-        const sale = Math.max(0, Math.round(original * (1 - d/100)));
+        const sale = Math.max(0, toMoney(original * (1 - d/100)));
         card.dataset.unitPrice = String(sale);
         // Keep displayed price as original; only update line total
         const q = Math.max(1, parseInt(card.querySelector('.qty input')?.value || '1', 10));
-        card.querySelector('.line-total').textContent = fmt(sale * q);
+        card.querySelector('.line-total').textContent = fmt(toMoney(sale * q));
         calcTotals();
       }
     });
@@ -605,7 +640,7 @@
         const qty = Number(card.querySelector('.qty input')?.value || '1') || 1;
         const originalUnitPrice = parseNumber(card.dataset.originalUnitPrice || card.dataset.unitPrice || '0');
         const percent = parseNumber(card.querySelector('.item-discount')?.value || '0');
-        const unitPrice = Math.max(0, Math.round(originalUnitPrice * (1 - percent/100)));
+        const unitPrice = Math.max(0, toMoney(originalUnitPrice * (1 - percent/100)));
         const productId = card.dataset.productId ? Number(card.dataset.productId) : null;
         // Send effective unit price and set discount to 0 to keep backend totals consistent
         items.push({ productId, sku, name, quantity: qty, unitPrice, discount: 0 });
