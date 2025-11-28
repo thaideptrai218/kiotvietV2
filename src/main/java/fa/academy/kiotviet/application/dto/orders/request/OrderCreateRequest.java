@@ -14,5 +14,6 @@ public class OrderCreateRequest {
     private BigDecimal orderDiscount; // optional absolute discount (VND)
     private BigDecimal orderDiscountPercent; // optional percentage discount (0-100)
     private String note; // optional order note
+    private String cashier; // username of creator/cashier
     private List<OrderCreateItem> items;
 }
