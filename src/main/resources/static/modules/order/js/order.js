@@ -1574,6 +1574,7 @@ window.kvOrderToggleDetail = (function(){
     <div class='row'><span class="label">Paid amount</span><span class="value">${fmt(d.total)}</span></div>
   </div>
 </div>
+${(typeof CURRENT_USER_CAN_MANAGE !== 'undefined' && CURRENT_USER_CAN_MANAGE) ? `
 <div class='kv-order-detail__footer'>
   <div class='kv-order-detail__actions'></div>
   <div class='kv-order-detail__actions'>
@@ -1581,7 +1582,7 @@ window.kvOrderToggleDetail = (function(){
     <button class='kv-btn--ghost' data-action='save'>Save</button>
     <button class='kv-btn--primary' data-action='update'>Update</button>
   </div>
-</div>`;
+</div>` : ''}`;
       // bind footer actions
       const delBtn = panel.querySelector("[data-action='delete']");
       if (delBtn) {

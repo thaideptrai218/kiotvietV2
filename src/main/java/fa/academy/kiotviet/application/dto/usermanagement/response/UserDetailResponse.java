@@ -22,6 +22,7 @@ public class UserDetailResponse {
     private LocalDate birthday;
     private String address;
     private String note;
+    private java.util.List<String> permissions;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

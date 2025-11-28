@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     editingStatus: 'Active',
     detailRow: null,
     detailAnchor: null,
-    detailData: null
+    detailData: null,
+    isRestricted: false
   };
 
   const api = {
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   function init() {
+    checkPermissions();
     buildToast();
     buildFormError();
     initModal();
@@ -101,8 +103,29 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilterSidebar();
     initBulkActions();
     initExportButton();
-    loadRoles();
     loadUsers();
+  }
+
+  function checkPermissions() {
+    try {
+      const userInfoStr = localStorage.getItem('userInfo');
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr);
+        // Check if role is NOT Admin or Manager (case-insensitive check just in case)
+        const role = (userInfo.role || '').toLowerCase();
+        if (role !== 'admin' && role !== 'manager') {
+          state.isRestricted = true;
+          
+          // Hide create button
+          if (els.createBtn) els.createBtn.style.display = 'none';
+          
+          // Hide header checkbox
+          if (els.selectAll) els.selectAll.style.visibility = 'hidden';
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to check permissions', e);
+    }
   }
 
   function getDialCode() {
@@ -182,6 +205,22 @@ document.addEventListener('DOMContentLoaded', () => {
       els.createBtn.addEventListener('click', () => openUserModal());
     }
     els.userForm.addEventListener('submit', handleFormSubmit);
+    
+    const roleSelect = document.getElementById('roleSelect');
+    if (roleSelect) {
+        roleSelect.addEventListener('change', () => {
+            const role = roleSelect.value;
+            const permissionsGroup = document.getElementById('permissionsGroup');
+            if (permissionsGroup) {
+                if (role === 'User') {
+                    permissionsGroup.style.display = 'flex';
+                } else {
+                    permissionsGroup.style.display = 'none';
+                }
+            }
+        });
+    }
+    
     window.closeCreateModal = closeUserModal;
   }
 
@@ -255,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     els.tableBody.innerHTML = state.users
       .map((u) => `
         <tr data-id="${u.id}">
-          <td><input type="checkbox" data-id="${u.id}"></td>
+          <td>${state.isRestricted ? '' : `<input type="checkbox" data-id="${u.id}">`}</td>
           <td>${escapeHtml(u.displayName || u.username || '—')}</td>
           <td>${escapeHtml(u.username || '—')}</td>
           <td>${escapeHtml(u.phone || '—')}</td>
@@ -313,7 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       els.selectedInfo.style.display = 'none';
       els.bulkActions.style.display = 'none';
-      els.createBtn.style.display = 'inline-flex';
+      if (!state.isRestricted) {
+        els.createBtn.style.display = 'inline-flex';
+      }
     }
   }
 
@@ -354,6 +395,18 @@ document.addEventListener('DOMContentLoaded', () => {
       state.detailData = detail;
       fillDetail(clone, detail);
       bindDetailActions(clone);
+      
+      if (state.isRestricted) {
+        const editBtn = clone.querySelector('[data-action="edit"]');
+        const deleteBtn = clone.querySelector('[data-action="delete"]');
+        const passwordBtn = clone.querySelector('[data-action="password"]');
+        const statusBtn = clone.querySelector('[data-action="toggle-status"]');
+        
+        if (editBtn) editBtn.remove();
+        if (deleteBtn) deleteBtn.remove();
+        if (passwordBtn) passwordBtn.remove();
+        if (statusBtn) statusBtn.remove();
+      }
     } catch (err) {
       showToast(getErrorMessage(err), 'error');
       closeDetail();
@@ -424,7 +477,17 @@ document.addEventListener('DOMContentLoaded', () => {
     els.userForm.reset();
     showFormError('');
     els.userForm.elements.status.value = state.editingStatus || 'Active';
+    
+    // Reset permissions
+    const permissionsGroup = document.getElementById('permissionsGroup');
+    const roleSelect = document.getElementById('roleSelect');
+    if (permissionsGroup) {
+        permissionsGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        permissionsGroup.style.display = 'none';
+    }
+
     setPasswordRequired(!detail);
+    
     if (detail) {
       els.userForm.elements.displayName.value = detail.displayName || '';
       els.userForm.elements.username.value = detail.username || '';
@@ -433,6 +496,17 @@ document.addEventListener('DOMContentLoaded', () => {
       setDialCode(phoneParts.dial);
       els.userForm.elements.phone.value = phoneParts.number;
       els.userForm.elements.role.value = detail.role || '';
+      
+      if (detail.role === 'User' && permissionsGroup) {
+          permissionsGroup.style.display = 'flex';
+          if (detail.permissions && Array.isArray(detail.permissions)) {
+              detail.permissions.forEach(p => {
+                  const cb = permissionsGroup.querySelector(`input[value="${p}"]`);
+                  if (cb) cb.checked = true;
+              });
+          }
+      }
+
       if (detail.birthday) els.userForm.elements.birthday.value = detail.birthday;
       els.userForm.elements.address.value = detail.address || '';
       els.userForm.elements.note.value = detail.note || '';
@@ -507,6 +581,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (phoneInput && !phoneInput.startsWith('+') && dialCode) {
       phone = `${dialCode} ${phoneInput}`.trim();
     }
+    
+    const permissions = [];
+    const permissionsGroup = document.getElementById('permissionsGroup');
+    if (permissionsGroup && form.role.value === 'User') {
+        permissionsGroup.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+            permissions.push(cb.value);
+        });
+    }
+
     return {
       displayName: form.displayName.value.trim(),
       username: form.username.value.trim(),
@@ -518,7 +601,8 @@ document.addEventListener('DOMContentLoaded', () => {
       rePassword: form.rePassword.value.trim(),
       birthday: form.birthday.value || null,
       address: form.address.value.trim() || null,
-      note: form.note.value.trim() || null
+      note: form.note.value.trim() || null,
+      permissions: permissions
     };
   }
 

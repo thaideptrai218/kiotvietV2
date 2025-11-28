@@ -14,6 +14,7 @@ import fa.academy.kiotviet.core.orders.repository.OrderItemRepository;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +60,7 @@ public class OrderApiController {
     }
 
     @DeleteMapping("/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('ORDER_MANAGE')")
     public SuccessResponse<String> bulkDelete(@RequestBody List<Long> ids) {
         Long companyId = currentCompanyId();
         orderService.deleteBulk(companyId, ids);
@@ -66,6 +68,7 @@ public class OrderApiController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('ORDER_MANAGE')")
     public SuccessResponse<OrderCreateResponse> createOrder(@RequestBody OrderCreateRequest request) {
         Long companyId = currentCompanyId();
         Order saved = orderService.create(companyId, request);
@@ -84,6 +87,7 @@ public class OrderApiController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('ORDER_MANAGE')")
     public SuccessResponse<OrderCreateResponse> updateOrder(@PathVariable Long id, @RequestBody OrderCreateRequest request) {
         Long companyId = currentCompanyId();
         Order saved = orderService.update(companyId, id, request);

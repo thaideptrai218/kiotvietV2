@@ -29,13 +29,13 @@
         <div class="kv-toolbar__inner">
             <h1 id="page-title" class="kv-title">Orders</h1>
             <div class="kv-actions">
-                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import orders from CSV">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import orders from CSV" th:if="${canManage}">
                     <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
                 </button>
                 <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export orders to CSV">
                     <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
                 </button>
-                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new supplier">
+                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new supplier" th:if="${canManage}">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>Create Order</span>
                 </button>
                 <input type="file" id="fileImportCsv" accept=".csv,text/csv" style="display:none" />
@@ -286,7 +286,7 @@
                     <div><span id="selCount" class="fw-semibold">0</span> selected</div>
                     <div class="d-flex gap-2">
                         <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnClearSel">Clear</button>
-                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete"><i
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete" th:if="${canManage}"><i
                                 class="far fa-trash-can me-1"></i>Delete</button>
                     </div>
                 </div>
@@ -385,6 +385,9 @@
     <script src="/modules/dashboard/js/dashboard-core.js" th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
 
     <!-- Module JS -->
+    <script th:inline="javascript">
+        const CURRENT_USER_CAN_MANAGE = /*[[${canManage}]]*/ false;
+    </script>
     <script src="/modules/order/js/order.js" th:src="@{/modules/order/js/order.js}"></script>
     <!-- Import Preview Modal -->
     <div class="modal fade" id="importPreviewModal" tabindex="-1" aria-hidden="true">

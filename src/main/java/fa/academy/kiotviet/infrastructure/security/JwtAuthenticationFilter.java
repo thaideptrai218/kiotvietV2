@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -18,6 +20,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -55,6 +60,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(null);
 
                 if (user != null && username.equals(user.getUsername())) {
+                    // Build authorities
+                    List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                    // Add role as authority (e.g., ROLE_ADMIN)
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name().toUpperCase()));
+                    
+                    // Add permissions
+                    // See fa.academy.kiotviet.core.usermanagement.domain.UserInfo.UserPermission for available permissions
+                    if (StringUtils.hasText(user.getPermissions())) {
+                        Arrays.stream(user.getPermissions().split(","))
+                            .filter(StringUtils::hasText)
+                            .map(String::trim)
+                            .map(SimpleGrantedAuthority::new)
+                            .forEach(authorities::add);
+                    }
+
                     // Create authentication token with user info
                     UserPrincipal userPrincipal = new UserPrincipal(
                         userId,
@@ -62,13 +82,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         username,
                         role,
                         user.getFullName() != null ? user.getFullName() : "",
-                        user.getEmail() != null ? user.getEmail() : ""
+                        user.getEmail() != null ? user.getEmail() : "",
+                        authorities
                     );
                     UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                             userPrincipal,
                             null,
-                            new ArrayList<>() // No authorities for now
+                            authorities
                         );
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
@@ -118,6 +139,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         private String role;
         private String fullName;
         private String email;
+        private Collection<? extends GrantedAuthority> authorities;
 
         @Override
         public boolean isAccountNonExpired() {
@@ -140,8 +162,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         @Override
-        public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
-            return new ArrayList<>();
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return authorities != null ? authorities : new ArrayList<>();
         }
 
         @Override

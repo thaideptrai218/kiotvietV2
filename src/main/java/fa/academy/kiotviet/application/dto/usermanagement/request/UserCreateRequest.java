@@ -49,4 +49,6 @@ public class UserCreateRequest {
 
     @Size(max = 2000, message = "Note must not exceed 2000 characters")
     private String note;
+
+    private java.util.List<String> permissions;
 }

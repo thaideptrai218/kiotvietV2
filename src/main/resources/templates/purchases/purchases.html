@@ -30,13 +30,13 @@
         <div class="kv-toolbar__inner">
             <h1 id="page-title" class="kv-title">Purchases</h1>
             <div class="kv-actions">
-                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import purchases from file">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import purchases from file" th:if="${canManage}">
                     <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
                 </button>
-                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export purchases to CSV">
+                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export purchases to CSV" th:if="${canManage}">
                     <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
                 </button>
-                <button class="kv-btn kv-btn--primary" id="btnNew" title="Create new purchase entry">
+                <button class="kv-btn kv-btn--primary" id="btnNew" title="Create new purchase entry" th:if="${canManage}">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>Create Entry</span>
                 </button>
             </div>
@@ -204,7 +204,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
-                    <button class="kv-btn kv-btn--primary" id="btnCreatePurchase">
+                    <button class="kv-btn kv-btn--primary" id="btnCreatePurchase" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-save"></i> Create Draft</span>
                         <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                     </button>
@@ -238,7 +238,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
-                    <button class="kv-btn kv-btn--primary" id="btnImportUpload"><i class="fas fa-upload me-1"></i>Upload</button>
+                    <button class="kv-btn kv-btn--primary" id="btnImportUpload" th:if="${canManage}"><i class="fas fa-upload me-1"></i>Upload</button>
                 </div>
             </div>
         </div>
@@ -293,7 +293,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Close</button>
-                    <button class="kv-btn kv-btn--primary" id="btnSaveEdit">
+                    <button class="kv-btn kv-btn--primary" id="btnSaveEdit" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-save"></i> Save</span>
                         <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                     </button>
@@ -335,7 +335,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Close</button>
-                    <button class="kv-btn kv-btn--primary" id="btnDoConfirm">
+                    <button class="kv-btn kv-btn--primary" id="btnDoConfirm" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-check"></i> Confirm</span>
                         <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Processing...</span>
                     </button>
@@ -359,7 +359,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Close</button>
-                    <button class="kv-btn kv-btn--danger" id="btnDoCancel">
+                    <button class="kv-btn kv-btn--danger" id="btnDoCancel" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-ban"></i> Cancel</span>
                         <span class="loading-text d-none"><span class="spinner-border spinner-border-sm me-1"></span>Processing...</span>
                     </button>

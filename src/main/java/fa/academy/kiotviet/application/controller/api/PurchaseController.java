@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -26,6 +27,7 @@ public class PurchaseController {
     private final PurchaseService purchaseService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PURCHASE_MANAGE')")
     public SuccessResponse<PurchaseDto> create(@Valid @RequestBody PurchaseCreateRequest request) {
         Long companyId = currentCompanyId();
         PurchaseDto dto = purchaseService.create(companyId, request);
@@ -33,6 +35,7 @@ public class PurchaseController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PURCHASE_MANAGE')")
     public SuccessResponse<PurchaseDto> update(@PathVariable Long id, @Valid @RequestBody PurchaseUpdateRequest request) {
         Long companyId = currentCompanyId();
         PurchaseDto dto = purchaseService.update(companyId, id, request);
@@ -40,6 +43,7 @@ public class PurchaseController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PURCHASE_MANAGE')")
     public SuccessResponse<PurchaseDto> confirm(@PathVariable Long id, @RequestBody PurchaseConfirmRequest request) {
         Long companyId = currentCompanyId();
         PurchaseDto dto = purchaseService.confirm(companyId, id, request);
@@ -47,6 +51,7 @@ public class PurchaseController {
     }
 
     @PostMapping("/{id}/receive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PURCHASE_MANAGE')")
     public SuccessResponse<PurchaseDto> receive(@PathVariable Long id, @RequestBody PurchaseReceiveRequest request) {
         Long companyId = currentCompanyId();
         PurchaseDto dto = purchaseService.receive(companyId, id, request);
@@ -54,6 +59,7 @@ public class PurchaseController {
     }
 
     @PostMapping("/{id}/payments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PURCHASE_MANAGE')")
     public SuccessResponse<PurchaseDto> addPayment(@PathVariable Long id, @RequestBody PurchasePaymentRequest request) {
         Long companyId = currentCompanyId();
         PurchaseDto dto = purchaseService.addPayment(companyId, id, request);
@@ -61,6 +67,7 @@ public class PurchaseController {
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PURCHASE_MANAGE')")
     public SuccessResponse<PurchaseDto> cancel(@PathVariable Long id) {
         Long companyId = currentCompanyId();
         PurchaseDto dto = purchaseService.cancel(companyId, id);

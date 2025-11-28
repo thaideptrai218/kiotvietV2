@@ -9,6 +9,7 @@ import fa.academy.kiotviet.core.productcatalog.service.CategoryService;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -114,6 +115,7 @@ public class CategoryApiController {
      * Create a new category (root or subcategory)
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<CategoryDto> createCategory(@Valid @RequestBody CategoryCreateRequest request) {
         Long companyId = currentCompanyId();
 
@@ -147,6 +149,7 @@ public class CategoryApiController {
      * Update category details (not hierarchy changes)
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<CategoryDto> updateCategory(
             @PathVariable Long id,
             @Valid @RequestBody CategoryUpdateRequest request) {
@@ -169,6 +172,7 @@ public class CategoryApiController {
      * Move a category to a new parent
      */
     @PutMapping("/{id}/move")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<CategoryDto> moveCategory(
             @PathVariable Long id,
             @Valid @RequestBody CategoryMoveRequest request) {
@@ -188,6 +192,7 @@ public class CategoryApiController {
      * Soft delete a category (and all its descendants)
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> deleteCategory(@PathVariable Long id) {
         Long companyId = currentCompanyId();
         categoryService.deleteCategory(companyId, id);
@@ -198,6 +203,7 @@ public class CategoryApiController {
      * Restore a deleted category (and its descendants)
      */
     @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<CategoryDto> restoreCategory(@PathVariable Long id) {
         Long companyId = currentCompanyId();
         Category category = categoryService.restoreCategory(companyId, id);
@@ -222,6 +228,7 @@ public class CategoryApiController {
      * Reorder categories within the same parent level
      */
     @PutMapping("/reorder")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> reorderCategories(@Valid @RequestBody CategoryReorderRequest request) {
         Long companyId = currentCompanyId();
         categoryService.reorderCategories(companyId, request.getCategoryIds());

@@ -29,6 +29,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -99,6 +100,7 @@ public class UserManagementController {
     }
 
     @PostMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SuccessResponse<Map<String, Long>>> createUser(
         @Valid @RequestBody UserCreateRequest request
     ) {
@@ -110,6 +112,7 @@ public class UserManagementController {
     }
 
     @PutMapping("/users/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SuccessResponse<UserDetailResponse>> updateUser(
         @PathVariable Long id,
         @Valid @RequestBody UserUpdateRequest request
@@ -120,6 +123,7 @@ public class UserManagementController {
     }
 
     @PutMapping("/users/{id}/password")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SuccessResponse<Void>> changePassword(
         @PathVariable Long id,
         @Valid @RequestBody UserPasswordUpdateRequest request
@@ -130,6 +134,7 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SuccessResponse<Void>> deleteUser(@PathVariable Long id) {
         JwtAuthenticationFilter.UserPrincipal principal = requirePrincipal();
         userManagementService.deleteUser(principal.getCompanyId(), id, principal.getUserId());
@@ -137,6 +142,7 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SuccessResponse<Void>> deleteUsers(@RequestBody List<Long> ids) {
         JwtAuthenticationFilter.UserPrincipal principal = requirePrincipal();
         userManagementService.deleteUsers(principal.getCompanyId(), ids, principal.getUserId());
@@ -144,6 +150,7 @@ public class UserManagementController {
     }
 
     @PutMapping("/users/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SuccessResponse<Void>> updateStatuses(
         @Valid @RequestBody BulkStatusUpdateRequest request
     ) {
@@ -228,6 +235,9 @@ public class UserManagementController {
             .birthday(user.getBirthday())
             .address(user.getAddress())
             .note(user.getNote())
+            .permissions(StringUtils.hasText(user.getPermissions()) 
+                ? Arrays.asList(user.getPermissions().split(",")) 
+                : java.util.Collections.emptyList())
             .createdAt(user.getCreatedAt())
             .updatedAt(user.getUpdatedAt())
             .build();

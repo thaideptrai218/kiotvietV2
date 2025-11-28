@@ -66,6 +66,9 @@ public class UserInfo {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "permissions", columnDefinition = "TEXT")
+    private String permissions;
+
     @Column(name = "created_at", updatable = false)
     private java.time.LocalDateTime createdAt;
 
@@ -110,6 +113,23 @@ public class UserInfo {
                     || role.displayName.equalsIgnoreCase(value))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + value));
+        }
+    }
+
+    public enum UserPermission {
+        PRODUCT_MANAGE("Product Management (View, Create, Edit, Delete)"),
+        ORDER_MANAGE("Order Management (Selling, Returns)"),
+        PURCHASE_MANAGE("Purchase Management"),
+        INVENTORY_MANAGE("Inventory Control");
+
+        private final String description;
+
+        UserPermission(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
         }
     }
 }

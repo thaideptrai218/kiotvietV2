@@ -17,6 +17,7 @@ import fa.academy.kiotviet.infrastructure.security.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ import java.time.LocalDate;
 @RequestMapping("/api/inventory-counts")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('INVENTORY_MANAGE')")
 public class InventoryCountController {
 
     private final InventoryCountService inventoryCountService;

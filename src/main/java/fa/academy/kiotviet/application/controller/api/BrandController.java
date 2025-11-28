@@ -11,6 +11,7 @@ import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -62,6 +63,7 @@ public class BrandController {
      * Create a new brand
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<BrandDto> createBrand(@Valid @RequestBody BrandCreateRequest request) {
         Long companyId = currentCompanyId();
         BrandDto brand = brandService.create(companyId, request);
@@ -72,6 +74,7 @@ public class BrandController {
      * Update an existing brand
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<BrandDto> updateBrand(
             @PathVariable Long id,
             @Valid @RequestBody BrandUpdateRequest request) {
@@ -85,6 +88,7 @@ public class BrandController {
      * Soft delete a brand (mark as inactive)
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> deleteBrand(@PathVariable Long id) {
         Long companyId = currentCompanyId();
         brandService.softDelete(companyId, id);

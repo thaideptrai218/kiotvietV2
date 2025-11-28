@@ -12,6 +12,7 @@ import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
@@ -75,6 +76,7 @@ public class SupplierApiController {
 
     // Create supplier
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<SupplierDto> create(@Valid @RequestBody SupplierCreateRequest request) {
         Long companyId = currentCompanyId();
         SupplierDto data = supplierService.create(companyId, request);
@@ -83,6 +85,7 @@ public class SupplierApiController {
 
     // Update supplier
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<SupplierDto> update(@PathVariable Long id,
             @Valid @RequestBody SupplierUpdateRequest request) {
         Long companyId = currentCompanyId();
@@ -92,6 +95,7 @@ public class SupplierApiController {
 
     // Soft delete supplier
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> delete(@PathVariable Long id) {
         Long companyId = currentCompanyId();
         supplierService.softDelete(companyId, id);
@@ -110,6 +114,7 @@ public class SupplierApiController {
 
     // Bulk import (CSV/Excel) - MVP handles CSV; Excel can be added later
     @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> bulkImport(@RequestParam("file") MultipartFile file) {
         Long companyId = currentCompanyId();
         if (file == null || file.isEmpty()) {

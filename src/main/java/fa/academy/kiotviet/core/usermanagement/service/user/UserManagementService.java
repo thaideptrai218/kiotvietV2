@@ -71,7 +71,7 @@ public class UserManagementService {
         user.setCompany(company);
         applyCommonFields(user, request.getDisplayName(), request.getUsername(), request.getEmail(),
             request.getPhone(), request.getRole(), request.getStatus(), request.getBirthday(),
-            request.getAddress(), request.getNote());
+            request.getAddress(), request.getNote(), request.getPermissions());
 
         UserInfo saved = userInfoRepository.save(user);
         persistPassword(saved, request.getPassword());
@@ -87,7 +87,7 @@ public class UserManagementService {
 
         applyCommonFields(user, request.getDisplayName(), request.getUsername(), request.getEmail(),
             request.getPhone(), request.getRole(), request.getStatus(), request.getBirthday(),
-            request.getAddress(), request.getNote());
+            request.getAddress(), request.getNote(), request.getPermissions());
 
         UserInfo saved = userInfoRepository.save(user);
         if (StringUtils.hasText(request.getPassword())) {
@@ -165,7 +165,8 @@ public class UserManagementService {
         String status,
         java.time.LocalDate birthday,
         String address,
-        String note
+        String note,
+        List<String> permissions
     ) {
         user.setFullName(displayName);
         user.setUsername(username);
@@ -176,6 +177,12 @@ public class UserManagementService {
         user.setBirthday(birthday);
         user.setAddress(address);
         user.setNote(note);
+        
+        if (permissions != null && !permissions.isEmpty()) {
+            user.setPermissions(String.join(",", permissions));
+        } else {
+            user.setPermissions(null);
+        }
     }
 
     private void persistPassword(UserInfo user, String rawPassword) {

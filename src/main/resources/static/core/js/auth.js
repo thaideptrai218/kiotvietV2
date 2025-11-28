@@ -1,22 +1,9 @@
-/**
- * KiotViet Authentication Manager
- * Centralized authentication handling for all pages
- *
- * Features:
- * - JWT token management (localStorage)
- * - Authentication status checking
- * - Automatic redirects for protected pages
- * - UI updates for authenticated users
- * - Token refresh handling
- * - Logout functionality
- */
-
 class KiotVietAuth {
     constructor() {
-        this.tokenKey = 'jwtToken';
-        this.refreshTokenKey = 'refreshToken';
-        this.userInfoKey = 'userInfo';
-        this.apiBaseUrl = '/api/auth';
+        this.tokenKey = "jwtToken";
+        this.refreshTokenKey = "refreshToken";
+        this.userInfoKey = "userInfo";
+        this.apiBaseUrl = "/api/auth";
         this._mfaModal = null;
         this._mfaChallengeId = null;
     }
@@ -38,10 +25,17 @@ class KiotVietAuth {
      * Check if current page requires authentication
      */
     isProtectedPage() {
-        const protectedRoutes = ['/dashboard', '/profile', '/settings', '/products', '/suppliers', '/order'];
+        const protectedRoutes = [
+            "/dashboard",
+            "/profile",
+            "/settings",
+            "/products",
+            "/suppliers",
+            "/order",
+        ];
         const currentPath = window.location.pathname;
 
-        return protectedRoutes.some(route => currentPath.startsWith(route));
+        return protectedRoutes.some((route) => currentPath.startsWith(route));
     }
 
     /**
@@ -77,7 +71,7 @@ class KiotVietAuth {
             const userInfo = localStorage.getItem(this.userInfoKey);
             return userInfo ? JSON.parse(userInfo) : null;
         } catch (error) {
-            console.error('Error parsing user info:', error);
+            console.error("Error parsing user info:", error);
             return null;
         }
     }
@@ -94,17 +88,20 @@ class KiotVietAuth {
 
         try {
             const response = await fetch(`${this.apiBaseUrl}/me`, {
-                method: 'GET',
+                method: "GET",
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
             });
 
             if (response.ok) {
                 const data = await response.json();
                 // Update stored user info with fresh data
-                localStorage.setItem(this.userInfoKey, JSON.stringify(data.data));
+                localStorage.setItem(
+                    this.userInfoKey,
+                    JSON.stringify(data.data)
+                );
                 return true;
             } else {
                 // Token is invalid, clear it
@@ -112,7 +109,7 @@ class KiotVietAuth {
                 return false;
             }
         } catch (error) {
-            console.error('Authentication check failed:', error);
+            console.error("Authentication check failed:", error);
             return false;
         }
     }
@@ -126,8 +123,11 @@ class KiotVietAuth {
 
         if (!isAuthenticated) {
             // Store current URL for redirect after login
-            const currentUrl = window.location.pathname + window.location.search;
-            window.location.href = `/login?redirect=${encodeURIComponent(currentUrl)}`;
+            const currentUrl =
+                window.location.pathname + window.location.search;
+            window.location.href = `/login?redirect=${encodeURIComponent(
+                currentUrl
+            )}`;
             return false;
         }
 
@@ -167,7 +167,7 @@ class KiotVietAuth {
      * Update navbar for authenticated users
      */
     updateNavbarForAuthenticatedUser(userInfo) {
-        const navbarAuth = document.querySelector('.navbar-nav:last-child');
+        const navbarAuth = document.querySelector(".navbar-nav:last-child");
         if (navbarAuth && userInfo) {
             navbarAuth.innerHTML = `
                 <div class="dropdown">
@@ -195,7 +195,7 @@ class KiotVietAuth {
      * Update hero section for authenticated users
      */
     updateHeroSectionForAuthenticatedUser(userInfo) {
-        const heroCTA = document.querySelector('.hero-content .d-flex');
+        const heroCTA = document.querySelector(".hero-content .d-flex");
         if (heroCTA && userInfo) {
             heroCTA.innerHTML = `
                 <button class="btn btn-light btn-lg px-4 py-3" onclick="kiotVietAuth.goToDashboard()">
@@ -212,9 +212,10 @@ class KiotVietAuth {
      * Update dashboard access button
      */
     updateDashboardAccessButton(userInfo) {
-        const dashboardBtn = document.querySelector('#dashboardAccess button');
+        const dashboardBtn = document.querySelector("#dashboardAccess button");
         if (dashboardBtn && userInfo) {
-            dashboardBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Enter Dashboard';
+            dashboardBtn.innerHTML =
+                '<i class="fas fa-arrow-right me-2"></i>Enter Dashboard';
             dashboardBtn.onclick = () => this.goToDashboard();
         }
     }
@@ -223,12 +224,20 @@ class KiotVietAuth {
      * Update trust indicators
      */
     updateTrustIndicators(userInfo) {
-        const trustIndicators = document.querySelector('.hero-content .mt-4 small');
+        const trustIndicators = document.querySelector(
+            ".hero-content .mt-4 small"
+        );
         if (trustIndicators && userInfo) {
             trustIndicators.innerHTML = `
-                <i class="fas fa-check-circle me-2"></i>Welcome back, ${userInfo.username}!
-                <i class="fas fa-check-circle ms-3 me-2"></i>${userInfo.companyName || 'Your Company'}
-                <i class="fas fa-check-circle ms-3 me-2"></i>Role: ${userInfo.role || 'User'}
+                <i class="fas fa-check-circle me-2"></i>Welcome back, ${
+                    userInfo.username
+                }!
+                <i class="fas fa-check-circle ms-3 me-2"></i>${
+                    userInfo.companyName || "Your Company"
+                }
+                <i class="fas fa-check-circle ms-3 me-2"></i>Role: ${
+                    userInfo.role || "User"
+                }
             `;
         }
     }
@@ -246,26 +255,28 @@ class KiotVietAuth {
     async handleLogin(loginData) {
         try {
             const response = await fetch(`${this.apiBaseUrl}/login`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
                 },
-                body: JSON.stringify(loginData)
+                body: JSON.stringify(loginData),
             });
 
             // MFA required path (HTTP 202)
             if (response.status === 202) {
                 const mfa = await response.json().catch(() => ({}));
                 const challengeId = mfa?.data?.challengeId || mfa?.challengeId;
-                if (!challengeId) throw new Error('MFA challenge missing');
+                if (!challengeId) throw new Error("MFA challenge missing");
                 const verified = await this._handleMfaViaModal(challengeId);
                 return { success: true, data: verified };
             }
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.error || 'Login failed');
+                throw new Error(
+                    errorData.message || errorData.error || "Login failed"
+                );
             }
 
             const data = await response.json();
@@ -279,7 +290,7 @@ class KiotVietAuth {
 
             return { success: true, data: data.data };
         } catch (error) {
-            console.error('Login failed:', error);
+            console.error("Login failed:", error);
             return { success: false, error: error.message };
         }
     }
@@ -287,36 +298,39 @@ class KiotVietAuth {
     _handleMfaViaModal(challengeId) {
         this._mfaChallengeId = challengeId;
         return new Promise((resolve, reject) => {
-            const modalEl = document.getElementById('mfaModal');
-            const codeInput = document.getElementById('mfaCodeInput');
-            const verifyBtn = document.getElementById('mfaVerifyBtn');
-            const cancelBtn = document.getElementById('mfaCancelBtn');
-            const alertEl = document.getElementById('mfaAlert');
+            const modalEl = document.getElementById("mfaModal");
+            const codeInput = document.getElementById("mfaCodeInput");
+            const verifyBtn = document.getElementById("mfaVerifyBtn");
+            const cancelBtn = document.getElementById("mfaCancelBtn");
+            const alertEl = document.getElementById("mfaAlert");
             if (!modalEl || !codeInput || !verifyBtn) {
-                reject(new Error('MFA UI not available'));
+                reject(new Error("MFA UI not available"));
                 return;
             }
 
             // Bootstrap modal with static backdrop to prevent accidental close
-            const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+            const modal = new bootstrap.Modal(modalEl, {
+                backdrop: "static",
+                keyboard: false,
+            });
             this._mfaModal = modal;
-            alertEl?.classList.add('d-none');
-            codeInput.value = '';
+            alertEl?.classList.add("d-none");
+            codeInput.value = "";
             modal.show();
             setTimeout(() => codeInput.focus(), 200);
 
             const cleanup = () => {
-                modalEl.removeEventListener('hidden.bs.modal', onHidden);
-                verifyBtn.removeEventListener('click', onVerify);
-                cancelBtn?.removeEventListener('click', onCancel);
-                codeInput.removeEventListener('keydown', onKey);
+                modalEl.removeEventListener("hidden.bs.modal", onHidden);
+                verifyBtn.removeEventListener("click", onVerify);
+                cancelBtn?.removeEventListener("click", onCancel);
+                codeInput.removeEventListener("keydown", onKey);
                 this._mfaModal = null;
                 this._mfaChallengeId = null;
             };
 
             const onHidden = () => {
                 cleanup();
-                reject(new Error('Two-factor verification cancelled'));
+                reject(new Error("Two-factor verification cancelled"));
             };
 
             const onCancel = () => {
@@ -324,52 +338,62 @@ class KiotVietAuth {
             };
 
             const onKey = (e) => {
-                if (e.key === 'Enter') onVerify();
+                if (e.key === "Enter") onVerify();
             };
 
             const onVerify = async () => {
-                const code = String(codeInput.value || '').trim();
+                const code = String(codeInput.value || "").trim();
                 if (code.length !== 6) {
-                    alertEl.className = 'alert alert-danger';
-                    alertEl.textContent = 'Please enter the 6-digit code.';
-                    alertEl.classList.remove('d-none');
+                    alertEl.className = "alert alert-danger";
+                    alertEl.textContent = "Please enter the 6-digit code.";
+                    alertEl.classList.remove("d-none");
                     return;
                 }
-                alertEl.classList.add('d-none');
+                alertEl.classList.add("d-none");
                 verifyBtn.disabled = true;
                 try {
-                    const verifyRes = await fetch(`${this.apiBaseUrl}/mfa/verify`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ challengeId, code })
-                    });
+                    const verifyRes = await fetch(
+                        `${this.apiBaseUrl}/mfa/verify`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                            },
+                            body: JSON.stringify({ challengeId, code }),
+                        }
+                    );
                     const body = await verifyRes.json().catch(() => ({}));
                     if (!verifyRes.ok) {
-                        alertEl.className = 'alert alert-danger';
-                        alertEl.textContent = body.message || body.error || 'Invalid or expired code';
-                        alertEl.classList.remove('d-none');
+                        alertEl.className = "alert alert-danger";
+                        alertEl.textContent =
+                            body.message ||
+                            body.error ||
+                            "Invalid or expired code";
+                        alertEl.classList.remove("d-none");
                         verifyBtn.disabled = false;
                         return;
                     }
-                    this.setTokens(body.data.accessToken, body.data.refreshToken, body.data.userInfo);
+                    this.setTokens(
+                        body.data.accessToken,
+                        body.data.refreshToken,
+                        body.data.userInfo
+                    );
                     modal.hide();
                     cleanup();
                     resolve(body.data);
                 } catch (err) {
-                    alertEl.className = 'alert alert-danger';
-                    alertEl.textContent = 'Network error. Please try again.';
-                    alertEl.classList.remove('d-none');
+                    alertEl.className = "alert alert-danger";
+                    alertEl.textContent = "Network error. Please try again.";
+                    alertEl.classList.remove("d-none");
                     verifyBtn.disabled = false;
                 }
             };
 
-            modalEl.addEventListener('hidden.bs.modal', onHidden);
-            verifyBtn.addEventListener('click', onVerify);
-            cancelBtn?.addEventListener('click', onCancel);
-            codeInput.addEventListener('keydown', onKey);
+            modalEl.addEventListener("hidden.bs.modal", onHidden);
+            verifyBtn.addEventListener("click", onVerify);
+            cancelBtn?.addEventListener("click", onCancel);
+            codeInput.addEventListener("keydown", onKey);
         });
     }
 
@@ -379,17 +403,21 @@ class KiotVietAuth {
     async handleRegistration(registrationData) {
         try {
             const response = await fetch(`${this.apiBaseUrl}/register`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
                 },
-                body: JSON.stringify(registrationData)
+                body: JSON.stringify(registrationData),
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || errorData.error || 'Registration failed');
+                throw new Error(
+                    errorData.message ||
+                        errorData.error ||
+                        "Registration failed"
+                );
             }
 
             const data = await response.json();
@@ -403,7 +431,7 @@ class KiotVietAuth {
 
             return { success: true, data: data.data };
         } catch (error) {
-            console.error('Registration failed:', error);
+            console.error("Registration failed:", error);
             return { success: false, error: error.message };
         }
     }
@@ -420,16 +448,16 @@ class KiotVietAuth {
 
         try {
             const response = await fetch(`${this.apiBaseUrl}/refresh`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
                 },
-                body: JSON.stringify({ refreshToken })
+                body: JSON.stringify({ refreshToken }),
             });
 
             if (!response.ok) {
-                throw new Error('Token refresh failed');
+                throw new Error("Token refresh failed");
             }
 
             const data = await response.json();
@@ -439,7 +467,7 @@ class KiotVietAuth {
 
             return true;
         } catch (error) {
-            console.error('Token refresh failed:', error);
+            console.error("Token refresh failed:", error);
             this.clearTokens();
             return false;
         }
@@ -455,15 +483,15 @@ class KiotVietAuth {
             // Call logout endpoint if token exists
             if (token) {
                 await fetch(`${this.apiBaseUrl}/logout`, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
                 });
             }
         } catch (error) {
-            console.error('Logout API call failed:', error);
+            console.error("Logout API call failed:", error);
         }
 
         // Clear local storage FIRST before redirect
@@ -472,7 +500,7 @@ class KiotVietAuth {
         // Add a small delay to ensure local storage is cleared before redirect
         setTimeout(() => {
             // Redirect to login page with logout flag
-            window.location.href = '/login?logout=true';
+            window.location.href = "/login?logout=true";
         }, 100);
     }
 
@@ -480,7 +508,7 @@ class KiotVietAuth {
      * Navigate to dashboard
      */
     goToDashboard() {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
     }
 
     /**
@@ -488,7 +516,7 @@ class KiotVietAuth {
      */
     getAuthHeaders() {
         const token = this.getToken();
-        return token ? { 'Authorization': `Bearer ${token}` } : {};
+        return token ? { Authorization: `Bearer ${token}` } : {};
     }
 
     /**
@@ -498,18 +526,18 @@ class KiotVietAuth {
         const token = this.getToken();
 
         if (!token) {
-            throw new Error('No authentication token available');
+            throw new Error("No authentication token available");
         }
 
         const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            ...options.headers
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...options.headers,
         };
 
         return fetch(url, {
             ...options,
-            headers
+            headers,
         });
     }
 }
@@ -518,11 +546,11 @@ class KiotVietAuth {
 window.kiotVietAuth = new KiotVietAuth();
 
 // Auto-initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     kiotVietAuth.init();
 });
 
 // Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
     module.exports = KiotVietAuth;
 }

@@ -13,6 +13,7 @@ import fa.academy.kiotviet.infrastructure.storage.FileStorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -75,6 +76,7 @@ public class ProductController {
      * Create a new product
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<ProductDto> createProduct(@Valid @RequestBody ProductCreateRequest request) {
         Long companyId = currentCompanyId();
         ProductDto product = productService.create(companyId, request);
@@ -85,6 +87,7 @@ public class ProductController {
      * Upload product image
      */
     @PostMapping("/upload-image")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> uploadImage(@RequestParam("file") MultipartFile file) {
         Long companyId = currentCompanyId();
         String imageUrl = fileStorageService.storeProductImage(companyId, file);
@@ -95,6 +98,7 @@ public class ProductController {
      * Update an existing product
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<ProductDto> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductUpdateRequest request) {
@@ -108,6 +112,7 @@ public class ProductController {
      * Soft delete a product (mark as discontinued)
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('PRODUCT_MANAGE')")
     public SuccessResponse<String> deleteProduct(@PathVariable Long id) {
         Long companyId = currentCompanyId();
         productService.softDelete(companyId, id);

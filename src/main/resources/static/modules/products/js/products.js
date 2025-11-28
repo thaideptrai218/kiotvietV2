@@ -617,7 +617,8 @@
             </div>
 
             <!-- Action Bar -->
-            <div class="action-bar">
+            ${(typeof CURRENT_USER_CAN_MANAGE !== 'undefined' && CURRENT_USER_CAN_MANAGE) ? 
+            `<div class="action-bar">
               <div class="d-flex justify-content-end gap-2">
                 <button class="kv-btn kv-btn--ghost kv-btn--sm" data-act="delete">
                   <i class="far fa-trash-can me-1"></i>Delete
@@ -629,7 +630,7 @@
                   <i class="fas fa-power-off me-1"></i>${toggleLabel}
                 </button>
               </div>
-            </div>
+            </div>` : ''}
           </div>
         </td>
       </tr>`;

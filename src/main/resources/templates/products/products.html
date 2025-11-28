@@ -30,13 +30,13 @@
         <div class="kv-toolbar__inner">
             <h1 id="page-title" class="kv-title">Products</h1>
             <div class="kv-actions">
-                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import products from file">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import products from file" th:if="${canManage}">
                     <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
                 </button>
-                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export products to CSV">
+                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export products to CSV" th:if="${canManage}">
                     <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
                 </button>
-                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new product">
+                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new product" th:if="${canManage}">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>Create Product</span>
                 </button>
             </div>
@@ -54,7 +54,7 @@
                     <div class="kv-filter__group">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label class="kv-filter__label mb-0">Category</label>
-                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageCategory" style="font-size: 0.85rem;">
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageCategory" style="font-size: 0.85rem;" th:if="${canManage}">
                                 <i class="fas fa-cog me-1"></i>Manage
                             </button>
                         </div>
@@ -70,7 +70,7 @@
                     <div class="kv-filter__group">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label class="kv-filter__label mb-0">Brand</label>
-                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageBrand" style="font-size: 0.85rem;">
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageBrand" style="font-size: 0.85rem;" th:if="${canManage}">
                                 <i class="fas fa-cog me-1"></i>Manage
                             </button>
                         </div>
@@ -86,7 +86,7 @@
                     <div class="kv-filter__group">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label class="kv-filter__label mb-0">Supplier</label>
-                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageSupplier" style="font-size: 0.85rem;">
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" id="btnManageSupplier" style="font-size: 0.85rem;" th:if="${canManage}">
                                 <i class="fas fa-cog me-1"></i>Manage
                             </button>
                         </div>
@@ -98,6 +98,7 @@
                             <div class="kv-autocomplete__dropdown" id="supplierDropdown"></div>
                         </div>
                     </div>
+
 
                     <div class="kv-filter__group">
                         <label class="kv-filter__label">Status</label>
@@ -179,7 +180,7 @@
                     <div><span id="selCount" class="fw-semibold">0</span> selected</div>
                     <div class="d-flex gap-2">
                         <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnClearSel">Clear</button>
-                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete"><i
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete" th:if="${canManage}"><i
                                 class="far fa-trash-can me-1"></i>Delete</button>
                     </div>
                 </div>
@@ -372,12 +373,12 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
-                    <button class="kv-btn kv-btn--primary d-none" id="btnSave" disabled>
+                    <button class="kv-btn kv-btn--primary d-none" id="btnSave" disabled th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-save"></i> Update</span>
                         <span class="loading-text d-none"><span
                                 class="spinner-border spinner-border-sm me-1"></span>Updating...</span>
                     </button>
-                    <button class="kv-btn kv-btn--outline" id="btnSaveNew">
+                    <button class="kv-btn kv-btn--outline" id="btnSaveNew" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-plus"></i> Create</span>
                         <span class="loading-text d-none"><span
                                 class="spinner-border spinner-border-sm me-1"></span>Creating...</span>
@@ -402,7 +403,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
-                    <button class="kv-btn kv-btn--primary" id="btnImportUpload">
+                    <button class="kv-btn kv-btn--primary" id="btnImportUpload" th:if="${canManage}">
                         <i class="fas fa-upload me-1"></i>Upload
                     </button>
                 </div>
@@ -515,71 +516,6 @@
         </div>
     </div>
 
-    <!-- Modal: Manage Suppliers -->
-    <div class="modal fade" id="supplierManageModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header kv-modal__header">
-                    <h5 class="modal-title">Manage Suppliers</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <!-- List View -->
-                    <div id="supp-list-view" class="p-3">
-                        <div class="d-flex justify-content-between mb-3">
-                            <input type="text" class="form-control form-control-sm me-2" id="supp-search" placeholder="Search suppliers...">
-                            <button class="kv-btn kv-btn--primary kv-btn--sm" id="supp-btn-add">
-                                <i class="fas fa-plus"></i> New
-                            </button>
-                        </div>
-                        <div class="list-group list-group-flush border rounded overflow-auto" style="max-height: 400px;" id="supp-list">
-                            <div class="text-center p-3 text-muted">Loading...</div>
-                        </div>
-                    </div>
-
-                    <!-- Form View -->
-                    <div id="supp-form-view" class="d-none p-3">
-                        <h6 class="mb-3 border-bottom pb-2" id="supp-form-title">Create Supplier</h6>
-                        <form id="supp-form">
-                            <input type="hidden" id="supp-id">
-                            <div class="row g-2">
-                                <div class="col-12">
-                                    <label class="form-label small">Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-sm" id="supp-name" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Tax Code</label>
-                                    <input type="text" class="form-control form-control-sm" id="supp-tax">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Contact Person</label>
-                                    <input type="text" class="form-control form-control-sm" id="supp-contact">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Phone</label>
-                                    <input type="text" class="form-control form-control-sm" id="supp-phone">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Email</label>
-                                    <input type="email" class="form-control form-control-sm" id="supp-email">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small">Address</label>
-                                    <input type="text" class="form-control form-control-sm" id="supp-address">
-                                </div>
-                            </div>
-                            <div class="alert alert-danger d-none small mt-2" id="supp-err"></div>
-                            <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button type="button" class="kv-btn kv-btn--ghost kv-btn--sm" id="supp-btn-cancel">Cancel</button>
-                                <button type="submit" class="kv-btn kv-btn--primary kv-btn--sm" id="supp-btn-save">Save</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -588,6 +524,9 @@
     <script src="/modules/dashboard/js/dashboard-core.js" th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
 
     <!-- Module JavaScript -->
+    <script th:inline="javascript">
+        const CURRENT_USER_CAN_MANAGE = /*[[${canManage}]]*/ false;
+    </script>
     <script src="/modules/products/js/products.js" th:src="@{/modules/products/js/products.js}"></script>
 </body>
 
