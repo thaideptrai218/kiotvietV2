@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customers - KiotViet</title>
+
+    <!-- Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Module CSS -->
+    <link rel="stylesheet" href="/css/header-nav.css" th:href="@{/css/header-nav.css}">
+    <link rel="stylesheet" href="/css/dashboard.css" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/modules/products/css/products.css}">
+    <link rel="stylesheet" th:href="@{/modules/customers/css/customers.css}">
+</head>
+
+<body>
+    <!-- Shared Header -->
+    <div th:replace="~{common/header :: dashboardHeader}"></div>
+
+    <!-- Shared Navigation -->
+    <div th:replace="~{common/navigation :: dashboardNav('customers')}"></div>
+
+    <!-- Page Toolbar -->
+    <section class="kv-toolbar" aria-labelledby="page-title">
+        <div class="kv-toolbar__inner">
+            <h1 id="page-title" class="kv-title">Customers</h1>
+            <div class="kv-actions">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import customers from file">
+                    <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
+                </button>
+                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export customers to CSV">
+                    <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
+                </button>
+                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new customer">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>Create Customer</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <main class="kv-content">
+        <div class="kv-grid">
+            <!-- Filter Sidebar -->
+            <aside class="kv-filter" id="filterPanel">
+                <form class="kv-filter__form" onsubmit="return false;">
+
+                    <!-- Filters -->
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Active Status</label>
+                        <select id="active" class="kv-select">
+                            <option value="">All</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Name</label>
+                        <input id="f_name" type="text" class="kv-input" placeholder="Enter name" autocomplete="off">
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <label class="kv-filter__label">Phone</label>
+                        <input id="f_phone" type="text" class="kv-input" placeholder="Enter phone" autocomplete="off">
+                    </div>
+
+                    <div class="kv-filter__group">
+                        <div class="d-grid gap-2">
+                            <button type="button" class="kv-btn kv-btn--primary" id="btnApplyFilters">
+                                <i class="fas fa-filter me-1"></i>Apply
+                            </button>
+                            <button type="button" class="kv-btn kv-btn--ghost" id="btnClearFilters">Clear</button>
+                        </div>
+                    </div>
+                </form>
+            </aside>
+
+            <!-- Right data panel -->
+            <section class="kv-card">
+                <!-- Table toolbar -->
+                <div id="hdrNormal" class="kv-cardbar">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-muted"><span id="totalCount">0</span> Customers</span>
+                    </div>
+
+                    <div class="kv-cardbar__right">
+                        <div class="dropdown">
+                            <button class="kv-btn kv-btn--ghost kv-btn--sm dropdown-toggle" id="btnColumns"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-table-columns me-1"></i> Columns
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 220px;" id="colMenu">
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colCode" checked><label class="form-check-label" for="colCode">Code</label>
+                                </div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colName" checked><label class="form-check-label" for="colName">Name</label>
+                                </div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colPhone" checked><label class="form-check-label"
+                                        for="colPhone">Phone</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colEmail" checked><label class="form-check-label"
+                                        for="colEmail">Email</label></div>
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colAddress" checked><label class="form-check-label"
+                                        for="colAddress">Address</label></div>
+                                
+                                <div class="form-check form-check-sm"><input class="form-check-input" type="checkbox"
+                                        id="colStatus" checked><label class="form-check-label"
+                                        for="colStatus">Status</label></div>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item text-danger" id="btnResetColumns"><i
+                                        class="fas fa-rotate-left me-1"></i> Reset to default</button>
+                            </div>
+                        </div>
+
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnRefresh">
+                            <i class="fas fa-rotate"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bulk mode bar -->
+                <div id="hdrBulk" class="kv-bulkbar d-none">
+                    <div><span id="selCount" class="fw-semibold">0</span> selected</div>
+                    <div class="d-flex gap-2">
+                        <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnClearSel">Clear</button>
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete"><i
+                                class="far fa-trash-can me-1"></i>Delete</button>
+                    </div>
+                </div>
+
+                <!-- Active filter chips -->
+                <div id="chips" class="kv-chips"></div>
+
+                <!-- Alerts -->
+                <div id="alert" class="alert d-none" role="alert"></div>
+
+                <!-- Data table -->
+                <div class="kv-card-content">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle kv-table" id="tbl">
+                            <thead>
+                                <tr>
+                                    <th style="width:38px"><input type="checkbox" id="chkAll"
+                                            title="Select current page only"></th>
+                                    <th data-sort="code" data-col="code" class="sortable" aria-sort="none">
+                                        <span>Code <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="name" data-col="name" class="sortable" aria-sort="none">
+                                        <span>Name <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="phone" data-col="phone" class="sortable" aria-sort="none">
+                                        <span>Phone <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-sort="email" data-col="email" class="sortable" aria-sort="none">
+                                        <span>Email <i class="sort-icon"></i></span>
+                                    </th>
+                                    <th data-col="address">Address</th>
+                                    
+                                    <th data-sort="status" data-col="status" class="sortable" aria-sort="none">
+                                        <span>Status <i class="sort-icon"></i></span>
+                                    </th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody class="itemList"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Footer: page size + pagination -->
+                    <div class="kv-table__footer">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="sizeSel" class="small text-muted">Show</label>
+                            <select id="sizeSel" class="form-select form-select-sm" style="width: 90px;">
+                                <option value="15">15</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="small text-muted">per page</span>
+                            <div id="pageInfo" class="text-muted small ms-2"></div>
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="pagi"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal: Create/Update -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="modalTitle">New Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="frm">
+                        <input type="hidden" id="customerId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Code</label>
+                                <input id="code" class="form-control" maxlength="50"
+                                    placeholder="Auto-generated if empty">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Name <span class="text-danger">*</span></label>
+                                <input id="name" class="form-control" maxlength="255" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input id="phone" class="form-control" maxlength="20">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input id="email" type="email" class="form-control" maxlength="255">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Gender</label>
+                                <select id="gender" class="form-select">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <input id="address" class="form-control" maxlength="500">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea id="notes" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12 d-flex align-items-center gap-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="isActive">
+                                    <label class="form-check-label" for="isActive">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="modalErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--primary d-none" id="btnSave" disabled>
+                        <span class="default-text"><i class="fas fa-save"></i> Update</span>
+                        <span class="loading-text d-none"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Updating...</span>
+                    </button>
+                    <button class="kv-btn kv-btn--outline" id="btnSaveNew">
+                        <span class="default-text"><i class="fas fa-plus"></i> Create</span>
+                        <span class="loading-text d-none"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Creating...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Import -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header kv-modal__header">
+                    <h5 class="modal-title" id="importModalLabel">Import Customers from Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Upload a CSV/Excel file with columns: Code, Name, Phone, Email, Address,
+                        etc.</p>
+                    <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv" class="form-control mb-3" />
+                    <div id="importErr" class="alert alert-danger d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="kv-btn kv-btn--primary" id="btnImportUpload">
+                        <i class="fas fa-upload me-1"></i>Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core Authentication -->
+    <script src="/core/js/auth.js" th:src="@{/core/js/auth.js}"></script>
+    <script src="/modules/dashboard/js/dashboard-core.js" th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
+
+    <!-- Module JavaScript -->
+    <script src="/modules/customers/js/customers.js" th:src="@{/modules/customers/js/customers.js}"></script>
+</body>
+
+</html>

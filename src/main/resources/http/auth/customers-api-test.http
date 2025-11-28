@@ -1,0 +1,101 @@
+### Customer Management API Tests (Authenticated)
+### Step 1: Login to obtain JWT, then paste accessToken into @token below.
+
+### Variables
+@baseUrl = http://localhost:8080
+@username = cashier2_quickstop
+@password = Admin123!
+@token = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOjYsInJvbGUiOiJ1c2VyIiwiY29tcGFueUlkIjoxLCJ1c2VybmFtZSI6ImNhc2hpZXIyX3F1aWNrc3RvcCIsInN1YiI6ImNhc2hpZXIyX3F1aWNrc3RvcCIsImlhdCI6MTc2NDMwMjUxOSwiZXhwIjoxNzY0MzAzNDE5fQ.Zka_Yb9aQW1Mm31F9EteWMvrh10_5eED5Ff-_A57ryOeyoWxIq1NhusWGJnVU8_ChkGdGyu5HdHM8u9pc25LGA
+
+### Step 1 — Login (copy data.accessToken into @token)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("token", response.body.data.accessToken);
+    client.log("Token obtained: " + response.body.data.accessToken);
+%}
+
+### Common header
+@authHeader = Authorization: Bearer {{token}}
+
+### =================== CREATE ===================
+
+### Create a new customer (Full fields)
+POST {{baseUrl}}/api/customers
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "code": "CUST001",
+  "name": "Nguyen Van A",
+  "phone": "0901234567",
+  "email": "vana@example.com",
+  "address": "123 Le Loi",
+  "ward": "Ben Nghe",
+  "district": "District 1",
+  "province": "Ho Chi Minh City",
+  "birthDate": "1990-01-01",
+  "gender": "Male",
+  "taxCode": "1234567890",
+  "notes": "VIP Customer"
+}
+
+### Create another customer (Minimal fields)
+POST {{baseUrl}}/api/customers
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Tran Thi B",
+  "phone": "0909876543",
+  "address": "456 Nguyen Hue"
+}
+
+### =================== READ/LIST ===================
+
+### List customers (paginated, sorted by name ASC)
+GET {{baseUrl}}/api/customers?page=0&size=20&sortBy=name&sortDir=asc
+{{authHeader}}
+
+### Search customers (by name, phone, or email)
+GET {{baseUrl}}/api/customers?search=Nguyen&page=0&size=10
+{{authHeader}}
+
+### Autocomplete customers (by name, phone, or code)
+GET {{baseUrl}}/api/customers/autocomplete?query=Nguyen&limit=10
+{{authHeader}}
+
+### Get customer by ID
+GET {{baseUrl}}/api/customers/1
+{{authHeader}}
+
+### =================== UPDATE ===================
+
+### Update customer details
+PUT {{baseUrl}}/api/customers/1
+{{authHeader}}
+Content-Type: application/json
+
+{
+  "name": "Nguyen Van A Updated",
+  "address": "789 Dong Khoi",
+  "notes": "Updated VIP Status",
+  "status": "ACTIVE"
+}
+
+### =================== DELETE ===================
+
+### Soft delete customer (sets status to INACTIVE)
+DELETE {{baseUrl}}/api/customers/1
+{{authHeader}}
+
+### Verify Delete (Get details)
+# Note: Should return the customer with status INACTIVE
+GET {{baseUrl}}/api/customers/1
+{{authHeader}}
