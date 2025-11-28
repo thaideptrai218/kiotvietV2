@@ -10,6 +10,7 @@ import fa.academy.kiotviet.core.tenant.domain.Company;
 import fa.academy.kiotviet.core.productcatalog.domain.Product;
 import fa.academy.kiotviet.core.productcatalog.repository.ProductRepository;
 import jakarta.transaction.Transactional;
+import fa.academy.kiotviet.infrastructure.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -68,6 +69,14 @@ public class OrderService {
         order.setOrderDate(java.time.LocalDateTime.now());
         order.setCustomerName(trimToNull(req.getCustomerName()));
         order.setPhoneNumber(trimToNull(req.getPhoneNumber()));
+        // Set cashier (creator) to the authenticated username (not role, not display name)
+        try {
+            var p = SecurityUtil.getCurrentPrincipal();
+            String username = p.getUsername();
+            if (username != null && !username.isBlank()) {
+                order.setCashier(username.trim());
+            }
+        } catch (Exception ignored) { }
 
         java.math.BigDecimal subtotal = java.math.BigDecimal.ZERO;
         java.math.BigDecimal totalDiscount = java.math.BigDecimal.ZERO;
@@ -185,6 +194,12 @@ public class OrderService {
         order.setCustomerName(trimToNull(req.getCustomerName()));
         order.setPhoneNumber(trimToNull(req.getPhoneNumber()));
         order.setNote(trimToNull(req.getNote()));
+        // Do not overwrite cashier on update; only set if previously null and request supplies it
+        try {
+            if (order.getCashier() == null && req.getCashier() != null && !req.getCashier().isBlank()) {
+                order.setCashier(req.getCashier().trim());
+            }
+        } catch (Exception ignored) { }
 
         try {
             if (req.getPaymentMethod() != null) {

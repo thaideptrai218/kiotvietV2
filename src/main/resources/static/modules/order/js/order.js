@@ -753,7 +753,8 @@ function format(d) {
     pagi: document.getElementById('pagi'),
     hdrSearch: document.getElementById('hdrSearch'),
     hdrSearchIcon: document.querySelector('#hdrNormal .kv-input-search i'),
-    status: document.getElementById('status')
+    status: document.getElementById('status'),
+    cashierFilter: document.getElementById('cashierFilter')
   };
 
   const state = {
@@ -765,7 +766,8 @@ function format(d) {
     fromDate: null,
     toDate: null,
     status: '',
-    q: ''
+    q: '',
+    cashier: ''
   };
 
   // Debounce helper
@@ -809,6 +811,14 @@ function format(d) {
       return;
     }
 
+    function currentUserName(){
+      try {
+        const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+        if (!t) return '';
+        const p = JSON.parse(atob((t.split('.')[1]||'').replace(/-/g,'+').replace(/_/g,'/'))||'{}');
+        return p.fullName || p.name || p.username || p.sub || '';
+      } catch { return ''; }
+    }
     const rows = items.map(it => `
       <tr class="kv-order-row" data-id="${it.id}">
         <td><input type="checkbox" class="row-check" data-id="${it.id}"></td>
@@ -896,7 +906,12 @@ function format(d) {
       if (!res.ok) throw new Error(`Failed to load orders: ${res.status}`);
       const body = await res.json();
       const paged = body?.data || {};
-      const items = paged.content || [];
+      let items = paged.content || [];
+      // Client-side cashier filter
+      if (state.cashier) {
+        const q = state.cashier.toLowerCase();
+        items = items.filter(it => ((it.cashier || '').toString().toLowerCase().includes(q)));
+      }
       state.total = paged.totalElements || items.length || 0;
       state.totalPages = paged.totalPages || 1;
       renderRows(items);
@@ -955,12 +970,14 @@ function format(d) {
       state.page = 0;
       state.status = els.status?.value || '';
       state.q = (els.hdrSearch?.value || '').trim();
+      state.cashier = (els.cashierFilter?.value || '').trim();
       load();
     });
     btnClear?.addEventListener('click', () => {
       // Reset inputs
       if (els.status) els.status.value = '';
       if (els.hdrSearch) els.hdrSearch.value = '';
+      if (els.cashierFilter) els.cashierFilter.value = '';
       // Clear all text/number inputs inside the filter form (Customer, Cashier, Phone, etc.)
       try {
         const filterForm = document.querySelector('.kv-filter__form');
@@ -981,6 +998,7 @@ function format(d) {
       state.toDate = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth()+1).padStart(2,'0')}-${String(endOfMonth.getDate()).padStart(2,'0')}`;
       state.status = '';
       state.q = '';
+      state.cashier = '';
       state.page = 0;
       try { document.getElementById('selectedDateLabel').textContent = 'This month'; } catch {}
       load();
@@ -997,6 +1015,9 @@ function format(d) {
     // Initialize q from existing input value
     if (els.hdrSearch && els.hdrSearch.value) {
       state.q = (els.hdrSearch.value || '').trim();
+    }
+    if (els.cashierFilter && els.cashierFilter.value) {
+      state.cashier = (els.cashierFilter.value || '').trim();
     }
     bindEvents();
     load();
@@ -1018,7 +1039,8 @@ function format(d) {
         fromDate: state.fromDate,
         toDate: state.toDate,
         status: state.status,
-        q: state.q
+        q: state.q,
+        cashier: state.cashier
       };
     }
   };
@@ -1540,8 +1562,7 @@ window.kvOrderToggleDetail = (function(){
 </div>
 <div class='kv-order-detail__grid'>
   <div class='kv-order-detail__section'>
-    <h6>Creator</h6>
-    <div class='kv-order-detail__row'><span class='label'>Creator</span><span class='value'>${currentUser()||'Guest'}</span></div>
+    <div class='kv-order-detail__row'><span class='label'>Cashier</span><span class='value'>${d.creator || ''}</span></div>
     <div class='kv-order-detail__row'><span class='label'>Sale channel</span><span class='value'>
       <select class='form-select form-select-sm kv-sale-channel' style='min-width:180px;'>
         ${((d.paymentMethod||'').toUpperCase()==='CASH' || (d.paymentMethod||'').toUpperCase()==='COD')
@@ -1661,6 +1682,8 @@ window.kvOrderToggleDetail = (function(){
   }
   return function(tr,id){ const next=tr.nextElementSibling; if(next && next.classList.contains('kv-order-detail-row')){ next.remove(); } else { loadDetail(tr,id); } }
 })();
+
+
 
 
 
