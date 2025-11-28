@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // SECTION SWITCHING (user/store)
   // ===============================
   const sidebar = document.getElementById('settingsSidebar');
-  const userSection = document.getElementById('userManagementSection');
   const storeSection = document.getElementById('storeInfoSection');
-  const filterSidebar = document.getElementById('filterSidebar');
+  // const userSection = document.getElementById('userManagementSection'); // Removed
+  // const filterSidebar = document.getElementById('filterSidebar'); // Removed
 
   const btnEditStore = document.getElementById('btnEditStore');
   const storeModal = document.getElementById('storeModal');
@@ -16,36 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const defaultLogo = logoPreview?.getAttribute('data-default') || logoPreview?.src || 'https://via.placeholder.com/72x72.png?text=Logo';
 
   function showSection(section) {
-    if (section === 'user') {
-      userSection.style.visibility = 'visible';
-      userSection.style.position = 'static';
-      userSection.style.left = '0';
-
-      storeSection.style.visibility = 'hidden';
-      storeSection.style.position = 'absolute';
-      storeSection.style.left = '-9999px';
-    }
-
+    // Simplified section switching
     if (section === 'store') {
-      storeSection.style.visibility = 'visible';
-      storeSection.style.position = 'static';
-      storeSection.style.left = '0';
-
-      userSection.style.visibility = 'hidden';
-      userSection.style.position = 'absolute';
-      userSection.style.left = '-9999px';
-
-      filterSidebar.style.display = 'none';
+      if (storeSection) {
+        storeSection.style.visibility = 'visible';
+        storeSection.style.position = 'static';
+        storeSection.style.left = '0';
+      }
+    } else {
+        // For other sections like currency, hide store section
+        if (storeSection) {
+            storeSection.style.visibility = 'hidden';
+            storeSection.style.position = 'absolute';
+            storeSection.style.left = '-9999px';
+        }
     }
   }
 
-  sidebar.querySelectorAll('li').forEach((li) => {
-    li.addEventListener('click', () => {
-      sidebar.querySelectorAll('li').forEach((i) => i.classList.remove('active'));
-      li.classList.add('active');
-      showSection(li.dataset.section);
+  if (sidebar) {
+    sidebar.querySelectorAll('li').forEach((li) => {
+      li.addEventListener('click', () => {
+        sidebar.querySelectorAll('li').forEach((i) => i.classList.remove('active'));
+        li.classList.add('active');
+        showSection(li.dataset.section);
+      });
     });
-  });
+  }
 
   // ===============================
   // API HELPERS
@@ -139,16 +135,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderStore() {
     const urlText = document.getElementById('storeUrlText');
-    urlText.textContent = storeData.url || 'Not configured';
-    urlText.href = storeData.url || '#';
+    if (urlText) {
+        urlText.textContent = storeData.url || 'Not configured';
+        urlText.href = storeData.url || '#';
+    }
 
-    document.getElementById('storePhoneText').textContent = storeData.phone || '—';
-    document.getElementById('storeCountryText').innerHTML = `
-      <img src="https://flagcdn.com/w20/${storeData.countryFlag || 'vn'}.png" class="flag-icon">
-      ${storeData.countryName || '—'}
-    `;
-    document.getElementById('storeNameText').textContent = storeData.storeName || '—';
-    document.getElementById('storeAddressText').textContent = storeData.address || 'None';
+    const phoneText = document.getElementById('storePhoneText');
+    if (phoneText) phoneText.textContent = storeData.phone || '—';
+
+    const countryText = document.getElementById('storeCountryText');
+    if (countryText) {
+        countryText.innerHTML = `
+          <img src="https://flagcdn.com/w20/${storeData.countryFlag || 'vn'}.png" class="flag-icon">
+          ${storeData.countryName || '—'}
+        `;
+    }
+
+    const nameText = document.getElementById('storeNameText');
+    if (nameText) nameText.textContent = storeData.storeName || '—';
+
+    const addressText = document.getElementById('storeAddressText');
+    if (addressText) addressText.textContent = storeData.address || 'None';
+
     if (logoPreview) {
       logoPreview.src = storeData.logoUrl || defaultLogo;
     }
@@ -168,65 +176,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function syncCountrySelection() {
     const currentFlag = storeData.countryFlag || 'vn';
-    flagEl.src = `https://flagcdn.com/w20/${currentFlag}.png`;
-    nameEl.textContent = storeData.countryName || 'Select country';
-    kvList.querySelectorAll('.kv-country-item').forEach((item) => {
-      item.classList.toggle('active', item.dataset.flag === currentFlag);
-    });
+    if (flagEl) flagEl.src = `https://flagcdn.com/w20/${currentFlag}.png`;
+    if (nameEl) nameEl.textContent = storeData.countryName || 'Select country';
+    if (kvList) {
+        kvList.querySelectorAll('.kv-country-item').forEach((item) => {
+          item.classList.toggle('active', item.dataset.flag === currentFlag);
+        });
+    }
   }
 
   function openStoreModal() {
-    storeForm.url.value = storeData.url || '';
-    storeForm.phone.value = storeData.phone || '';
-    storeForm.storeName.value = storeData.storeName || '';
-    storeForm.address.value = storeData.address || '';
-    storeForm.province.value = storeData.province || '';
-    storeForm.ward.value = storeData.ward || '';
+    if (storeForm) {
+        storeForm.url.value = storeData.url || '';
+        storeForm.phone.value = storeData.phone || '';
+        storeForm.storeName.value = storeData.storeName || '';
+        storeForm.address.value = storeData.address || '';
+        storeForm.province.value = storeData.province || '';
+        storeForm.ward.value = storeData.ward || '';
+    }
     syncCountrySelection();
-    storeModal.style.display = 'flex';
+    if (storeModal) storeModal.style.display = 'flex';
   }
 
   function closeStoreModal() {
-    storeModal.style.display = 'none';
+    if (storeModal) storeModal.style.display = 'none';
   }
 
-  btnEditStore.addEventListener('click', openStoreModal);
+  if (btnEditStore) btnEditStore.addEventListener('click', openStoreModal);
   document.querySelectorAll("[data-close='storeModal']").forEach((el) => {
     el.addEventListener('click', closeStoreModal);
   });
 
-  kvBox.addEventListener('click', () => {
-    kvDropdown.style.display = kvDropdown.style.display === 'block' ? 'none' : 'block';
-  });
+  if (kvBox) {
+      kvBox.addEventListener('click', () => {
+        if (kvDropdown) kvDropdown.style.display = kvDropdown.style.display === 'block' ? 'none' : 'block';
+      });
+  }
 
-  kvList.querySelectorAll('.kv-country-item').forEach((item) => {
-    item.addEventListener('click', () => {
-      kvList.querySelectorAll('.kv-country-item').forEach((i) => i.classList.remove('active'));
-      item.classList.add('active');
+  if (kvList) {
+      kvList.querySelectorAll('.kv-country-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          kvList.querySelectorAll('.kv-country-item').forEach((i) => i.classList.remove('active'));
+          item.classList.add('active');
 
-      const flag = item.dataset.flag;
-      const name = item.dataset.name;
+          const flag = item.dataset.flag;
+          const name = item.dataset.name;
 
-      flagEl.src = `https://flagcdn.com/w20/${flag}.png`;
-      nameEl.textContent = name;
+          if (flagEl) flagEl.src = `https://flagcdn.com/w20/${flag}.png`;
+          if (nameEl) nameEl.textContent = name;
 
-      storeData.countryFlag = flag;
-      storeData.countryName = name;
+          storeData.countryFlag = flag;
+          storeData.countryName = name;
 
-      kvDropdown.style.display = 'none';
-    });
-  });
+          if (kvDropdown) kvDropdown.style.display = 'none';
+        });
+      });
+  }
 
-  kvSearch.addEventListener('input', () => {
-    const keyword = kvSearch.value.toLowerCase();
-    kvList.querySelectorAll('.kv-country-item').forEach((item) => {
-      const name = item.dataset.name.toLowerCase();
-      item.style.display = name.includes(keyword) ? 'flex' : 'none';
-    });
-  });
+  if (kvSearch) {
+      kvSearch.addEventListener('input', () => {
+        const keyword = kvSearch.value.toLowerCase();
+        if (kvList) {
+            kvList.querySelectorAll('.kv-country-item').forEach((item) => {
+              const name = item.dataset.name.toLowerCase();
+              item.style.display = name.includes(keyword) ? 'flex' : 'none';
+            });
+        }
+      });
+  }
 
   document.addEventListener('click', (e) => {
-    if (!kvBox.contains(e.target) && !kvDropdown.contains(e.target)) {
+    if (kvBox && kvDropdown && !kvBox.contains(e.target) && !kvDropdown.contains(e.target)) {
       kvDropdown.style.display = 'none';
     }
   });
@@ -234,46 +254,50 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===============================
   // SAVE STORE
   // ===============================
-  storeForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const payload = {
-      phone: storeForm.phone.value.trim(),
-      country: storeData.countryName,
-      countryFlag: storeData.countryFlag,
-      name: storeForm.storeName.value.trim(),
-      address: storeForm.address.value.trim(),
-      province: storeForm.province.value.trim(),
-      ward: storeForm.ward.value.trim()
-    };
-    try {
-      const company = await api.request('/api/company', { method: 'PUT', body: payload });
-      applyCompanyData(company);
-      closeStoreModal();
-      notify('Store information updated successfully', 'success');
-    } catch (err) {
-      notify(err.message || 'Failed to update store information', 'error');
-    }
-  });
+  if (storeForm) {
+      storeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          phone: storeForm.phone.value.trim(),
+          country: storeData.countryName,
+          countryFlag: storeData.countryFlag,
+          name: storeForm.storeName.value.trim(),
+          address: storeForm.address.value.trim(),
+          province: storeForm.province.value.trim(),
+          ward: storeForm.ward.value.trim()
+        };
+        try {
+          const company = await api.request('/api/company', { method: 'PUT', body: payload });
+          applyCompanyData(company);
+          closeStoreModal();
+          notify('Store information updated successfully', 'success');
+        } catch (err) {
+          notify(err.message || 'Failed to update store information', 'error');
+        }
+      });
+  }
 
   // ===============================
   // LOGO SELECT
   // ===============================
-  logoBtn.addEventListener('click', () => logoInput.click());
+  if (logoBtn && logoInput) {
+      logoBtn.addEventListener('click', () => logoInput.click());
 
-  logoInput.addEventListener('change', async () => {
-    const file = logoInput.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const data = await api.request('/api/company/logo', { method: 'POST', body: formData });
-      storeData.logoUrl = data.logoUrl;
-      renderStore();
-      notify('Logo updated successfully', 'success');
-    } catch (err) {
-      notify(err.message || 'Failed to upload logo', 'error');
-    } finally {
-      logoInput.value = '';
-    }
-  });
+      logoInput.addEventListener('change', async () => {
+        const file = logoInput.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+          const data = await api.request('/api/company/logo', { method: 'POST', body: formData });
+          storeData.logoUrl = data.logoUrl;
+          renderStore();
+          notify('Logo updated successfully', 'success');
+        } catch (err) {
+          notify(err.message || 'Failed to upload logo', 'error');
+        } finally {
+          logoInput.value = '';
+        }
+      });
+  }
 });
