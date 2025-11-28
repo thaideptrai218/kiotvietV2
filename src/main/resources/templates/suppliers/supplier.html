@@ -30,13 +30,13 @@
         <div class="kv-toolbar__inner">
             <h1 id="page-title" class="kv-title">Suppliers</h1>
             <div class="kv-actions">
-                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import suppliers from file">
+                <button class="kv-btn kv-btn--secondary" id="btnImport" title="Import suppliers from file" th:if="${canManage}">
                     <i class="fas fa-upload" aria-hidden="true"></i><span>Import file</span>
                 </button>
-                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export suppliers to CSV">
+                <button class="kv-btn kv-btn--secondary" id="btnDownloadCsv" title="Export suppliers to CSV" th:if="${canManage}">
                     <i class="fas fa-download" aria-hidden="true"></i><span>Export file</span>
                 </button>
-                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new supplier">
+                <button class="kv-btn kv-btn--primary" id="btnAdd" title="Create new supplier" th:if="${canManage}">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>Create Supplier</span>
                 </button>
 
@@ -152,7 +152,7 @@
                     <div><span id="selCount" class="fw-semibold">0</span> selected</div>
                     <div class="d-flex gap-2">
                         <button class="kv-btn kv-btn--ghost kv-btn--sm" id="btnClearSel">Clear</button>
-                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete"><i
+                        <button class="kv-btn kv-btn--danger kv-btn--sm" id="btnBulkDelete" th:if="${canManage}"><i
                                 class="far fa-trash-can me-1"></i>Delete</button>
                     </div>
                 </div>
@@ -294,14 +294,14 @@
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
 
-                    <button class="kv-btn kv-btn--primary" id="btnSave">
+                    <button class="kv-btn kv-btn--primary" id="btnSave" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-save"></i> Save</span>
                         <span class="loading-text d-none">
                             <span class="spinner-border spinner-border-sm me-1"></span>Saving...
                         </span>
                     </button>
 
-                    <button class="kv-btn kv-btn--outline" id="btnSaveNew">
+                    <button class="kv-btn kv-btn--outline" id="btnSaveNew" th:if="${canManage}">
                         <span class="default-text"><i class="fas fa-plus"></i> Create</span>
                         <span class="loading-text d-none">
                             <span class="spinner-border spinner-border-sm me-1"></span>Creating...
@@ -329,7 +329,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="kv-btn kv-btn--ghost" data-bs-dismiss="modal">Cancel</button>
-                    <button class="kv-btn kv-btn--primary" id="btnImportUpload">
+                    <button class="kv-btn kv-btn--primary" id="btnImportUpload" th:if="${canManage}">
                         <i class="fas fa-upload me-1"></i>Upload
                     </button>
                 </div>
@@ -342,6 +342,9 @@
     <!-- Core Authentication / Header helpers (keeps profile dropdown from showing 'Loading...') -->
     <script src="/core/js/auth.js" th:src="@{/core/js/auth.js}"></script>
     <script src="/modules/dashboard/js/dashboard-core.js" th:src="@{/modules/dashboard/js/dashboard-core.js}"></script>
+    <script th:inline="javascript">
+        const CURRENT_USER_CAN_MANAGE = /*[[${canManage}]]*/ false;
+    </script>
     <script th:src="@{/modules/suppliers/js/supplier.js}"></script>
 </body>
 

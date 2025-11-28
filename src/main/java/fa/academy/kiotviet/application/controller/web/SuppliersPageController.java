@@ -3,6 +3,7 @@ package fa.academy.kiotviet.application.controller.web;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -11,9 +12,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class SuppliersPageController {
 
     @GetMapping
-    public String suppliers() {
-        // Serve the page without server-side auth check.
-        // Frontend JS will attach JWT for API calls and handle 401s.
+    public String suppliers(Model model) {
+        model.addAttribute("canManage", canManageSuppliers());
         return "suppliers/supplier";
+    }
+
+    private boolean canManageSuppliers() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") 
+                        || a.getAuthority().equals("ROLE_MANAGER")
+                        || a.getAuthority().equals("PRODUCT_MANAGE"));
     }
 }
