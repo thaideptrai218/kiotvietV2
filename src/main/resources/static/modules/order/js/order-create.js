@@ -181,19 +181,32 @@
     if (els.sumSubtotal) els.sumSubtotal.textContent = fmt(subtotal);
     if (els.sumDiscount) els.sumDiscount.textContent = fmt(discount);
     if (els.sumTotal) els.sumTotal.textContent = fmt(total);
-    // Determine mode
+    // Determine mode and show Remaining/Change appropriately
     const params = new URLSearchParams(window.location.search || '');
     const isUpdate = !!params.get('orderId');
     const basePaid = parseCurrencyText(els.customerPay?.value || '0');
     const addPaid = parseCurrencyText(els.additionalPay?.value || '0');
     const effectivePaid = isUpdate ? (basePaid + addPaid) : basePaid;
-    const delta = effectivePaid - total;
-    if (els.sumChangeLabel) els.sumChangeLabel.textContent = isUpdate ? 'Remaining' : 'Change';
-    if (els.sumChange) {
-      const show = isUpdate ? Math.max(0, total - effectivePaid) : delta;
-      els.sumChange.textContent = fmt(toMoney(show));
-      els.sumChange.classList.toggle('text-danger', isUpdate ? false : (delta < 0));
-      els.sumChange.classList.toggle('text-success', isUpdate ? false : (delta >= 0));
+    const delta = toMoney(effectivePaid - total);
+    if (els.sumChangeLabel && els.sumChange) {
+      if (isUpdate) {
+        if (delta >= 0) {
+          els.sumChangeLabel.textContent = 'Change';
+          els.sumChange.textContent = fmt(delta);
+          els.sumChange.classList.toggle('text-danger', false);
+          els.sumChange.classList.toggle('text-success', true);
+        } else {
+          els.sumChangeLabel.textContent = 'Remaining';
+          els.sumChange.textContent = fmt(toMoney(-delta));
+          els.sumChange.classList.toggle('text-danger', true);
+          els.sumChange.classList.toggle('text-success', false);
+        }
+      } else {
+        els.sumChangeLabel.textContent = 'Change';
+        els.sumChange.textContent = fmt(delta);
+        els.sumChange.classList.toggle('text-danger', delta < 0);
+        els.sumChange.classList.toggle('text-success', delta >= 0);
+      }
     }
   }
 
