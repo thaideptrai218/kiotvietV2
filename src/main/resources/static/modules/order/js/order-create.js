@@ -41,7 +41,7 @@
 
   function fmt(n) {
     try {
-      return Number(n || 0).toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return Number(n || 0).toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
     } catch { return n; }
   }
   function parseNumber(n) { const v = Number(n); return Number.isFinite(v) ? v : 0; }
@@ -408,7 +408,7 @@
           <span class="barcode">${p.barcode ? 'Barcode: ' + p.barcode : ''}</span>
           <span class="ms-auto meta">
             ${stockBadge}
-            <span class="price">${price}</span>
+            <span class="price">${fmt(price)}</span>
           </span>
         </div>`;
     }).join('');

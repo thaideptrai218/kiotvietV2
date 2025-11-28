@@ -139,6 +139,43 @@
   }
 
   function fmt(val) { return val ?? ''; }
+  function fmtMoney(v) {
+    try {
+      const n = Number(v || 0);
+      return n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+    } catch (_) { return '0,00 $'; }
+  }
+  function parseCurrencyText(text) {
+    let s = (text ?? '').toString().trim();
+    if (!s) return 0;
+    let sign = 1;
+    if (s.startsWith('-')) { sign = -1; s = s.slice(1); }
+    s = s.replace(/[^0-9,\.]/g, '');
+    const hasComma = s.includes(',');
+    const hasDot = s.includes('.');
+    let decSep = null;
+    if (hasComma && hasDot) decSep = s.lastIndexOf(',') > s.lastIndexOf('.') ? ',' : '.';
+    else if (hasComma) decSep = ','; else if (hasDot) decSep = '.';
+    if (decSep) {
+      const i = s.lastIndexOf(decSep);
+      const intPart = s.slice(0, i).replace(/[^0-9]/g, '');
+      const fracPart = s.slice(i + 1).replace(/[^0-9]/g, '');
+      const num = parseFloat((intPart || '0') + '.' + (fracPart || '0'));
+      return sign * (Number.isFinite(num) ? num : 0);
+    } else {
+      const intPart = s.replace(/[^0-9]/g, '');
+      const num = parseFloat(intPart || '0');
+      return sign * (Number.isFinite(num) ? num : 0);
+    }
+  }
+  function fmtMoney(v) {
+    try {
+      const n = Number(v || 0);
+      return n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+    } catch (_) {
+      return '0,00 $';
+    }
+  }
 
   function authGuard(resp) { if (resp.status === 401) throw new Error('Unauthorized. Please login again.'); return resp; }
 
@@ -305,6 +342,25 @@
     const html = rows.join('');
     console.log('Setting table HTML with', rows.length, 'rows');
     els.tblBody.innerHTML = html;
+    // Normalize currency displays to "$" with 2 decimals
+    try {
+      els.tblBody.querySelectorAll('td[data-col="sellingPrice"]').forEach(td => {
+        const n = parseCurrencyText(td.textContent);
+        td.textContent = n ? fmtMoney(n) : '';
+      });
+      // Expanded rows: convert Selling/Cost Price values
+      els.tblBody.querySelectorAll('.expanded-row .field-item').forEach(item => {
+        const label = item.querySelector('.field-label')?.textContent?.trim().toLowerCase();
+        const valEl = item.querySelector('.field-value');
+        if (!label || !valEl) return;
+        if (label === 'selling price' || label === 'cost price') {
+          const n = parseCurrencyText(valEl.textContent);
+          if (valEl.textContent && valEl.textContent.toLowerCase() !== 'not set') {
+            valEl.textContent = fmtMoney(n);
+          }
+        }
+      });
+    } catch(_) {}
 
     applyColumnVisibility();
     syncHeaderCheckbox();
@@ -535,7 +591,7 @@
                         <div class="field-item mb-3">
                           <div class="field-label">Profit Margin</div>
                           <div class="field-value">
-                            ${calculateProfitMargin(p.sellingPrice, p.costPrice)}
+                            ${calcMarginStr(p.sellingPrice, p.costPrice)}
                           </div>
                         </div>
                       </div>
@@ -546,7 +602,7 @@
                         ${p.sellingPrice && p.costPrice ?
                           `<div class="alert alert-success">
                             <i class="fas fa-chart-line me-2"></i>
-                            <strong>Margin:</strong> ${calculateProfitMargin(p.sellingPrice, p.costPrice)}
+                            <strong>Margin:</strong> ${calcMarginStr(p.sellingPrice, p.costPrice)}
                           </div>` :
                           `<div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -623,6 +679,15 @@
       .replace(/\n/g, '<br>')
       .replace(/^(.+)$/gm, '<p>$1</p>')
       .replace(/<p><\/p>/g, '');
+  }
+
+  function calcMarginStr(sellingPrice, costPrice) {
+    const selling = Number(sellingPrice) || 0;
+    const cost = Number(costPrice) || 0;
+    if (selling === 0 || cost === 0) return 'Not available';
+    const margin = ((selling - cost) / selling * 100).toFixed(1);
+    const profit = selling - cost;
+    return `${margin}% (${fmtMoney(profit)})`;
   }
 
   function calculateProfitMargin(sellingPrice, costPrice) {

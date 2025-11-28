@@ -779,10 +779,12 @@ function format(d) {
 
   function fmtMoney(v) {
     try {
-      if (v === null || v === undefined) return '0';
+      if (v === null || v === undefined) return '0,00 $';
       const n = typeof v === 'number' ? v : Number(String(v).replace(/[^0-9.-]/g, ''));
-      return Number.isFinite(n) ? n.toLocaleString('vi-VN') : '0';
-    } catch (_) { return '0'; }
+      return Number.isFinite(n)
+        ? n.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $'
+        : '0,00 $';
+    } catch (_) { return '0,00 $'; }
   }
 
   function fmtDateTime(iso) {
@@ -1460,11 +1462,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="text-muted small" data-col="orderdate">${formatDateTime(resp.orderDate)}</td>
                 <td class="fw-medium" data-col="customer">${(payload.customerName||'')}</td>
                 <td data-col="phonenumber">${(payload.phoneNumber||'')}</td>
-                <td class="text-end fw-semibold" data-col="subtotal">${(subtotal).toLocaleString('vi-VN')}</td>
-                <td class="text-end" data-col="discount">${(discount).toLocaleString('vi-VN')}</td>
-                <td class="text-end" data-col="customerpays">${(paid).toLocaleString('vi-VN')}</td>
-                <td class="text-end" data-col="remaining">${(remaining).toLocaleString('vi-VN')}</td>
-                <td class="text-end fw-semibold" data-col="paidamount">${(total).toLocaleString('vi-VN')}</td>
+                <td class="text-end fw-semibold" data-col="subtotal">${fmtMoney(subtotal)}</td>
+                <td class="text-end" data-col="discount">${fmtMoney(discount)}</td>
+                <td class="text-end" data-col="customerpays">${fmtMoney(paid)}</td>
+                <td class="text-end" data-col="remaining">${fmtMoney(remaining)}</td>
+                <td class="text-end fw-semibold" data-col="paidamount">${fmtMoney(total)}</td>
                 <td data-col="paymentmethod">${pm}</td>
                 <td data-col="cashier"></td>
                 <td data-col="status">${badge}</td>
@@ -1511,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Order detail toggler
 window.kvOrderToggleDetail = (function(){
   const api = { base: '/api/orders', headers() { const t=localStorage.getItem('jwtToken')||sessionStorage.getItem('jwtToken')||localStorage.getItem('accessToken')||sessionStorage.getItem('accessToken'); const h={'Accept':'application/json'}; if(t) h['Authorization']=`Bearer ${t}`; return h; } };
-  function fmt(n){ try{ return Number(n||0).toLocaleString('vi-VN'); }catch{return n; } }
+  function fmt(n){ try{ return Number(n||0).toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $'; }catch{return n; } }
   function dt(iso){ try{ const d=new Date(iso); return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d);}catch{return iso;} }
   async function loadDetail(tr,id){
     const open = document.querySelector('.kv-order-detail-row'); if(open) open.remove();
