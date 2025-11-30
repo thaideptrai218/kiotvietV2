@@ -122,7 +122,7 @@
       err.style.display = 'block';
     }
     if (input) input.classList.add('is-invalid');
-    try { showToast(msg || 'Customer not found', 'error'); } catch {}
+    try { showToastOnce('customer-not-found', msg || 'Customer not found', 'error'); } catch {}
   }
 
   function clearCustomerError() {
@@ -130,6 +130,7 @@
     if (err) err.style.display = 'none';
     const input = document.getElementById('customerSearch');
     if (input) input.classList.remove('is-invalid');
+    try { hideToastByKey('customer-not-found'); } catch {}
   }
 
   // Toast/notification utilities
@@ -691,7 +692,10 @@
       const list = document.getElementById('customerOptions');
       if (!input || !list) return;
       let timer = null;
+      let lastIssued = 0;
       async function run(q){
+        const issuedAt = Date.now();
+        lastIssued = issuedAt;
         try {
           const query = (q || '').trim();
           // Always seed Guest option; no error on empty
@@ -706,7 +710,15 @@
           if (!res.ok) return;
           const body = await res.json();
           const items = Array.isArray(body?.data) ? body.data : [];
-          if (!items.length) return;
+          // Discard out-of-order responses
+          if (issuedAt !== lastIssued) return;
+          if (!items.length) {
+            const cur = (input.value || '').trim();
+            if (cur && normName(cur) === normName(query)) {
+              showCustomerError('Customer not found');
+            }
+            return;
+          }
           const opts = items.map(c => {
             const name = (c?.name || '').toString();
             const phone = (c?.phone || '').toString();
@@ -715,12 +727,26 @@
             return `<option value="${value}">${label}</option>`;
           }).join('');
           list.insertAdjacentHTML('beforeend', opts);
+          // We have results; clear error for current non-empty query
+          const cur = (input.value || '').trim();
+          if (cur && normName(cur).length) {
+            clearCustomerError();
+          }
         } catch {}
       }
       input.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim();
         clearTimeout(timer);
-        clearCustomerError(); // do not show error while typing
-        timer = setTimeout(() => run(e.target.value), 250);
+        if (!isCustomerValueEmptyOrGuest(q)) {
+          // Immediate local check: if datalist has no non-Guest options matching current input, show error now
+          const opts = Array.from(list.options || []);
+          const qq = normName(q);
+          const hasAny = opts.some(o => normName(o.value).includes(qq)) && opts.length > 1; // >1 to exclude only Guest
+          if (!hasAny) showCustomerError('Customer not found'); else clearCustomerError();
+        } else {
+          clearCustomerError();
+        }
+        timer = setTimeout(() => run(q), 150);
       });
       input.addEventListener('change', () => { clearCustomerError(); });
       // Initial seed
@@ -879,4 +905,34 @@
     } catch {}
   });
 })();
-    
+// Global toast helpers to dedupe messages while typing
+function kvEnsureToastContainer() {
+  let el = document.getElementById('posToastContainer');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'posToastContainer';
+  el.className = 'pos-toast-container';
+  document.body.appendChild(el);
+  return el;
+}
+
+function showToastOnce(key, message, type = 'info', timeoutMs = 2500) {
+  const container = kvEnsureToastContainer();
+  const existing = container.querySelector(`.pos-toast[data-key="${key}"]`);
+  if (existing) return;
+  const toast = document.createElement('div');
+  const cls = type === 'success' ? 'pos-toast--success' : type === 'error' ? 'pos-toast--error' : 'pos-toast--info';
+  toast.className = `pos-toast ${cls}`;
+  toast.setAttribute('data-key', key);
+  toast.innerHTML = `<span class="pos-toast__msg">${message}</span><button class="pos-toast__close" aria-label="Close">A-</button>`;
+  container.appendChild(toast);
+  const remove = () => { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); };
+  toast.querySelector('.pos-toast__close')?.addEventListener('click', remove);
+  setTimeout(remove, timeoutMs);
+}
+
+function hideToastByKey(key) {
+  const container = kvEnsureToastContainer();
+  const el = container.querySelector(`.pos-toast[data-key="${key}"]`);
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}
