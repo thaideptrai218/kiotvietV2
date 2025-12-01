@@ -10,6 +10,8 @@ import fa.academy.kiotviet.application.dto.shared.SuccessResponse;
 import fa.academy.kiotviet.application.service.ResponseFactory;
 import fa.academy.kiotviet.core.orders.domain.Order;
 import fa.academy.kiotviet.core.orders.service.OrderService;
+import fa.academy.kiotviet.core.customers.repository.CustomerRepository;
+import fa.academy.kiotviet.core.customers.domain.Customer;
 import fa.academy.kiotviet.core.orders.repository.OrderItemRepository;
 import fa.academy.kiotviet.infrastructure.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class OrderApiController {
 
     private final OrderService orderService;
     private final OrderItemRepository orderItemRepository;
+    private final CustomerRepository customerRepository;
 
     @GetMapping
     public SuccessResponse<PagedResponse<OrderListItemDto>> listOrders(
@@ -54,7 +57,7 @@ public class OrderApiController {
         if ((effectiveFrom == null || effectiveFrom.isBlank()) && from != null) effectiveFrom = from.toString();
         if ((effectiveTo == null || effectiveTo.isBlank()) && to != null) effectiveTo = to.toString();
         Page<Order> paged = orderService.list(companyId, page, size, effectiveQ, status, effectiveFrom, effectiveTo);
-        List<OrderListItemDto> items = paged.getContent().stream().map(this::toListDto).collect(Collectors.toList());
+        List<OrderListItemDto> items = paged.getContent().stream().map(o -> toListDto(companyId, o)).collect(Collectors.toList());
         PagedResponse<OrderListItemDto> response = PagedResponse.of(items, paged.getNumber(), paged.getSize(), paged.getTotalElements());
         return ResponseFactory.success(response, "Orders retrieved successfully");
     }
@@ -141,12 +144,13 @@ public class OrderApiController {
                     .build());
         }
 
+        String phoneResolved = resolvePhone(companyId, o);
         OrderDetailDto dto = OrderDetailDto.builder()
                 .id(o.getId())
                 .orderCode(o.getOrderCode())
                 .orderDate(o.getOrderDate())
                 .customerName(o.getCustomerName())
-                .phoneNumber(o.getPhoneNumber())
+                .phoneNumber(phoneResolved)
                 .status(o.getStatus() != null ? o.getStatus().name() : "DRAFT")
                 .paymentMethod(o.getPaymentMethod() != null ? o.getPaymentMethod().name() : "")
                 .branchName("")
@@ -166,18 +170,19 @@ public class OrderApiController {
         return ResponseFactory.success(dto, "Order detail retrieved");
     }
 
-    private OrderListItemDto toListDto(Order o) {
+    private OrderListItemDto toListDto(Long companyId, Order o) {
         java.math.BigDecimal zero = java.math.BigDecimal.ZERO;
         java.math.BigDecimal sub = o.getSubtotal() != null ? o.getSubtotal() : zero;
         java.math.BigDecimal disc = o.getDiscount() != null ? o.getDiscount() : zero;
         java.math.BigDecimal total = sub.subtract(disc);
         if (total.compareTo(zero) < 0) total = zero;
+        String phoneResolved = resolvePhone(companyId, o);
         return OrderListItemDto.builder()
                 .id(o.getId())
                 .orderCode(o.getOrderCode())
                 .orderDate(o.getOrderDate())
                 .customerName(o.getCustomerName())
-                .phoneNumber(o.getPhoneNumber())
+                .phoneNumber(phoneResolved)
                 .subtotal(sub)
                 .discount(disc)
                 .paidAmount(o.getPaidAmount() != null ? o.getPaidAmount() : zero)
@@ -186,6 +191,22 @@ public class OrderApiController {
                 .cashier(o.getCashier())
                 .status(o.getStatus() != null ? o.getStatus().name() : "DRAFT")
                 .build();
+    }
+
+    // Prefer the phone stored on the order. If missing and customer is registered (non-Guest),
+    // attempt a best-effort lookup by exact customer name within the same company.
+    private String resolvePhone(Long companyId, Order o) {
+        String phone = o.getPhoneNumber();
+        if (phone != null && !phone.isBlank()) return phone;
+        String name = o.getCustomerName();
+        if (name == null || name.isBlank() || "guest".equalsIgnoreCase(name)) return null;
+        try {
+            return customerRepository.findFirstByCompany_IdAndNameIgnoreCase(companyId, name)
+                    .map(Customer::getPhone)
+                    .orElse(null);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private Long currentCompanyId() {

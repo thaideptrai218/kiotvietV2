@@ -76,6 +76,120 @@
     }
   }
 
+  // Generate a unique-ish customer code when user leaves it blank
+  function generateCustomerCode() {
+    try {
+      const ts = new Date();
+      const y = ts.getFullYear().toString().slice(-2);
+      const m = String(ts.getMonth() + 1).padStart(2, '0');
+      const d = String(ts.getDate()).padStart(2, '0');
+      const h = String(ts.getHours()).padStart(2, '0');
+      const mi = String(ts.getMinutes()).padStart(2, '0');
+      const s = String(ts.getSeconds()).padStart(2, '0');
+      const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
+      // Example: CUST-2507-142530-ABCD
+      return `CUST-${y}${m}${d}-${h}${mi}${s}-${rnd}`;
+    } catch {
+      return `CUST-${Date.now().toString(36).toUpperCase()}`;
+    }
+  }
+
+  // Reset the entire order form to initial clean state (Guest + no items)
+  function resetOrderForm() {
+    try {
+      // Clear products/items
+      if (els.items) els.items.innerHTML = '';
+      // Reset inputs
+      const productSearch = document.getElementById('productSearch');
+      const customerSearch = document.getElementById('customerSearch');
+      const orderDiscount = document.getElementById('orderDiscount');
+      const customerPay = document.getElementById('customerPay');
+      const additionalPay = document.getElementById('additionalPay');
+      const addPayContainer = document.getElementById('addPayContainer');
+      const searchDropdown = document.getElementById('searchDropdown');
+
+      if (productSearch) productSearch.value = '';
+      if (orderDiscount) orderDiscount.value = '';
+      if (customerPay) customerPay.value = '';
+      if (additionalPay) additionalPay.value = '';
+      if (addPayContainer) addPayContainer.style.display = 'none';
+      if (customerSearch) customerSearch.value = 'Guest';
+      clearCustomerError();
+
+      // Clear search dropdown
+      if (searchDropdown) { searchDropdown.innerHTML = ''; searchDropdown.classList.add('d-none'); }
+
+      // Reset totals
+      if (els.sumSubtotal) els.sumSubtotal.textContent = '0';
+      if (els.sumDiscount) els.sumDiscount.textContent = '0';
+      if (els.sumTotal) els.sumTotal.textContent = '0';
+      if (els.sumChange) els.sumChange.textContent = '0';
+
+      // Recalculate to ensure consistency
+      calcTotals();
+
+      // Focus product search for fast entry
+      productSearch?.focus();
+    } catch {}
+  }
+
+  // ---- Customer validation helpers ----
+  function normName(s){ return (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim(); }
+  function isCustomerValueEmptyOrGuest(v) {
+    const s = (v || '').trim();
+    return !s || s.toLowerCase() === 'guest';
+  }
+
+  function isCustomerInDatalist(val) {
+    const list = document.getElementById('customerOptions');
+    const v = normName(val);
+    if (!list || !v) return false;
+    const opts = Array.from(list.options || []);
+    return opts.some(o => normName(o.value) === v);
+  }
+
+  async function resolveCustomerFromServer(val) {
+    const name = (val || '').trim();
+    if (!name) return { ok: true, name: 'Guest', phone: null };
+    try {
+      const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`/api/customers/autocomplete?query=${encodeURIComponent(name)}&limit=10`, { headers });
+      if (!res.ok) return { ok: false };
+      const body = await res.json();
+      const items = body?.data || [];
+      if (!Array.isArray(items) || !items.length) return { ok: false };
+      const n = normName(name);
+      const match = items.find(c => normName(c?.name) === n);
+      if (!match) return { ok: false };
+      return { ok: true, name: match.name || name, phone: match.phone || null };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  function showCustomerError(msg) {
+    const err = document.getElementById('customerError');
+    const input = document.getElementById('customerSearch');
+    // Never show error for Guest/empty
+    if (isCustomerValueEmptyOrGuest(input?.value || '')) { clearCustomerError(); return; }
+    if (err) {
+      err.textContent = msg || 'Customer not found';
+      err.style.display = 'block';
+    }
+    if (input) input.classList.add('is-invalid');
+    try { showToastOnce('customer-not-found', msg || 'Customer not found', 'error'); } catch {}
+  }
+
+  function clearCustomerError() {
+    const err = document.getElementById('customerError');
+    if (err) err.style.display = 'none';
+    const input = document.getElementById('customerSearch');
+    if (input) input.classList.remove('is-invalid');
+    try { hideToastByKey('customer-not-found'); } catch {}
+  }
+
   // Toast/notification utilities
   function ensureToastContainer() {
     let el = document.getElementById('posToastContainer');
@@ -629,6 +743,258 @@
     els.customerPay?.addEventListener('input', () => { calcTotals(); });
     els.additionalPay?.addEventListener('input', () => { calcTotals(); });
 
+    // Customer autocomplete (populate datalist from server)
+    (function initCustomerAutocomplete(){
+      const input = document.getElementById('customerSearch');
+      const list = document.getElementById('customerOptions');
+      if (!input || !list) return;
+      let timer = null;
+      let lastIssued = 0;
+      async function run(q){
+        const issuedAt = Date.now();
+        lastIssued = issuedAt;
+        try {
+          const query = (q || '').trim();
+          // Always seed Guest option; no error on empty
+          list.innerHTML = '<option value="Guest"></option>';
+          if (!query) { return; }
+          const headers = { 'Accept': 'application/json' };
+          try {
+            const t = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            if (t) headers['Authorization'] = `Bearer ${t}`;
+          } catch {}
+          const res = await fetch(`/api/customers/autocomplete?query=${encodeURIComponent(query)}&limit=10`, { headers });
+          if (!res.ok) return;
+          const body = await res.json();
+          const items = Array.isArray(body?.data) ? body.data : [];
+          // Discard out-of-order responses
+          if (issuedAt !== lastIssued) return;
+          if (!items.length) {
+            const cur = (input.value || '').trim();
+            if (cur && normName(cur) === normName(query)) {
+              showCustomerError('Customer not found');
+            }
+            return;
+          }
+          const opts = items.map(c => {
+            const name = (c?.name || '').toString();
+            const phone = (c?.phone || '').toString();
+            const value = name; // enforce selection by name
+            const label = phone ? `${name} (${phone})` : name;
+            return `<option value="${value}">${label}</option>`;
+          }).join('');
+          list.insertAdjacentHTML('beforeend', opts);
+          // We have results; clear error for current non-empty query
+          const cur = (input.value || '').trim();
+          if (cur && normName(cur).length) {
+            clearCustomerError();
+          }
+        } catch {}
+      }
+      input.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim();
+        clearTimeout(timer);
+        if (!isCustomerValueEmptyOrGuest(q)) {
+          // Immediate local check: if datalist has no non-Guest options matching current input, show error now
+          const opts = Array.from(list.options || []);
+          const qq = normName(q);
+          const hasAny = opts.some(o => normName(o.value).includes(qq)) && opts.length > 1; // >1 to exclude only Guest
+          if (!hasAny) showCustomerError('Customer not found'); else clearCustomerError();
+        } else {
+          clearCustomerError();
+        }
+        timer = setTimeout(() => run(q), 150);
+      });
+      input.addEventListener('change', () => { clearCustomerError(); });
+      // Initial seed
+      run('');
+    })();
+
+    // Inline customer create modal: load form from customers page and submit via AJAX
+    (function initInlineCustomerCreate(){
+      const btn = document.getElementById('btnAddCustomer');
+      const modalEl = document.getElementById('customerCreateModal');
+      const modalContent = document.getElementById('customerCreateModalContent');
+      if (!btn || !modalEl || !modalContent) return;
+      let loaded = false;
+      
+      function resetCustomerModalForm() {
+        try {
+          const frm = modalContent.querySelector('#frm');
+          if (!frm) return;
+          // Reset all inputs/selects/textareas
+          frm.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+              if (el.id === 'isActive') el.checked = true; else el.checked = false;
+            } else {
+              el.value = '';
+            }
+          });
+          const title = modalContent.querySelector('#modalTitle'); if (title) title.textContent = 'New Customer';
+          const id = modalContent.querySelector('#customerId'); if (id) id.value = '';
+          const active = modalContent.querySelector('#isActive'); if (active) active.checked = true;
+          const btnSave = modalContent.querySelector('#btnSave'); if (btnSave) { btnSave.classList.add('d-none'); btnSave.disabled = false; }
+          const btnSaveNew = modalContent.querySelector('#btnSaveNew'); if (btnSaveNew) { btnSaveNew.classList.remove('d-none'); btnSaveNew.disabled = false; }
+          const modalErr = modalContent.querySelector('#modalErr'); if (modalErr) { modalErr.textContent=''; modalErr.classList.add('d-none'); }
+          // Reset button texts/spinners
+          [btnSave, btnSaveNew].forEach(b => {
+            if (!b) return;
+            const def = b.querySelector('.default-text');
+            const load = b.querySelector('.loading-text');
+            if (def) def.classList.remove('d-none');
+            if (load) load.classList.add('d-none');
+          });
+        } catch {}
+      }
+
+      async function loadCustomerForm() {
+        if (loaded) return;
+        try {
+          const headers = { 'Accept': 'text/html' };
+          const res = await fetch('/customers', { headers });
+          if (!res.ok) throw new Error('Failed to load customer form');
+          const html = await res.text();
+          const temp = document.createElement('div');
+          temp.innerHTML = html;
+          const editModal = temp.querySelector('#editModal .modal-content');
+          if (!editModal) throw new Error('Customer form not found');
+          modalContent.innerHTML = editModal.innerHTML;
+          setupCustomerFormHandlers();
+          loaded = true;
+        } catch (e) {
+          modalContent.innerHTML = `<div class="modal-body"><div class="alert alert-danger">${e.message || 'Unable to load customer form'}</div></div>`;
+        }
+      }
+
+      function setupCustomerFormHandlers() {
+        try {
+          const title = modalContent.querySelector('#modalTitle'); if (title) title.textContent = 'New Customer';
+          const id = modalContent.querySelector('#customerId'); if (id) id.value = '';
+          const active = modalContent.querySelector('#isActive'); if (active) active.checked = true;
+          const btnSave = modalContent.querySelector('#btnSave'); if (btnSave) btnSave.classList.add('d-none');
+          const btnSaveNew = modalContent.querySelector('#btnSaveNew'); if (btnSaveNew) btnSaveNew.classList.remove('d-none');
+          const modalErr = modalContent.querySelector('#modalErr'); if (modalErr) { modalErr.textContent=''; modalErr.classList.add('d-none'); }
+
+          // Apply consistent CSS for Cancel/Create buttons
+          const btnCancel = modalContent.querySelector('.modal-footer [data-bs-dismiss="modal"]');
+          if (btnCancel) { btnCancel.classList.add('btn', 'btn-secondary'); }
+          if (btnSaveNew) { btnSaveNew.classList.add('btn', 'btn-primary'); }
+
+          const setLoading = (btn, loading) => {
+            if (!btn) return;
+            btn.disabled = !!loading;
+            const def = btn.querySelector('.default-text');
+            const load = btn.querySelector('.loading-text');
+            if (def && load) {
+              if (loading) { def.classList.add('d-none'); load.classList.remove('d-none'); }
+              else { def.classList.remove('d-none'); load.classList.add('d-none'); }
+            }
+          };
+
+          async function submitNewCustomer() {
+            const get = (sel) => modalContent.querySelector(sel);
+            // Auto-generate code if empty
+            let codeVal = get('#code')?.value || '';
+            if (!codeVal || !codeVal.trim()) {
+              codeVal = generateCustomerCode();
+              const codeInput = get('#code');
+              if (codeInput) codeInput.value = codeVal; // reflect to UI
+            }
+            const data = {
+              code: codeVal,
+              name: get('#name')?.value?.trim() || '',
+              phone: get('#phone')?.value || '',
+              email: get('#email')?.value || '',
+              address: get('#address')?.value || '',
+              // Optional fields supported by backend DTO; include if present
+              gender: get('#gender')?.value || undefined,
+              notes: get('#notes')?.value || undefined
+            };
+            if (!data.name) {
+              if (modalErr) { modalErr.textContent = 'Name is required'; modalErr.classList.remove('d-none'); }
+              return;
+            }
+            const btn = get('#btnSaveNew');
+            try {
+              setLoading(btn, true);
+              const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+              const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+              if (token) headers['Authorization'] = `Bearer ${token}`;
+              const res = await fetch('/api/customers', { method: 'POST', headers, body: JSON.stringify(data) });
+              let body = null;
+              let text = '';
+              try { body = await res.json(); } catch { try { text = await res.text(); } catch {}
+              }
+              if (!res.ok) {
+                const msg = (body && (body.message || body.error || body.details)) || text || `Failed to save customer (${res.status})`;
+                throw new Error(msg);
+              }
+              const c = body?.data || { name: data.name, phone: data.phone };
+              // Insert into datalist and set input
+              try {
+                const list = document.getElementById('customerOptions');
+                if (list) {
+                  const label = c.phone ? `${c.name} (${c.phone})` : c.name;
+                  const opt = document.createElement('option');
+                  opt.value = c.name;
+                  opt.textContent = label;
+                  list.appendChild(opt);
+                }
+              } catch {}
+              const input = document.getElementById('customerSearch');
+              if (input && c?.name) { input.value = c.name; clearCustomerError(); }
+              // Close modal without reloading
+              const inst = bootstrap.Modal.getOrCreateInstance(modalEl);
+              inst.hide();
+              showToast('Customer created successfully', 'success');
+            } catch (err) {
+              if (modalErr) { modalErr.textContent = (err && err.message) ? err.message : 'Failed to save customer'; modalErr.classList.remove('d-none'); }
+            } finally {
+              setLoading(btn, false);
+            }
+          }
+
+          // Bind create button and form submit (Enter key)
+          const btnCreate = modalContent.querySelector('#btnSaveNew');
+          btnCreate?.addEventListener('click', (e) => { e.preventDefault(); submitNewCustomer(); });
+          const frm = modalContent.querySelector('#frm');
+          frm?.addEventListener('submit', (e) => { e.preventDefault(); submitNewCustomer(); });
+        } catch {}
+      }
+
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await loadCustomerForm();
+        // Always reset fields to empty on every open
+        resetCustomerModalForm();
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      });
+
+      // Also reset after the modal is closed/cancelled
+      modalEl.addEventListener('hidden.bs.modal', () => { resetCustomerModalForm(); });
+    })();
+
+    // Validate/default customer on blur and typing
+    try {
+      const cInput = document.getElementById('customerSearch');
+      cInput?.addEventListener('blur', async () => {
+        const vRaw = cInput.value || '';
+        const v = vRaw.trim();
+        // Empty -> set Guest, no error
+        if (!v) { cInput.value = 'Guest'; clearCustomerError(); return; }
+        // Guest string -> always valid, no error
+        if (isCustomerValueEmptyOrGuest(vRaw)) { clearCustomerError(); return; }
+        // If listed in datalist -> valid
+        if (isCustomerInDatalist(v)) { clearCustomerError(); return; }
+        // Otherwise, verify with server
+        const resolved = await resolveCustomerFromServer(v);
+        if (resolved.ok) { clearCustomerError(); }
+        else { showCustomerError('Customer not found'); }
+      });
+      cInput?.addEventListener('input', () => { clearCustomerError(); });
+    } catch {}
+
     els.btnComplete?.addEventListener('click', async (e) => {
       e.preventDefault();
 
@@ -660,9 +1026,29 @@
         if (isNaN(v)) return 0;
         return Math.min(Math.max(v, 0), 100);
       })();
+      // Resolve customer per rules: empty -> Guest; else must exist
+      const rawCustomer = (document.getElementById('customerSearch')?.value || '').trim();
+      let resolvedName = 'Guest';
+      let resolvedPhone = null;
+      if (!isCustomerValueEmptyOrGuest(rawCustomer)) {
+        if (isCustomerInDatalist(rawCustomer)) {
+          resolvedName = rawCustomer;
+        } else {
+          const resolved = await resolveCustomerFromServer(rawCustomer);
+          if (!resolved.ok) { showCustomerError('Customer not found'); return; }
+          resolvedName = resolved.name || 'Guest';
+          resolvedPhone = resolved.phone || null;
+        }
+      } else {
+        // ensure UI shows Guest for clarity
+        const cInput = document.getElementById('customerSearch');
+        if (cInput && !cInput.value.trim()) cInput.value = 'Guest';
+      }
+      clearCustomerError();
+
       const payload = {
-        customerName: (function(){ const v = document.getElementById('customerSearch')?.value || ''; return v.trim() ? v : 'Guest'; })(),
-        phoneNumber: null,
+        customerName: resolvedName,
+        phoneNumber: resolvedPhone,
         paymentMethod: 'CASH',
         paidAmount,
         orderDiscountPercent,
@@ -699,12 +1085,9 @@
           window.location.href = '/order/create';
           return;
         } else {
-          // Create flow: stay on page, reset draft
+          // Create flow: stay on page, fully reset to initial state (Guest + cleared inputs)
           showToast(`Created ${code} successfully.`, 'success');
-          if (els.items) els.items.innerHTML = '';
-          if (els.customerPay) els.customerPay.value = '';
-          calcTotals();
-          els.productSearch?.focus();
+          resetOrderForm();
         }
       } catch (err) {
         console.error(err);
@@ -741,3 +1124,34 @@
     } catch {}
   });
 })();
+// Global toast helpers to dedupe messages while typing
+function kvEnsureToastContainer() {
+  let el = document.getElementById('posToastContainer');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'posToastContainer';
+  el.className = 'pos-toast-container';
+  document.body.appendChild(el);
+  return el;
+}
+
+function showToastOnce(key, message, type = 'info', timeoutMs = 2500) {
+  const container = kvEnsureToastContainer();
+  const existing = container.querySelector(`.pos-toast[data-key="${key}"]`);
+  if (existing) return;
+  const toast = document.createElement('div');
+  const cls = type === 'success' ? 'pos-toast--success' : type === 'error' ? 'pos-toast--error' : 'pos-toast--info';
+  toast.className = `pos-toast ${cls}`;
+  toast.setAttribute('data-key', key);
+  toast.innerHTML = `<span class="pos-toast__msg">${message}</span><button class="pos-toast__close" aria-label="Close">A-</button>`;
+  container.appendChild(toast);
+  const remove = () => { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); };
+  toast.querySelector('.pos-toast__close')?.addEventListener('click', remove);
+  setTimeout(remove, timeoutMs);
+}
+
+function hideToastByKey(key) {
+  const container = kvEnsureToastContainer();
+  const el = container.querySelector(`.pos-toast[data-key="${key}"]`);
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}

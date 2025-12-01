@@ -752,9 +752,12 @@ function format(d) {
     sizeSel: document.getElementById('sizeSel'),
     pagi: document.getElementById('pagi'),
     hdrSearch: document.getElementById('hdrSearch'),
+    hdrPhoneSearch: document.getElementById('hdrPhoneSearch'),
     hdrSearchIcon: document.querySelector('#hdrNormal .kv-input-search i'),
     status: document.getElementById('status'),
-    cashierFilter: document.getElementById('cashierFilter')
+    cashierFilter: document.getElementById('cashierFilter'),
+    phoneFilter: document.getElementById('phoneFilter'),
+    customerFilter: document.getElementById('customerFilter')
   };
 
   const state = {
@@ -767,7 +770,9 @@ function format(d) {
     toDate: null,
     status: '',
     q: '',
-    cashier: ''
+    cashier: '',
+    phone: '',
+    customer: ''
   };
 
   // Debounce helper
@@ -819,13 +824,16 @@ function format(d) {
         return p.fullName || p.name || p.username || p.sub || '';
       } catch { return ''; }
     }
-    const rows = items.map(it => `
+    const rows = items.map(it => {
+      const isGuest = ((it.customerName || '').toString().trim().toLowerCase() === 'guest');
+      const phoneVal = isGuest ? '' : (it.phoneNumber || it.phone_number || it.phone || '');
+      return `
       <tr class="kv-order-row" data-id="${it.id}">
         <td><input type="checkbox" class="row-check" data-id="${it.id}"></td>
         <td class="fw-bold text-primary" data-col="ordercode">${it.orderCode || ''}</td>
         <td class="text-muted small" data-col="orderdate">${fmtDateTime(it.orderDate)}</td>
         <td class="fw-medium" data-col="customer">${it.customerName || ''}</td>
-        <td data-col="phonenumber">${it.phoneNumber || ''}</td>
+        <td data-col="phonenumber">${phoneVal}</td>
         <td class="text-end fw-semibold" data-col="subtotal">${fmtMoney(it.subtotal)}</td>
         <td class="text-end" data-col="discount">${fmtMoney(it.discount)}</td>
         <td class="text-end" data-col="customerpays">${fmtMoney(it.paidAmount)}</td>
@@ -835,7 +843,7 @@ function format(d) {
         <td data-col="cashier">${it.cashier || ''}</td>
         <td data-col="status">${statusBadge(it.status)}</td>
       </tr>
-    `).join('');
+    `}).join('');
     els.tblBody.innerHTML = rows;
     if (els.chkAll) { els.chkAll.checked = false; els.chkAll.indeterminate = false; }
     // bind row click to expand detail
@@ -897,11 +905,15 @@ function format(d) {
     if (state.loading) return;
     state.loading = true;
     try {
+      // Determine which text filter to send to backend (server supports single 'q')
+      const qEffective = (state.phone && state.phone.length) ? state.phone
+                        : (state.customer && state.customer.length) ? state.customer
+                        : state.q;
       let url = `${api.base}?page=${state.page}&size=${state.size}`;
       if (state.fromDate) url += `&fromDate=${encodeURIComponent(state.fromDate)}`;
       if (state.toDate) url += `&toDate=${encodeURIComponent(state.toDate)}`;
       if (state.status) url += `&status=${encodeURIComponent(state.status)}`;
-      if (state.q) url += `&q=${encodeURIComponent(state.q)}`;
+      if (qEffective) url += `&q=${encodeURIComponent(qEffective)}`;
       const res = await fetch(url, { headers: api.headers() });
       if (!res.ok) throw new Error(`Failed to load orders: ${res.status}`);
       const body = await res.json();
@@ -911,6 +923,11 @@ function format(d) {
       if (state.cashier) {
         const q = state.cashier.toLowerCase();
         items = items.filter(it => ((it.cashier || '').toString().toLowerCase().includes(q)));
+      }
+      // Client-side phone number filter
+      if (state.phone) {
+        const q = state.phone.toLowerCase();
+        items = items.filter(it => ((it.phoneNumber || '').toString().toLowerCase().includes(q)));
       }
       state.total = paged.totalElements || items.length || 0;
       state.totalPages = paged.totalPages || 1;
@@ -945,6 +962,13 @@ function format(d) {
       load();
     }, 300);
     els.hdrSearch?.addEventListener('input', doSearch);
+    // Phone quick search in toolbar (debounced)
+    const doPhoneSearch = debounce(() => {
+      state.page = 0;
+      state.phone = (els.hdrPhoneSearch?.value || '').trim();
+      load();
+    }, 300);
+    els.hdrPhoneSearch?.addEventListener('input', doPhoneSearch);
     // Click on search icon triggers search
     els.hdrSearchIcon?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -971,6 +995,8 @@ function format(d) {
       state.status = els.status?.value || '';
       state.q = (els.hdrSearch?.value || '').trim();
       state.cashier = (els.cashierFilter?.value || '').trim();
+      state.phone = (els.phoneFilter?.value || '').trim();
+      state.customer = (els.customerFilter?.value || '').trim();
       load();
     });
     btnClear?.addEventListener('click', () => {
@@ -978,6 +1004,8 @@ function format(d) {
       if (els.status) els.status.value = '';
       if (els.hdrSearch) els.hdrSearch.value = '';
       if (els.cashierFilter) els.cashierFilter.value = '';
+      if (els.phoneFilter) els.phoneFilter.value = '';
+      if (els.customerFilter) els.customerFilter.value = '';
       // Clear all text/number inputs inside the filter form (Customer, Cashier, Phone, etc.)
       try {
         const filterForm = document.querySelector('.kv-filter__form');
@@ -999,9 +1027,25 @@ function format(d) {
       state.status = '';
       state.q = '';
       state.cashier = '';
+      state.phone = '';
       state.page = 0;
       try { document.getElementById('selectedDateLabel').textContent = 'This month'; } catch {}
       load();
+    });
+
+    // Live search: customer name, phone number, cashier (debounced)
+    const liveSearch = debounce(() => { state.page = 0; load(); }, 250);
+    els.customerFilter?.addEventListener('input', () => {
+      state.customer = (els.customerFilter.value || '').trim();
+      liveSearch();
+    });
+    els.phoneFilter?.addEventListener('input', () => {
+      state.phone = (els.phoneFilter.value || '').trim();
+      liveSearch();
+    });
+    els.cashierFilter?.addEventListener('input', () => {
+      state.cashier = (els.cashierFilter.value || '').trim();
+      liveSearch();
     });
   }
 
@@ -1018,6 +1062,12 @@ function format(d) {
     }
     if (els.cashierFilter && els.cashierFilter.value) {
       state.cashier = (els.cashierFilter.value || '').trim();
+    }
+    if (els.phoneFilter && els.phoneFilter.value) {
+      state.phone = (els.phoneFilter.value || '').trim();
+    }
+    if (els.customerFilter && els.customerFilter.value) {
+      state.customer = (els.customerFilter.value || '').trim();
     }
     bindEvents();
     load();
@@ -1040,7 +1090,8 @@ function format(d) {
         toDate: state.toDate,
         status: state.status,
         q: state.q,
-        cashier: state.cashier
+        cashier: state.cashier,
+        phone: state.phone
       };
     }
   };
@@ -1558,11 +1609,13 @@ window.kvOrderToggleDetail = (function(){
   <div class='kv-order-detail__meta'>
     <div>${dt(d.orderDate)}</div>
     <div>${d.branchName||''}</div>
+    ${d.phoneNumber ? `<div><i class="fas fa-phone me-1"></i>${d.phoneNumber}</div>` : ''}
   </div>
 </div>
 <div class='kv-order-detail__grid'>
   <div class='kv-order-detail__section'>
     <div class='kv-order-detail__row'><span class='label'>Cashier</span><span class='value'>${d.creator || ''}</span></div>
+    <div class='kv-order-detail__row'><span class='label'>Phone</span><span class='value'>${d.phoneNumber || ''}</span></div>
     <div class='kv-order-detail__row'><span class='label'>Sale channel</span><span class='value'>
       <select class='form-select form-select-sm kv-sale-channel' style='min-width:180px;'>
         ${((d.paymentMethod||'').toUpperCase()==='CASH' || (d.paymentMethod||'').toUpperCase()==='COD')

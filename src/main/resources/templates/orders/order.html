@@ -205,9 +205,15 @@
             <section class="kv-card">
                 <!-- Table toolbar -->
                 <div id="hdrNormal" class="kv-cardbar">
-                    <div class="kv-input-search kv-input-search--sm">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="hdrSearch" placeholder="By order code" />
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="kv-input-search kv-input-search--sm">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="hdrSearch" placeholder="By code, customer, or phone" />
+                        </div>
+                        <div class="kv-input-search kv-input-search--sm d-none d-md-flex">
+                            <i class="fas fa-phone"></i>
+                            <input type="text" id="hdrPhoneSearch" placeholder="Phone number" />
+                        </div>
                     </div>
                     <div class="kv-cardbar__right">
                         <div class="dropdown">

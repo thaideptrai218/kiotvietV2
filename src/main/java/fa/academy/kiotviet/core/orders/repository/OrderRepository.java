@@ -19,13 +19,16 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
        Page<Order> findByCompany_Id(Long companyId, Pageable pageable);
 
-       @Query("select o from Order o where o.company.id = :companyId and " +
+       @Query("select o from Order o " +
+                     "left join fa.academy.kiotviet.core.customers.domain.Customer c " +
+                     "  on c.company.id = o.company.id and lower(c.name) = lower(o.customerName) " +
+                     "where o.company.id = :companyId and " +
                      "(:status is null or o.status = :status) and " +
                      "(:fromDate is null or o.orderDate >= :fromDate) and " +
                      "(:toDate is null or o.orderDate <= :toDate) and " +
                      "(:q is null or lower(o.orderCode) like lower(concat('%', :q, '%')) or " +
                      " lower(o.customerName) like lower(concat('%', :q, '%')) or " +
-                     " lower(o.phoneNumber) like lower(concat('%', :q, '%'))) " +
+                     " lower(coalesce(o.phoneNumber, c.phone)) like lower(concat('%', :q, '%'))) " +
                      "order by o.orderDate desc")
        Page<Order> search(
                      @Param("companyId") Long companyId,
