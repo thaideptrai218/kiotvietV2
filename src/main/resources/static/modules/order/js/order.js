@@ -3,7 +3,7 @@
     ordercode: true,
     orderdate: true,
     customer: true,
-    phonenumber: true,
+    phonenumber: false,
     subtotal: true,
     discount: true,
     customerpays: false,
@@ -752,6 +752,7 @@ function format(d) {
     sizeSel: document.getElementById('sizeSel'),
     pagi: document.getElementById('pagi'),
     hdrSearch: document.getElementById('hdrSearch'),
+    hdrPhoneSearch: document.getElementById('hdrPhoneSearch'),
     hdrSearchIcon: document.querySelector('#hdrNormal .kv-input-search i'),
     status: document.getElementById('status'),
     cashierFilter: document.getElementById('cashierFilter'),
@@ -856,7 +857,7 @@ function format(d) {
 
     // Ensure column visibility matches defaults/saved after data render
     try {
-      const defaultCols = { ordercode:true, orderdate:true, customer:true, phonenumber:true, subtotal:true, discount:true, customerpays:false, remaining:false, paidamount:true, paymentmethod:true, cashier:false, status:true };
+      const defaultCols = { ordercode:true, orderdate:true, customer:true, phonenumber:false, subtotal:true, discount:true, customerpays:false, remaining:false, paidamount:true, paymentmethod:true, cashier:false, status:true };
       function key() {
         try {
           const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
@@ -905,8 +906,8 @@ function format(d) {
     state.loading = true;
     try {
       // Determine which text filter to send to backend (server supports single 'q')
-      const qEffective = (state.customer && state.customer.length) ? state.customer
-                        : (state.phone && state.phone.length) ? state.phone
+      const qEffective = (state.phone && state.phone.length) ? state.phone
+                        : (state.customer && state.customer.length) ? state.customer
                         : state.q;
       let url = `${api.base}?page=${state.page}&size=${state.size}`;
       if (state.fromDate) url += `&fromDate=${encodeURIComponent(state.fromDate)}`;
@@ -961,6 +962,13 @@ function format(d) {
       load();
     }, 300);
     els.hdrSearch?.addEventListener('input', doSearch);
+    // Phone quick search in toolbar (debounced)
+    const doPhoneSearch = debounce(() => {
+      state.page = 0;
+      state.phone = (els.hdrPhoneSearch?.value || '').trim();
+      load();
+    }, 300);
+    els.hdrPhoneSearch?.addEventListener('input', doPhoneSearch);
     // Click on search icon triggers search
     els.hdrSearchIcon?.addEventListener('click', (e) => {
       e.preventDefault();
