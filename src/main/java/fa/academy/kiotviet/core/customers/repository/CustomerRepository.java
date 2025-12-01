@@ -18,6 +18,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
 
     boolean existsByCompany_IdAndPhone(Long companyId, String phone);
 
+    // Lookup by exact name (case-insensitive) within a company for fallback scenarios
+    Optional<Customer> findFirstByCompany_IdAndNameIgnoreCase(Long companyId, String name);
+
     Page<Customer> findByCompany_Id(Long companyId, Pageable pageable);
     
     long countByCompanyId(Long companyId);

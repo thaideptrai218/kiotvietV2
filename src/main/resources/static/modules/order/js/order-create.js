@@ -76,6 +76,63 @@
     }
   }
 
+  // Generate a unique-ish customer code when user leaves it blank
+  function generateCustomerCode() {
+    try {
+      const ts = new Date();
+      const y = ts.getFullYear().toString().slice(-2);
+      const m = String(ts.getMonth() + 1).padStart(2, '0');
+      const d = String(ts.getDate()).padStart(2, '0');
+      const h = String(ts.getHours()).padStart(2, '0');
+      const mi = String(ts.getMinutes()).padStart(2, '0');
+      const s = String(ts.getSeconds()).padStart(2, '0');
+      const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
+      // Example: CUST-2507-142530-ABCD
+      return `CUST-${y}${m}${d}-${h}${mi}${s}-${rnd}`;
+    } catch {
+      return `CUST-${Date.now().toString(36).toUpperCase()}`;
+    }
+  }
+
+  // Reset the entire order form to initial clean state (Guest + no items)
+  function resetOrderForm() {
+    try {
+      // Clear products/items
+      if (els.items) els.items.innerHTML = '';
+      // Reset inputs
+      const productSearch = document.getElementById('productSearch');
+      const customerSearch = document.getElementById('customerSearch');
+      const orderDiscount = document.getElementById('orderDiscount');
+      const customerPay = document.getElementById('customerPay');
+      const additionalPay = document.getElementById('additionalPay');
+      const addPayContainer = document.getElementById('addPayContainer');
+      const searchDropdown = document.getElementById('searchDropdown');
+
+      if (productSearch) productSearch.value = '';
+      if (orderDiscount) orderDiscount.value = '';
+      if (customerPay) customerPay.value = '';
+      if (additionalPay) additionalPay.value = '';
+      if (addPayContainer) addPayContainer.style.display = 'none';
+      if (customerSearch) customerSearch.value = 'Guest';
+      clearCustomerError();
+
+      // Clear search dropdown
+      if (searchDropdown) { searchDropdown.innerHTML = ''; searchDropdown.classList.add('d-none'); }
+
+      // Reset totals
+      if (els.sumSubtotal) els.sumSubtotal.textContent = '0';
+      if (els.sumDiscount) els.sumDiscount.textContent = '0';
+      if (els.sumTotal) els.sumTotal.textContent = '0';
+      if (els.sumChange) els.sumChange.textContent = '0';
+
+      // Recalculate to ensure consistency
+      calcTotals();
+
+      // Focus product search for fast entry
+      productSearch?.focus();
+    } catch {}
+  }
+
   // ---- Customer validation helpers ----
   function normName(s){ return (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim(); }
   function isCustomerValueEmptyOrGuest(v) {
@@ -753,6 +810,171 @@
       run('');
     })();
 
+    // Inline customer create modal: load form from customers page and submit via AJAX
+    (function initInlineCustomerCreate(){
+      const btn = document.getElementById('btnAddCustomer');
+      const modalEl = document.getElementById('customerCreateModal');
+      const modalContent = document.getElementById('customerCreateModalContent');
+      if (!btn || !modalEl || !modalContent) return;
+      let loaded = false;
+      
+      function resetCustomerModalForm() {
+        try {
+          const frm = modalContent.querySelector('#frm');
+          if (!frm) return;
+          // Reset all inputs/selects/textareas
+          frm.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+              if (el.id === 'isActive') el.checked = true; else el.checked = false;
+            } else {
+              el.value = '';
+            }
+          });
+          const title = modalContent.querySelector('#modalTitle'); if (title) title.textContent = 'New Customer';
+          const id = modalContent.querySelector('#customerId'); if (id) id.value = '';
+          const active = modalContent.querySelector('#isActive'); if (active) active.checked = true;
+          const btnSave = modalContent.querySelector('#btnSave'); if (btnSave) { btnSave.classList.add('d-none'); btnSave.disabled = false; }
+          const btnSaveNew = modalContent.querySelector('#btnSaveNew'); if (btnSaveNew) { btnSaveNew.classList.remove('d-none'); btnSaveNew.disabled = false; }
+          const modalErr = modalContent.querySelector('#modalErr'); if (modalErr) { modalErr.textContent=''; modalErr.classList.add('d-none'); }
+          // Reset button texts/spinners
+          [btnSave, btnSaveNew].forEach(b => {
+            if (!b) return;
+            const def = b.querySelector('.default-text');
+            const load = b.querySelector('.loading-text');
+            if (def) def.classList.remove('d-none');
+            if (load) load.classList.add('d-none');
+          });
+        } catch {}
+      }
+
+      async function loadCustomerForm() {
+        if (loaded) return;
+        try {
+          const headers = { 'Accept': 'text/html' };
+          const res = await fetch('/customers', { headers });
+          if (!res.ok) throw new Error('Failed to load customer form');
+          const html = await res.text();
+          const temp = document.createElement('div');
+          temp.innerHTML = html;
+          const editModal = temp.querySelector('#editModal .modal-content');
+          if (!editModal) throw new Error('Customer form not found');
+          modalContent.innerHTML = editModal.innerHTML;
+          setupCustomerFormHandlers();
+          loaded = true;
+        } catch (e) {
+          modalContent.innerHTML = `<div class="modal-body"><div class="alert alert-danger">${e.message || 'Unable to load customer form'}</div></div>`;
+        }
+      }
+
+      function setupCustomerFormHandlers() {
+        try {
+          const title = modalContent.querySelector('#modalTitle'); if (title) title.textContent = 'New Customer';
+          const id = modalContent.querySelector('#customerId'); if (id) id.value = '';
+          const active = modalContent.querySelector('#isActive'); if (active) active.checked = true;
+          const btnSave = modalContent.querySelector('#btnSave'); if (btnSave) btnSave.classList.add('d-none');
+          const btnSaveNew = modalContent.querySelector('#btnSaveNew'); if (btnSaveNew) btnSaveNew.classList.remove('d-none');
+          const modalErr = modalContent.querySelector('#modalErr'); if (modalErr) { modalErr.textContent=''; modalErr.classList.add('d-none'); }
+
+          // Apply consistent CSS for Cancel/Create buttons
+          const btnCancel = modalContent.querySelector('.modal-footer [data-bs-dismiss="modal"]');
+          if (btnCancel) { btnCancel.classList.add('btn', 'btn-secondary'); }
+          if (btnSaveNew) { btnSaveNew.classList.add('btn', 'btn-primary'); }
+
+          const setLoading = (btn, loading) => {
+            if (!btn) return;
+            btn.disabled = !!loading;
+            const def = btn.querySelector('.default-text');
+            const load = btn.querySelector('.loading-text');
+            if (def && load) {
+              if (loading) { def.classList.add('d-none'); load.classList.remove('d-none'); }
+              else { def.classList.remove('d-none'); load.classList.add('d-none'); }
+            }
+          };
+
+          async function submitNewCustomer() {
+            const get = (sel) => modalContent.querySelector(sel);
+            // Auto-generate code if empty
+            let codeVal = get('#code')?.value || '';
+            if (!codeVal || !codeVal.trim()) {
+              codeVal = generateCustomerCode();
+              const codeInput = get('#code');
+              if (codeInput) codeInput.value = codeVal; // reflect to UI
+            }
+            const data = {
+              code: codeVal,
+              name: get('#name')?.value?.trim() || '',
+              phone: get('#phone')?.value || '',
+              email: get('#email')?.value || '',
+              address: get('#address')?.value || '',
+              // Optional fields supported by backend DTO; include if present
+              gender: get('#gender')?.value || undefined,
+              notes: get('#notes')?.value || undefined
+            };
+            if (!data.name) {
+              if (modalErr) { modalErr.textContent = 'Name is required'; modalErr.classList.remove('d-none'); }
+              return;
+            }
+            const btn = get('#btnSaveNew');
+            try {
+              setLoading(btn, true);
+              const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+              const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+              if (token) headers['Authorization'] = `Bearer ${token}`;
+              const res = await fetch('/api/customers', { method: 'POST', headers, body: JSON.stringify(data) });
+              let body = null;
+              let text = '';
+              try { body = await res.json(); } catch { try { text = await res.text(); } catch {}
+              }
+              if (!res.ok) {
+                const msg = (body && (body.message || body.error || body.details)) || text || `Failed to save customer (${res.status})`;
+                throw new Error(msg);
+              }
+              const c = body?.data || { name: data.name, phone: data.phone };
+              // Insert into datalist and set input
+              try {
+                const list = document.getElementById('customerOptions');
+                if (list) {
+                  const label = c.phone ? `${c.name} (${c.phone})` : c.name;
+                  const opt = document.createElement('option');
+                  opt.value = c.name;
+                  opt.textContent = label;
+                  list.appendChild(opt);
+                }
+              } catch {}
+              const input = document.getElementById('customerSearch');
+              if (input && c?.name) { input.value = c.name; clearCustomerError(); }
+              // Close modal without reloading
+              const inst = bootstrap.Modal.getOrCreateInstance(modalEl);
+              inst.hide();
+              showToast('Customer created successfully', 'success');
+            } catch (err) {
+              if (modalErr) { modalErr.textContent = (err && err.message) ? err.message : 'Failed to save customer'; modalErr.classList.remove('d-none'); }
+            } finally {
+              setLoading(btn, false);
+            }
+          }
+
+          // Bind create button and form submit (Enter key)
+          const btnCreate = modalContent.querySelector('#btnSaveNew');
+          btnCreate?.addEventListener('click', (e) => { e.preventDefault(); submitNewCustomer(); });
+          const frm = modalContent.querySelector('#frm');
+          frm?.addEventListener('submit', (e) => { e.preventDefault(); submitNewCustomer(); });
+        } catch {}
+      }
+
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await loadCustomerForm();
+        // Always reset fields to empty on every open
+        resetCustomerModalForm();
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      });
+
+      // Also reset after the modal is closed/cancelled
+      modalEl.addEventListener('hidden.bs.modal', () => { resetCustomerModalForm(); });
+    })();
+
     // Validate/default customer on blur and typing
     try {
       const cInput = document.getElementById('customerSearch');
@@ -863,12 +1085,9 @@
           window.location.href = '/order/create';
           return;
         } else {
-          // Create flow: stay on page, reset draft
+          // Create flow: stay on page, fully reset to initial state (Guest + cleared inputs)
           showToast(`Created ${code} successfully.`, 'success');
-          if (els.items) els.items.innerHTML = '';
-          if (els.customerPay) els.customerPay.value = '';
-          calcTotals();
-          els.productSearch?.focus();
+          resetOrderForm();
         }
       } catch (err) {
         console.error(err);
