@@ -105,7 +105,7 @@
                 const payload = JSON.parse(atob(token.split(".")[1]));
                 return `suppliers.columns.v1.${payload.companyId || "default"}`;
             }
-        } catch {}
+        } catch { }
         return "suppliers.columns.v1.default";
     };
 
@@ -116,7 +116,7 @@
             );
             if (saved && typeof saved === "object")
                 state.columns = { ...state.columns, ...saved };
-        } catch {}
+        } catch { }
         els.colCode.checked = !!state.columns.code;
         els.colName.checked = !!state.columns.name;
         els.colPhone.checked = !!state.columns.phone;
@@ -296,9 +296,8 @@
             )}</td>
           <td data-col="city"></td>
           <td data-col="ward"></td>
-          <td data-col="status"><span class="badge badge-status ${
-              s.isActive ? "active" : "inactive"
-          }">${s.isActive ? "Active" : "Inactive"}</span></td>
+          <td data-col="status"><span class="badge badge-status ${s.isActive ? "active" : "inactive"
+                }">${s.isActive ? "Active" : "Inactive"}</span></td>
         </tr>
         ${isExpanded ? expandedRow(s) : ""}
       `);
@@ -318,49 +317,55 @@
             ? '<i class="fas fa-ban me-1"></i>'
             : '<i class="fas fa-check me-1"></i>';
 
+        // Actions are only shown if the user has permission
         const actionsHtml =
             typeof CURRENT_USER_CAN_MANAGE !== "undefined" &&
-            CURRENT_USER_CAN_MANAGE
+                CURRENT_USER_CAN_MANAGE
                 ? `<div class="expanded-actions">
-            <button class="btn btn-sm btn-outline-primary" data-act="edit">
-                <i class="far fa-pen-to-square me-1"></i> Edit
-            </button>
-            <button class="btn btn-sm ${toggleClass}" data-act="toggleActive">
-                ${toggleIcon} ${toggleLabel}
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" data-act="delete">
-                <i class="far fa-trash-can me-1"></i> Delete
-            </button>
-         </div>`
+                                <button class="btn btn-sm btn-primary" data-act="edit">
+                                    <i class="far fa-pen-to-square me-1"></i> Edit
+                                </button>
+                                <button class="btn btn-sm ${toggleClass.replace('outline-', '')}" data-act="toggleActive">
+                                    ${toggleIcon} ${toggleLabel}
+                                </button>
+                                                   </div>`
                 : "";
+
+        // Helper to make website clickable
+        const websiteDisplay = s.website
+            ? `<a href="${s.website.startsWith('http') ? s.website : 'http://' + s.website}" target="_blank" rel="noopener noreferrer">${fmt(s.website)} <i class="fas fa-external-link-alt small ms-1"></i></a>`
+            : '';
 
         return `
       <tr class="expanded-row" data-id="${s.id}-exp">
         <td></td>
         <td colspan="9">
-          <div class="expanded-content">
-            <div class="row g-3 align-items-start">
-              <div class="col-md-8 text-muted small">
-                <div><span class="fw-semibold">Tax code:</span> ${fmt(
-                    s.taxCode
-                )}</div>
-                <div><span class="fw-semibold">Website:</span> ${fmt(
-                    s.website
-                )}</div>
-                <div><span class="fw-semibold">Notes:</span> ${fmt(
-                    s.notes
-                )}</div>
-                <div><span class="fw-semibold">Credit limit:</span> ${fmtMoney(
-                    s.creditLimit
-                )}</div>
-                <div><span class="fw-semibold">Outstanding:</span> ${fmtMoney(
-                    s.outstandingBalance
-                )}</div>
-              </div>
-              <div class="col-md-4 d-flex justify-content-end gap-2">
-                <button class="btn btn-primary btn-sm" data-act="edit"><i class="far fa-pen-to-square me-1"></i>Update</button>
-                <button class="${toggleClass}" data-act="toggleActive">${toggleIcon}${toggleLabel}</button>
-              </div>
+          <div class="expanded-wrapper">
+            <div class="expanded-grid">
+                <div class="expanded-item">
+                    <div class="label">Contact Person</div>
+                    <div class="value">${fmt(s.contactPerson) || '<span class="text-muted">-</span>'}</div>
+                </div>
+                <div class="expanded-item">
+                    <div class="label">Tax Code</div>
+                    <div class="value">${fmt(s.taxCode) || '<span class="text-muted">-</span>'}</div>
+                </div>
+                <div class="expanded-item">
+                    <div class="label">Website</div>
+                    <div class="value">${websiteDisplay || '<span class="text-muted">-</span>'}</div>
+                </div>
+                <div class="expanded-item">
+                    <div class="label">Credit Limit</div>
+                    <div class="value">${fmtMoney(s.creditLimit)}</div>
+                </div>
+                <div class="expanded-item">
+                    <div class="label">Outstanding Balance</div>
+                    <div class="value ${s.outstandingBalance > 0 ? 'text-danger' : 'text-success'}">${fmtMoney(s.outstandingBalance)}</div>
+                </div>
+                <div class="expanded-item full-width">
+                    <div class="label">Notes</div>
+                    <div class="value text-break">${fmt(s.notes) || '<span class="text-muted">No notes available</span>'}</div>
+                </div>
             </div>
             ${actionsHtml}
           </div>
@@ -378,27 +383,23 @@
             `<li class="page-item ${disabledPrev}"><a class="page-link" data-page="0">First</a></li>`
         );
         items.push(
-            `<li class="page-item ${disabledPrev}"><a class="page-link" data-page="${
-                p - 1
+            `<li class="page-item ${disabledPrev}"><a class="page-link" data-page="${p - 1
             }">Prev</a></li>`
         );
         const start = Math.max(0, p - 2),
             end = Math.min(t - 1, p + 2);
         for (let i = start; i <= end; i++) {
             items.push(
-                `<li class="page-item ${
-                    i === p ? "active" : ""
+                `<li class="page-item ${i === p ? "active" : ""
                 }"><a class="page-link" data-page="${i}">${i + 1}</a></li>`
             );
         }
         items.push(
-            `<li class="page-item ${disabledNext}"><a class="page-link" data-page="${
-                p + 1
+            `<li class="page-item ${disabledNext}"><a class="page-link" data-page="${p + 1
             }">Next</a></li>`
         );
         items.push(
-            `<li class="page-item ${disabledNext}"><a class="page-link" data-page="${
-                t - 1
+            `<li class="page-item ${disabledNext}"><a class="page-link" data-page="${t - 1
             }">Last</a></li>`
         );
         els.pagi.innerHTML = items.join("");
@@ -725,14 +726,14 @@
                         r.ok
                             ? r.json()
                             : r
-                                  .json()
-                                  .then((b) =>
-                                      Promise.reject(
-                                          new Error(
-                                              b?.message || "Toggle failed"
-                                          )
-                                      )
-                                  )
+                                .json()
+                                .then((b) =>
+                                    Promise.reject(
+                                        new Error(
+                                            b?.message || "Toggle failed"
+                                        )
+                                    )
+                                )
                     )
                     .then(() => {
                         showAlert("Status updated", "success");
