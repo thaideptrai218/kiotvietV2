@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# --- Environment Setup ---
+# GitHub Actions runners often run with a minimal PATH. We need to ensure
+# the user's configuration is loaded or manually add common paths for PM2/Node.
+
+# 1. Try to load user profile (standard place for PATH updates)
+[ -f "$HOME/.profile" ] && source "$HOME/.profile"
+[ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"
+
+# 2. If NVM is used, load it explicitly
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    \. "$NVM_DIR/nvm.sh"
+fi
+
+# 3. Add common global npm binary paths just in case
+export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.npm-global/bin:$HOME/bin"
+# -------------------------
+
 # EC2 Application Management Script (PM2 Edition)
 # Usage: ./ec2-manage.sh [restart|clean|status|logs]
 
