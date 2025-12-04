@@ -887,18 +887,32 @@ function format(d) {
       els.pageInfo.textContent = `${start}-${end} of ${total}`;
     }
     if (!els.pagi) return;
-    const prevDisabled = page <= 0 ? 'disabled' : '';
-    const nextDisabled = page >= totalPages - 1 ? 'disabled' : '';
-    const pages = [];
-    for (let i = 0; i < Math.min(totalPages, 5); i++) {
-      const active = i === page ? 'active' : '';
-      pages.push(`<li class="page-item ${active}"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`);
+
+    const p = Math.max(0, page | 0);
+    const t = Math.max(1, totalPages | 0);
+    const items = [];
+    
+    const disabledPrev = p === 0 ? 'disabled' : '';
+    const disabledNext = p >= t - 1 ? 'disabled' : '';
+
+    // First & Prev
+    items.push(`<li class="page-item ${disabledPrev}"><a class="page-link" href="#" data-page="0">First</a></li>`);
+    items.push(`<li class="page-item ${disabledPrev}"><a class="page-link" href="#" data-page="${Math.max(0, p - 1)}">Prev</a></li>`);
+
+    // Page Numbers Window
+    const startPage = Math.max(0, p - 2);
+    const endPage = Math.min(t - 1, p + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+      const active = i === p ? 'active' : '';
+      items.push(`<li class="page-item ${active}"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`);
     }
-    els.pagi.innerHTML = `
-      <li class="page-item ${prevDisabled}"><a class="page-link" href="#" data-nav="prev"><i class="fas fa-chevron-left"></i></a></li>
-      ${pages.join('')}
-      <li class="page-item ${nextDisabled}"><a class="page-link" href="#" data-nav="next"><i class="fas fa-chevron-right"></i></a></li>
-    `;
+
+    // Next & Last
+    items.push(`<li class="page-item ${disabledNext}"><a class="page-link" href="#" data-page="${Math.min(t - 1, p + 1)}">Next</a></li>`);
+    items.push(`<li class="page-item ${disabledNext}"><a class="page-link" href="#" data-page="${t - 1}">Last</a></li>`);
+
+    els.pagi.innerHTML = items.join('');
   }
 
   async function load() {
@@ -980,11 +994,14 @@ function format(d) {
       const a = e.target.closest('a');
       if (!a) return;
       e.preventDefault();
-      const nav = a.getAttribute('data-nav');
       const p = a.getAttribute('data-page');
-      if (nav === 'prev' && state.page > 0) { state.page -= 1; load(); }
-      else if (nav === 'next' && state.page < state.totalPages - 1) { state.page += 1; load(); }
-      else if (p != null) { state.page = parseInt(p, 10) || 0; load(); }
+      if (p != null) { 
+        const newPage = parseInt(p, 10);
+        if (!isNaN(newPage) && newPage >= 0 && newPage < state.totalPages) {
+          state.page = newPage; 
+          load(); 
+        }
+      }
     });
 
     // Apply/Clear filters (match Purchases behavior)
