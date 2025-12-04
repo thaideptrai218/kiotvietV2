@@ -4,11 +4,7 @@
 # Usage: ./ec2-manage.sh [restart|clean|status|logs]
 
 APP_NAME="kiotviet"
-JAR_PATTERN="target/$APP_NAME-*.jar"
 LOG_FILE="app.log"
-
-# Load environment variables if needed (e.g. from .env)
-# export $(cat .env | xargs)
 
 function status() {
     echo "🔍 Checking application status..."
@@ -23,6 +19,19 @@ function status() {
         fi
     else
         echo "❌ Application is NOT running."
+    fi
+}
+
+function check_db() {
+    echo "🐘 Checking Database & Cache containers..."
+    # Check if mysql and redis containers are running
+    if docker compose ps | grep -q "Up"; then
+        echo "✅ Docker containers are running."
+    else
+        echo "⚠️  Docker containers might be down. Attempting to start..."
+        docker compose up -d
+        echo "⏳ Waiting 10s for DB initialization..."
+        sleep 10
     fi
 }
 
@@ -50,6 +59,9 @@ function stop() {
 }
 
 function start() {
+    # Ensure DB is up before starting app
+    check_db
+
     echo "🚀 Starting application..."
     
     # Find the JAR file
@@ -91,17 +103,6 @@ function clean_old_logs() {
     echo "✅ Old logs cleaned."
 }
 
-function clean_artifacts() {
-    echo "🧹 Cleaning old build artifacts..."
-    # Use make clean for thoroughness
-    if [ -f Makefile ]; then
-        make clean
-    else
-        ./mvnw clean
-    fi
-    echo "✅ Artifacts cleaned."
-}
-
 case "$1" in
     restart)
         stop
@@ -114,8 +115,10 @@ case "$1" in
         start
         ;;
     clean)
-        clean_artifacts
         clean_old_logs
+        ;;
+    check_db)
+        check_db
         ;;
     status)
         status

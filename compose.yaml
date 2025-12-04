@@ -15,6 +15,13 @@ services:
     command: >
       --default-authentication-plugin=mysql_native_password
 
+  redis:
+    image: redis:7.0
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
 # Declare the volume
 volumes:
   mysql_data:

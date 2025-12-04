@@ -29,11 +29,5 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: 🏗️ Build with Maven
-        run: make build
-
-      - name: 🧹 Cleanup Old Artifacts
-        run: ./scripts/ec2-manage.sh clean
-
       - name: 🚀 Deploy Application
-        run: ./scripts/ec2-manage.sh restart
+        run: make deploy
