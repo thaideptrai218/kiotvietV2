@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8.0
@@ -12,5 +10,11 @@ services:
       MYSQL_PASSWORD: user1234
     ports:
       - "33006:3306" # Host port 33006 → container port 3306
+    volumes:
+      - mysql_data:/var/lib/mysql # Internal Docker volume for persistence
     command: >
       --default-authentication-plugin=mysql_native_password
+
+# Declare the volume
+volumes:
+  mysql_data:

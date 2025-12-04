@@ -3,30 +3,37 @@ name: Self-Hosted CI/CD
 on:
   push:
     branches: [ "main", "master" ]
+  workflow_dispatch:
+
+env:
+  APP_NAME: kiotviet
+  JAVA_VERSION: '21'
+  LOG_FILE: app.log
 
 jobs:
-  deploy:
-    name: Build and Run
+  build-and-deploy:
+    name: Build & Deploy
     runs-on: self-hosted
+    timeout-minutes: 15
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: 'maven'
+      - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
 
-    - name: Build with Maven
-      run: ./mvnw clean package -DskipTests
+      - name: 🏗️ Build with Maven
+        run: make build
 
-    - name: Restart Application
-      run: |
-        echo "Restarting application..."
-        # Stop any running instance (ignore error if none found)
-        pkill -f "kiotviet-.*.jar" || true
-    - name: Run Application
-      run: ./mvnw spring-boot:run
+      - name: 🧹 Cleanup Old Artifacts
+        run: ./scripts/ec2-manage.sh clean
+
+      - name: 🚀 Deploy Application
+        run: ./scripts/ec2-manage.sh restart
