@@ -1,40 +1,71 @@
-# Kiotviet MVP - Multi-tenant Product Management System
+# 🏪 Kiotviet MVP - Multi-tenant Product Management System
 
-A comprehensive product management system for large retail sellers in Vietnam, built with Spring Boot 3.5.7 and Java 17.
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge)
 
-## Project Overview
+A comprehensive product management system for large retail sellers in Vietnam, built with **Spring Boot 3.5.7** and **Java 21**.
 
-**Target**: Large retail sellers with multiple store locations
-**Architecture**: Multi-tenant SaaS with account-based isolation
-**Scale**: 1000+ products per account, 100+ concurrent users per tenant
+---
+
+## 📑 Table of Contents
+
+- [Project Overview](#-project-overview)
+- [Technology Stack](#-technology-stack)
+- [Quick Start](#-quick-start)
+- [Project Structure](#-project-structure)
+- [Development Commands](#-development-commands)
+- [Database Schema](#-database-schema)
+- [API Documentation](#-api-documentation)
+- [Performance Targets](#-performance-targets)
+- [Security Features](#-security-features)
+- [Testing](#-testing)
+- [CI/CD Pipeline](#-cicd-pipeline)
+- [Documentation](#-documentation)
+- [License](#-license)
+
+---
+
+## 🔭 Project Overview
+
+**Target**: Large retail sellers with multiple store locations  
+**Architecture**: Multi-tenant SaaS with account-based isolation  
+**Scale**: 1000+ products per account, 100+ concurrent users per tenant  
 **Timeline**: November 5 - December 17, 2025 (6 weeks)
 
 ### Core Features
 
-- **Multi-tenant User Management**: Secure authentication with JWT tokens
-- **Product Catalog**: Barcode search, hierarchical categories, supplier management
-- **Inventory Management**: Real-time tracking with concurrency control
-- **High-Performance Search**: Optimized product search with filters
-- **Scalable Architecture**: MySQL + Redis + Elasticsearch stack
+- 🔐 **Multi-tenant User Management**: Secure authentication with JWT tokens
+- 📦 **Product Catalog**: Barcode search, hierarchical categories, supplier management
+- 📊 **Inventory Management**: Real-time tracking with concurrency control
+- 🔍 **High-Performance Search**: Optimized product search with filters
+- 🏗️ **Scalable Architecture**: MySQL + Redis + Elasticsearch stack
 
-## Technology Stack
+---
 
-- **Backend**: Spring Boot 3.5.7, Java 17
+## 🛠️ Technology Stack
+
+- **Backend**: Spring Boot 3.5.7, Java 21, Flyway for database migrations, Apache POI for Excel operations
 - **Database**: MySQL 8.0+ with multi-tenant isolation
 - **Caching**: Redis for performance optimization
 - **Authentication**: JWT with refresh tokens
 - **Frontend**: Thymeleaf templates, Bootstrap, JavaScript
-- **Build**: Maven with wrapper
+- **Build**: Maven with wrapper, Docker Compose for local development
 - **Testing**: JUnit 5, Spring Boot Test
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Java 17+
+- Java 21+
 - Maven 3.8+
-- MySQL 8.0+
-- Redis 7.0+
+- Docker & Docker Compose (for local database and Redis)
+- Git
 
 ### Installation
 
@@ -44,18 +75,17 @@ A comprehensive product management system for large retail sellers in Vietnam, b
    cd kiotviet
    ```
 
-2. **Configure database**
+2. **Start MySQL and Redis using Docker Compose**
    ```bash
-   mysql -u root -p
-   CREATE DATABASE kiotviet_mvp;
+   docker compose up -d
    ```
+   *This will start MySQL on port 33006 and Redis on 6379.*
 
-3. **Configure application properties**
-   ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/kiotviet_mvp
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
+3. **Run database migrations with Flyway**
+   ```bash
+   ./mvnw flyway:migrate
    ```
+   *The application properties (e.g., `spring.datasource.url`) are pre-configured to connect to the Dockerized services.*
 
 4. **Build and run**
    ```bash
@@ -67,27 +97,33 @@ A comprehensive product management system for large retail sellers in Vietnam, b
    - URL: http://localhost:8080
    - Default admin: Create through registration
 
-## Project Structure
+---
 
-```
+## 🏗️ Project Structure
+
+This project follows a **Domain-First Enterprise Architecture**, organizing code by business domain rather than technical layers.
+
+```plaintext
 src/
 ├── main/
-│   ├── java/fa/training/kiotviet/
-│   │   ├── controller/          # REST endpoints
-│   │   ├── service/             # Business logic
-│   │   ├── repository/          # Data access
-│   │   ├── entity/              # JPA entities
-│   │   ├── dto/                 # Data transfer objects
-│   │   ├── config/              # Configuration
-│   │   └── KiotvietApplication.java
+│   ├── java/fa/academy/kiotviet/       # Root package
+│   │   ├── application/                # Application layer (Controllers, DTOs, Application Services)
+│   │   ├── core/                       # Domain layer (Entities, Domain Services, Repositories grouped by feature)
+│   │   │   ├── usermanagement/
+│   │   │   ├── productcatalog/
+│   │   │   └── ...
+│   │   ├── infrastructure/             # Infrastructure layer (Security, Persistence implementations)
+│   │   └── config/                     # Spring Configuration
 │   └── resources/
-│       ├── templates/           # Thymeleaf templates
-│       ├── static/              # CSS, JS, images
-│       └── application.properties
-└── test/                        # Test code
+│       ├── templates/                  # Thymeleaf templates
+│       ├── static/                     # CSS, JS, images
+│       └── application.yml             # Main configuration
+└── test/                               # Test code (unit, integration, e2e)
 ```
 
-## Development Commands
+---
+
+## 💻 Development Commands
 
 - **Build**: `./mvnw clean compile`
 - **Run**: `./mvnw spring-boot:run`
@@ -95,7 +131,9 @@ src/
 - **Test**: `./mvnw test`
 - **Test specific**: `./mvnw test -Dtest=ClassName`
 
-## Database Schema
+---
+
+## 🗄️ Database Schema
 
 ### Core Tables
 
@@ -110,7 +148,9 @@ src/
 - **inventory**: Stock tracking
 - **inventory_transactions**: Audit trail
 
-## API Documentation
+---
+
+## 📡 API Documentation
 
 ### Authentication
 - `POST /api/auth/register` - User registration
@@ -142,7 +182,9 @@ src/
 - `POST /api/inventory/adjust` - Manual stock adjustment
 - `GET /api/inventory/transactions` - Transaction history
 
-## Performance Targets
+---
+
+## ⚡ Performance Targets
 
 - **Page load time**: <2 seconds (95th percentile)
 - **Search response**: <500ms (95th percentile)
@@ -150,15 +192,19 @@ src/
 - **Database queries**: <100ms average
 - **Cache hit rate**: >80% for cached entities
 
-## Security Features
+---
 
-- Multi-tenant data isolation with account_id filtering
+## 🔒 Security Features
+
+- Multi-tenant data isolation with `account_id` filtering
 - JWT authentication with refresh token rotation
 - BCrypt password hashing
 - Protection against SQL injection, XSS, CSRF
 - Audit trail for all inventory changes
 
-## Testing
+---
+
+## 🧪 Testing
 
 - **Unit tests**: Service layer business logic
 - **Integration tests**: Repository and API endpoints
@@ -166,24 +212,24 @@ src/
 - **Performance tests**: Load testing with JMeter
 - **Target coverage**: 80%+
 
-## Contributing
+---
 
-1. Follow the coding standards defined in `docs/CLAUDE_RULES.md`
-2. Update `docs/plan-progress.md` after completing tasks
-3. Ensure all tests pass before submitting
-4. Document API changes
-5. Follow multi-tenant patterns for data access
+## 🤖 CI/CD Pipeline
 
-## Progress Tracking
+This project uses GitHub Actions for Continuous Integration and Continuous Deployment (CI/CD) with self-hosted runners.
 
-Current implementation progress is tracked in `docs/plan-progress.md`:
-- **Overall**: 8% complete (13/168 tasks)
-- **Current Week**: Week 1 - Project Setup & Foundation (48% complete)
-- **Next Milestone**: Complete authentication system
+*   **Workflow File**: `.github/workflows/self-hosted-cicd.yml`
+*   **Trigger**: Automatically builds and deploys on pushes to `main` or `master` branches.
+*   **Steps**:
+    1.  Checkout code.
+    2.  Set up JDK 21.
+    3.  Build with Maven (skipping tests).
+    4.  Restart the application on the self-hosted runner.
 
-## Documentation
+---
 
-### 📚 Project Documentation
+## 📚 Documentation
+
 For detailed project documentation, see the `docs/` directory:
 
 #### Development & Setup
@@ -201,11 +247,13 @@ For detailed project documentation, see the `docs/` directory:
 - **[Implementation Plans](docs/plans/)** - Detailed implementation plans (coming soon)
 - **[Design Documents](docs/design/)** - System design documents (coming soon)
 
-## License
+---
+
+## 📜 License
 
 Private project for FA Training purposes.
 
-## Support
+## 📞 Support
 
 For project questions and support, refer to:
 - Project documentation in `/docs` directory
