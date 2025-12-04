@@ -28,9 +28,5 @@ jobs:
         echo "Restarting application..."
         # Stop any running instance (ignore error if none found)
         pkill -f "kiotviet-.*.jar" || true
-        
-        # Start the new JAR in background
-        # RUNNER_TRACKING_ID="" ensures the process survives after the workflow finishes
-        RUNNER_TRACKING_ID="" nohup java -jar target/kiotviet-*.jar > app.log 2>&1 &
-        
-        echo "Application deployed."
+    - name: Run Application
+      run: ./mvnw spring-boot:run
