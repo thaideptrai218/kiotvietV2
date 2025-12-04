@@ -210,7 +210,7 @@ public class ProductService {
             String sortBy,
             String sortDir) {
         Sort sort = Sort.by("desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC,
-                (sortBy == null || sortBy.isBlank()) ? "name" : sortBy);
+                (sortBy == null || sortBy.isBlank()) ? "updatedAt" : sortBy);
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), sort);
 
         Specification<Product> spec = Specification.where(byCompany(companyId))
