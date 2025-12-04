@@ -37,7 +37,7 @@ public class ProductService {
         }
 
         if (req.getBarcode() != null && !req.getBarcode().trim().isEmpty() &&
-            productRepository.existsByCompany_IdAndBarcodeIgnoreCase(companyId, req.getBarcode())) {
+                productRepository.existsByCompany_IdAndBarcodeIgnoreCase(companyId, req.getBarcode())) {
             throw new IllegalArgumentException("Product barcode already exists in this company");
         }
 
@@ -47,7 +47,7 @@ public class ProductService {
         }
 
         if (req.getMaxLevel() != null && req.getMinLevel() != null &&
-            req.getMaxLevel() > 0 && req.getMinLevel() >= req.getMaxLevel()) {
+                req.getMaxLevel() > 0 && req.getMinLevel() >= req.getMaxLevel()) {
             throw new IllegalArgumentException("Maximum level must be greater than minimum level");
         }
 
@@ -103,22 +103,28 @@ public class ProductService {
         // Validate barcode uniqueness if changed
         if (req.getBarcode() != null && !req.getBarcode().equalsIgnoreCase(product.getBarcode())) {
             if (!req.getBarcode().trim().isEmpty() &&
-                productRepository.existsByCompany_IdAndBarcodeIgnoreCase(companyId, req.getBarcode())) {
+                    productRepository.existsByCompany_IdAndBarcodeIgnoreCase(companyId, req.getBarcode())) {
                 throw new IllegalArgumentException("Product barcode already exists in this company");
             }
             product.setBarcode(req.getBarcode());
         }
 
         // Update basic fields
-        if (req.getName() != null) product.setName(req.getName());
-        if (req.getDescription() != null) product.setDescription(req.getDescription());
+        if (req.getName() != null)
+            product.setName(req.getName());
+        if (req.getDescription() != null)
+            product.setDescription(req.getDescription());
         if (req.getImage() != null) {
             product.setImage(req.getImage().isEmpty() ? null : req.getImage());
         }
-        if (req.getSellingPrice() != null) product.setSellingPrice(req.getSellingPrice());
-        if (req.getCostPrice() != null) product.setCostPrice(req.getCostPrice());
-        if (req.getStatus() != null) product.setStatus(req.getStatus());
-        if (req.getIsTracked() != null) product.setIsTracked(req.getIsTracked());
+        if (req.getSellingPrice() != null)
+            product.setSellingPrice(req.getSellingPrice());
+        if (req.getCostPrice() != null)
+            product.setCostPrice(req.getCostPrice());
+        if (req.getStatus() != null)
+            product.setStatus(req.getStatus());
+        if (req.getIsTracked() != null)
+            product.setIsTracked(req.getIsTracked());
 
         // Update inventory fields
         if (req.getOnHand() != null) {
@@ -144,13 +150,13 @@ public class ProductService {
 
         // Validate business logic for inventory levels
         if (product.getMinLevel() != null && product.getMaxLevel() != null &&
-            product.getMaxLevel() > 0 && product.getMinLevel() >= product.getMaxLevel()) {
+                product.getMaxLevel() > 0 && product.getMinLevel() >= product.getMaxLevel()) {
             throw new IllegalArgumentException("Maximum level must be greater than minimum level");
         }
 
         // Validate pricing logic
         if (product.getSellingPrice() != null && product.getCostPrice() != null &&
-            product.getSellingPrice().compareTo(product.getCostPrice()) <= 0) {
+                product.getSellingPrice().compareTo(product.getCostPrice()) <= 0) {
             throw new IllegalArgumentException("Selling price must be greater than cost price");
         }
 
@@ -202,8 +208,7 @@ public class ProductService {
             Integer page,
             Integer size,
             String sortBy,
-            String sortDir
-    ) {
+            String sortDir) {
         Sort sort = Sort.by("desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC,
                 (sortBy == null || sortBy.isBlank()) ? "name" : sortBy);
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), sort);
@@ -241,7 +246,8 @@ public class ProductService {
             }
         } else {
             // No supplier chosen: require non-empty query to avoid heavy result sets
-            if (q.isEmpty()) return List.of();
+            if (q.isEmpty())
+                return List.of();
             products = productRepository.autocompleteAll(companyId, q, pageable);
         }
 
@@ -251,14 +257,17 @@ public class ProductService {
     }
 
     public ProductAutocompleteItem lookupByCode(Long companyId, String code) {
-        if (code == null || code.trim().isEmpty()) return null;
+        if (code == null || code.trim().isEmpty())
+            return null;
         String c = code.trim();
         // Try SKU exact (case-insensitive)
         var bySku = productRepository.findByCompany_IdAndSkuIgnoreCase(companyId, c).orElse(null);
-        if (bySku != null) return toAutocomplete(bySku);
+        if (bySku != null)
+            return toAutocomplete(bySku);
         // Try barcode exact (case-insensitive)
         var byBarcode = productRepository.findByCompany_IdAndBarcodeIgnoreCase(companyId, c).orElse(null);
-        if (byBarcode != null) return toAutocomplete(byBarcode);
+        if (byBarcode != null)
+            return toAutocomplete(byBarcode);
         return null;
     }
 
@@ -277,7 +286,8 @@ public class ProductService {
         return products.stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    public List<ProductDto> findByPriceRange(Long companyId, java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice) {
+    public List<ProductDto> findByPriceRange(Long companyId, java.math.BigDecimal minPrice,
+            java.math.BigDecimal maxPrice) {
         List<Product> products = productRepository.findByPriceRange(companyId, minPrice, maxPrice);
         return products.stream().map(this::toDto).collect(Collectors.toList());
     }
@@ -326,7 +336,8 @@ public class ProductService {
     }
 
     private ProductDto.CategoryDto toCategoryDto(fa.academy.kiotviet.core.productcatalog.domain.Category category) {
-        if (category == null) return null;
+        if (category == null)
+            return null;
 
         return ProductDto.CategoryDto.builder()
                 .id(category.getId())
@@ -337,7 +348,8 @@ public class ProductService {
     }
 
     private ProductDto.SupplierDto toSupplierDto(fa.academy.kiotviet.core.suppliers.domain.Supplier supplier) {
-        if (supplier == null) return null;
+        if (supplier == null)
+            return null;
 
         return ProductDto.SupplierDto.builder()
                 .id(supplier.getId())
@@ -350,7 +362,8 @@ public class ProductService {
     }
 
     private ProductDto.BrandDto toBrandDto(fa.academy.kiotviet.core.productcatalog.domain.Brand brand) {
-        if (brand == null) return null;
+        if (brand == null)
+            return null;
 
         return ProductDto.BrandDto.builder()
                 .id(brand.getId())
@@ -388,37 +401,42 @@ public class ProductService {
     }
 
     private Specification<Product> likeSearch(String search) {
-        if (search == null || search.isBlank()) return null;
+        if (search == null || search.isBlank())
+            return null;
         String pattern = "%" + search.toLowerCase() + "%";
         return (root, query, cb) -> cb.or(
                 cb.like(cb.lower(root.get("name")), pattern),
                 cb.like(cb.lower(root.get("sku")), pattern),
-                cb.like(cb.lower(root.get("barcode")), pattern)
-        );
+                cb.like(cb.lower(root.get("barcode")), pattern));
     }
 
     private Specification<Product> eqCategory(Long categoryId) {
-        if (categoryId == null) return null;
+        if (categoryId == null)
+            return null;
         return (root, query, cb) -> cb.equal(root.get("category").get("id"), categoryId);
     }
 
     private Specification<Product> eqSupplier(Long supplierId) {
-        if (supplierId == null) return null;
+        if (supplierId == null)
+            return null;
         return (root, query, cb) -> cb.equal(root.get("supplier").get("id"), supplierId);
     }
 
     private Specification<Product> eqBrand(Long brandId) {
-        if (brandId == null) return null;
+        if (brandId == null)
+            return null;
         return (root, query, cb) -> cb.equal(root.get("brand").get("id"), brandId);
     }
 
     private Specification<Product> eqStatus(Product.ProductStatus status) {
-        if (status == null) return null;
+        if (status == null)
+            return null;
         return (root, query, cb) -> cb.equal(root.get("status"), status);
     }
 
     private Specification<Product> eqTracked(Boolean tracked) {
-        if (tracked == null) return null;
+        if (tracked == null)
+            return null;
         return (root, query, cb) -> cb.equal(root.get("isTracked"), tracked);
     }
 

@@ -74,7 +74,7 @@ app:
         domain-template: http://localhost:8080/dashboard
     storage:
         upload-dir: uploads
-        public-base-url: http://localhost:8080
+        public-base-url: ""
 
 logging:
     level:
