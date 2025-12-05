@@ -1,4 +1,5 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿
+document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/api/customers';
     let currentPage = 0;
     let pageSize = 15;
@@ -60,7 +61,7 @@
     const fPhone = document.getElementById('f_phone');
     fName?.addEventListener('input', debounce(() => { currentPage = 0; loadCustomers(); }, 300));
     fPhone?.addEventListener('input', debounce(() => { currentPage = 0; loadCustomers(); }, 300));
-    
+
     sizeSel.addEventListener('change', (e) => {
         pageSize = parseInt(e.target.value);
         currentPage = 0;
@@ -224,13 +225,13 @@
             // For now we only use search query param as backend implementation supports it.
             // Ideally backend should support filtering by status, gender etc. 
             // Assuming 'search' covers name/code/phone/email via 'likeSearch'.
-            
+
             let url = `${API_URL}?page=${currentPage}&size=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`;
             const nameFilter = document.getElementById('f_name') ? document.getElementById('f_name').value.trim() : '';
             const phoneFilter = document.getElementById('f_phone') ? document.getElementById('f_phone').value.trim() : '';
             const effectiveSearch = phoneFilter || nameFilter || currentSearch;
             if (effectiveSearch) url += '&search=' + encodeURIComponent(effectiveSearch);
-            
+
             // For this MVP frontend update, we will proceed with the existing API.
 
             const token =
@@ -423,9 +424,9 @@
     // Export CSV (current page)
     btnDownloadCsv?.addEventListener('click', (e) => {
         e.preventDefault();
-        const header = ['Code','Name','Phone','Email','Address','Status'];
+        const header = ['Code', 'Name', 'Phone', 'Email', 'Address', 'Status'];
         const rows = Array.from(tblBody.querySelectorAll('tr')).map(tr => {
-    const order = ['code','name','phone','email','address','status'];
+            const order = ['code', 'name', 'phone', 'email', 'address', 'status'];
             const vals = order.map(key => {
                 const td = tr.querySelector(`td[data-col="${key}"]`);
                 const text = (td ? td.textContent : '') || '';
@@ -505,7 +506,7 @@
     window.openModal = (customer = null) => {
         form.reset();
         modalErr.classList.add('d-none');
-        
+
         if (customer) {
             modalTitle.textContent = 'Edit Customer';
             document.getElementById('customerId').value = customer.id;
@@ -517,7 +518,7 @@
             document.getElementById('gender').value = customer.gender || 'Male';
             document.getElementById('notes').value = customer.notes || '';
             document.getElementById('isActive').checked = customer.status === 'ACTIVE';
-            
+
             // Toggle buttons for edit mode
             document.getElementById('btnSave').classList.remove('d-none');
             document.getElementById('btnSaveNew').classList.add('d-none');
@@ -526,7 +527,7 @@
             modalTitle.textContent = 'New Customer';
             document.getElementById('customerId').value = '';
             document.getElementById('isActive').checked = true;
-            
+
             // Toggle buttons for create mode
             document.getElementById('btnSave').classList.add('d-none');
             document.getElementById('btnSaveNew').classList.remove('d-none');
@@ -555,8 +556,15 @@
 
     async function saveCustomer(createAnother = false) {
         const id = document.getElementById('customerId').value;
+
+        let codeVal = document.getElementById('code').value;
+        if (!id && (!codeVal || !codeVal.trim())) { // Only auto-generate for new customers if code is empty
+            codeVal = generateCustomerCode();
+            document.getElementById('code').value = codeVal; // Reflect in UI
+        }
+
         const data = {
-            code: document.getElementById('code').value,
+            code: codeVal,
             name: document.getElementById('name').value,
             phone: document.getElementById('phone').value,
             email: document.getElementById('email').value,
@@ -571,6 +579,10 @@
             showModalError('Name is required');
             return;
         }
+        if (!data.phone || data.phone.trim() === '') {
+            showModalError('Phone number is required');
+            return;
+        }
 
         const method = id ? 'PUT' : 'POST';
         const url = id ? `${API_URL}/${id}` : API_URL;
@@ -579,7 +591,7 @@
 
         try {
             setLoading(btn, true);
-            
+
             const token =
                 localStorage.getItem('jwtToken') ||
                 sessionStorage.getItem('jwtToken') ||
@@ -591,7 +603,7 @@
             const response = await fetch(url, { method, headers, body: JSON.stringify(data) });
 
             const result = await response.json();
-            
+
             if (!response.ok) {
                 throw new Error(result.message || 'Failed to save customer');
             }
@@ -692,7 +704,38 @@
             timeout = setTimeout(later, wait);
         };
     }
-});
+
+    // Generate a unique-ish customer code when user leaves it blank
+    function generateCustomerCode() {
+        try {
+            const ts = new Date();
+            const y = ts.getFullYear().toString().slice(-2);
+            const m = String(ts.getMonth() + 1).padStart(2, '0');
+            const d = String(ts.getDate()).padStart(2, '0');
+            const h = String(ts.getHours()).padStart(2, '0');
+            const mi = String(ts.getMinutes()).padStart(2, '0');
+            const s = String(ts.getSeconds()).padStart(2, '0');
+            const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
+            // Example: CUST-2507-142530-ABCD
+            return `CUST-${y}${m}${d}-${h}${mi}${s}-${rnd}`;
+        } catch {
+            return `CUST-${Date.now().toString(36).toUpperCase()}`;
+        }
+    }
+
+    // Expose functions globally for reuse by other modules
+    window.customerModule = {
+        openModal: openCustomerModal,
+        editCustomer: editCustomerById,
+        saveCustomer: _saveCustomer,
+        deleteCustomer: _deleteCustomer,
+        generateCustomerCode: generateCustomerCode,
+        showAlert: showAlert,
+        showModalError: showModalError,
+        setLoading: setLoading,
+        loadCustomers: loadCustomers // Expose loadCustomers for external refreshing
+    };
+})();
 
 
 
