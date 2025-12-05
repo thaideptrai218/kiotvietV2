@@ -914,6 +914,10 @@
               if (modalErr) { modalErr.textContent = 'Name is required'; modalErr.classList.remove('d-none'); }
               return;
             }
+            if (!data.phone || data.phone.trim() === '') {
+              if (modalErr) { modalErr.textContent = 'Phone number is required'; modalErr.classList.remove('d-none'); }
+              return;
+            }
             const btn = get('#btnSaveNew');
             try {
               setLoading(btn, true);
