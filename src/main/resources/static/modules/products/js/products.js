@@ -447,7 +447,7 @@
               p.sellingPrice
           )}">${
                 p.sellingPrice
-                    ? `₫${Number(p.sellingPrice).toLocaleString("vi-VN")}`
+                    ? fmtMoney(p.sellingPrice)
                     : ""
             }</td>
           <td data-col="stock" class="text-center" title="${fmt(
@@ -464,35 +464,6 @@
         const html = rows.join("");
         console.log("Setting table HTML with", rows.length, "rows");
         els.tblBody.innerHTML = html;
-        // Normalize currency displays to "$" with 2 decimals
-        try {
-            els.tblBody
-                .querySelectorAll('td[data-col="sellingPrice"]')
-                .forEach((td) => {
-                    const n = parseCurrencyText(td.textContent);
-                    td.textContent = n ? fmtMoney(n) : "";
-                });
-            // Expanded rows: convert Selling/Cost Price values
-            els.tblBody
-                .querySelectorAll(".expanded-row .field-item")
-                .forEach((item) => {
-                    const label = item
-                        .querySelector(".field-label")
-                        ?.textContent?.trim()
-                        .toLowerCase();
-                    const valEl = item.querySelector(".field-value");
-                    if (!label || !valEl) return;
-                    if (label === "selling price" || label === "cost price") {
-                        const n = parseCurrencyText(valEl.textContent);
-                        if (
-                            valEl.textContent &&
-                            valEl.textContent.toLowerCase() !== "not set"
-                        ) {
-                            valEl.textContent = fmtMoney(n);
-                        }
-                    }
-                });
-        } catch (_) {}
 
         applyColumnVisibility();
         syncHeaderCheckbox();
@@ -636,9 +607,7 @@
                               <div class="field-label">Selling Price</div>
                               <div class="field-value">${
                                   p.sellingPrice
-                                      ? `₫${Number(
-                                            p.sellingPrice
-                                        ).toLocaleString("vi-VN")}`
+                                      ? fmtMoney(p.sellingPrice)
                                       : "Not set"
                               }</div>
                             </div>
@@ -777,9 +746,7 @@
                           <div class="field-value fs-4 fw-bold text-success">
                             ${
                                 p.sellingPrice
-                                    ? `₫${Number(p.sellingPrice).toLocaleString(
-                                          "vi-VN"
-                                      )}`
+                                    ? fmtMoney(p.sellingPrice)
                                     : "Not set"
                             }
                           </div>
@@ -789,9 +756,7 @@
                           <div class="field-value fs-5">
                             ${
                                 p.costPrice
-                                    ? `₫${Number(p.costPrice).toLocaleString(
-                                          "vi-VN"
-                                      )}`
+                                    ? fmtMoney(p.costPrice)
                                     : "Not set"
                             }
                           </div>

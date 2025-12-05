@@ -324,18 +324,32 @@
     }
   }
 
+  function getProdQty(p) {
+    const keys = ['stock', 'qty', 'quantity', 'stockQuantity', 'onHand', 'availableQty', 'currentStock', 'inventory'];
+    for (const k of keys) {
+      if (p[k] != null && p[k] !== '') {
+        const n = Number(p[k]);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+    return null;
+  }
+
   function addItemCard(prod) {
     if (!els.items) return;
     const id = prod.id ?? '';
     const sku = prod.sku ?? '';
     const name = prod.name ?? prod.displayName ?? '';
     const price = parseCurrencyText(prod.sellingPrice ?? '');
+    const stock = getProdQty(prod);
 
     const row = document.createElement('div');
     row.className = 'pos-itemcard d-flex align-items-center';
     row.dataset.productId = id;
     row.dataset.unitPrice = String(price); // effective sale unit price
     row.dataset.originalUnitPrice = String(price); // original unit price
+    if (stock !== null) row.dataset.stock = String(stock);
+
     row.innerHTML = `
       <div class="stt"></div>
       <button class="icon-btn text-danger" title="Remove"><i class="fa fa-trash-can"></i></button>
@@ -641,7 +655,8 @@
         id: item.getAttribute('data-id'),
         sku: item.getAttribute('data-sku'),
         name: item.getAttribute('data-name'),
-        sellingPrice: item.getAttribute('data-price')
+        sellingPrice: item.getAttribute('data-price'),
+        stock: item.getAttribute('data-qty')
       };
       addItemCard(prod);
       if (els.productSearch) els.productSearch.value = '';
@@ -826,6 +841,8 @@
           frm.querySelectorAll('input, textarea, select').forEach(el => {
             if (el.type === 'checkbox' || el.type === 'radio') {
               if (el.id === 'isActive') el.checked = true; else el.checked = false;
+            } else if (el.id === 'gender') {
+              el.value = 'Male';
             } else {
               el.value = '';
             }
@@ -1004,7 +1021,9 @@
 
       // Build items from DOM
       const items = [];
-      document.querySelectorAll('.pos-itemcard').forEach(card => {
+      let stockGone = false;
+      const cards = document.querySelectorAll('.pos-itemcard');
+      for (const card of cards) {
         const sku = (card.querySelector('.sku')?.textContent || '').trim();
         const name = (card.querySelector('.name')?.textContent || '').trim();
         const qty = Number(card.querySelector('.qty input')?.value || '1') || 1;
@@ -1012,9 +1031,25 @@
         const percent = parseNumber(card.querySelector('.item-discount')?.value || '0');
         const unitPrice = Math.max(0, toMoney(originalUnitPrice * (1 - percent/100)));
         const productId = card.dataset.productId ? Number(card.dataset.productId) : null;
+
+        // Check stock first
+        const stockVal = card.dataset.stock;
+        if (stockVal !== undefined && stockVal !== null && stockVal !== '') {
+           const s = Number(stockVal);
+           if (Number.isFinite(s) && s <= 0) {
+              stockGone = true;
+           }
+        }
+
         // Send effective unit price and set discount to 0 to keep backend totals consistent
         items.push({ productId, sku, name, quantity: qty, unitPrice, discount: 0 });
-      });
+      }
+
+      if (stockGone) {
+        showToast('Stock is gone.', 'error');
+        return;
+      }
+
       if (!items.length) {
         alert('Please add at least one product.');
         return;
@@ -1069,7 +1104,7 @@
         const { total } = getTotals();
         const effectivePaidCheck = paidAmount; // already includes additional in update
         if (effectivePaidCheck < total) {
-          showToast('Customer pays less than total. Order will be saved as DRAFT.', 'error');
+          showToast('Customer pays less than total.', 'error');
         }
         const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
         const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
@@ -1095,7 +1130,7 @@
         }
       } catch (err) {
         console.error(err);
-        showToast('Failed to save order.', 'error', 5000);
+        showToast('Stock is gone.', 'error', 5000);
       }
     });
 
