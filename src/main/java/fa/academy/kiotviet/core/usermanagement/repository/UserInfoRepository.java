@@ -44,4 +44,11 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Long>, JpaSp
     long countByCompanyId(Long companyId);
 
     long countActiveCustomersByCompanyId(Long companyId);
+
+    // System admin methods (cross-tenant queries)
+    List<UserInfo> findAll();
+
+    long countByCompanyIdAndIsActiveTrue(Long companyId);
+
+    List<UserInfo> findAllByCompanyIdAndIsActive(Long companyId, Boolean isActive);
 }

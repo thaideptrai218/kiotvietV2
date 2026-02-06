@@ -87,6 +87,7 @@ public class UserInfo {
     }
 
     public enum UserRole {
+        system_admin("System Admin", "Full system access across all tenants"),
         admin("Admin", "Full system access"),
         manager("Manager", "Shop management access"),
         user("User", "Standard operational access");

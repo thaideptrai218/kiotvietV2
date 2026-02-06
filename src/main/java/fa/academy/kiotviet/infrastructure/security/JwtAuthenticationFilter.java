@@ -1,5 +1,7 @@
 package fa.academy.kiotviet.infrastructure.security;
 
+import fa.academy.kiotviet.core.tenant.domain.Company;
+import fa.academy.kiotviet.core.tenant.repository.CompanyRepository;
 import fa.academy.kiotviet.core.usermanagement.domain.UserInfo;
 import fa.academy.kiotviet.core.usermanagement.repository.UserInfoRepository;
 import jakarta.servlet.FilterChain;
@@ -39,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserInfoRepository userInfoRepository;
+    private final CompanyRepository companyRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -58,6 +61,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserInfo user = userInfoRepository.findById(userId)
                     .filter(UserInfo::getIsActive)
                     .orElse(null);
+
+                // Check if company is suspended (block login if suspended)
+                if (companyId != null && companyId > 0) {
+                    Company company = companyRepository.findById(companyId).orElse(null);
+                    if (company != null && Boolean.TRUE.equals(company.getIsSuspended())) {
+                        log.warn("Company suspended, blocking login for user: {} (Company ID: {})", username, companyId);
+                        // Clear any existing authentication and block request
+                        SecurityContextHolder.clearContext();
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"Company account is suspended\"}");
+                        return; // Stop filter chain processing
+                    }
+                }
 
                 if (user != null && username.equals(user.getUsername())) {
                     // Build authorities

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>User Details - Admin Panel</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fira Code', monospace;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        secondary: '#A78BFA',
+                        cta: '#F97316'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Modern Admin Header with Navigation -->
+    <div th:replace="~{admin/components/admin-modern-header-with-navigation :: modernAdminHeader('User Details', 'users')}"></div>
+
+    <!-- Main Content -->
+    <main class="min-h-screen px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <a href="/admin/users" th:href="@{/admin/users}"
+               class="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium mb-4 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Back to Users</span>
+            </a>
+            <div class="flex items-start justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 font-heading mb-2" id="userName">Loading...</h1>
+                    <p class="text-gray-600">User details and management</p>
+                </div>
+                <button id="actionBtn"
+                        onclick="handleUserAction()"
+                        class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="ban" class="w-4 h-4"></i>
+                    <span id="actionButtonText">Deactivate User</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="py-16 text-center">
+            <i data-lucide="loader-2" class="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin"></i>
+            <p class="text-gray-600">Loading user details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="py-16 text-center hidden">
+            <i data-lucide="alert-circle" class="w-12 h-12 text-red-400 mx-auto mb-4"></i>
+            <p class="text-gray-600 mb-4" id="errorMessage">Failed to load user details</p>
+            <button onclick="loadUserDetails()"
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
+                Retry
+            </button>
+        </div>
+
+        <!-- User Details Content -->
+        <div id="contentState" class="hidden">
+            <!-- Info Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <!-- User Info Card -->
+                <div class="bg-white rounded-xl p-6 border border-gray-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900">User Information</h3>
+                    </div>
+                    <dl class="space-y-3">
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Username</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="username">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Full Name</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="fullName">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Email</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="email">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Phone</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="phone">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Status</dt>
+                            <dd id="statusBadge">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Created</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="createdAt">-</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Role Card -->
+                <div class="bg-white rounded-xl p-6 border border-gray-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-purple-100 rounded-lg">
+                            <i data-lucide="shield" class="w-5 h-5 text-purple-600"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900">Role & Access</h3>
+                    </div>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm text-gray-600">Role</dt>
+                            <dd id="roleBadge" class="mt-1">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Last Login</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="lastLoginAt">-</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Company Card -->
+                <div class="bg-white rounded-xl p-6 border border-gray-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-green-100 rounded-lg">
+                            <i data-lucide="building-2" class="w-5 h-5 text-green-600"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900">Company</h3>
+                    </div>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm text-gray-600">Company Name</dt>
+                            <dd class="text-sm font-medium text-gray-900 mt-1" id="companyName">-</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-600">Company ID</dt>
+                            <dd class="text-sm font-medium text-gray-900" id="companyId">-</dd>
+                        </div>
+                    </dl>
+                    <div class="mt-4">
+                        <a id="companyLink" href="/admin/companies/"
+                           class="inline-flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
+                            <span>View Company</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit User Form (Optional - can be added later) -->
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900 font-heading">Edit User</h3>
+                </div>
+
+                <div class="p-6">
+                    <form id="editUserForm" onsubmit="submitEditUser(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" name="fullName" id="editFullName"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                       placeholder="Full name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" name="email" id="editEmail" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                       placeholder="email@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input type="text" name="phone" id="editPhone"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                       placeholder="Phone number">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                <select name="role" id="editRole"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+                                    <option value="ROLE_USER">User</option>
+                                    <option value="ROLE_COMPANY_ADMIN">Company Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 justify-end">
+                            <button type="button" onclick="resetEditForm()"
+                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                                Reset
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-sm"></div>
+
+    <!-- Confirm Action Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-4" id="confirmModalTitle">Confirm Action</h3>
+            <p class="text-gray-600 mb-4" id="confirmModalMessage">Are you sure?</p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeConfirmModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button onclick="confirmAction()"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors cursor-pointer">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Get user ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id') || window.location.pathname.split('/').pop();
+
+        let userData = null;
+        let pendingAction = null;
+
+        // Load user details on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (userId) {
+                loadUserDetails();
+            } else {
+                showError('User ID not found');
+            }
+        });
+
+        // Load user details from API
+        async function loadUserDetails() {
+            showLoading();
+
+            try {
+                const response = await fetch(`/admin/api/users/${userId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error('Failed to load user details');
+
+                const result = await response.json();
+                userData = result.data || result;
+
+                renderUserDetails(userData);
+                populateEditForm(userData);
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                showError(error.message);
+            }
+        }
+
+        // Render user details
+        function renderUserDetails(user) {
+            document.getElementById('userName').textContent = user.fullName || user.username || 'Unknown';
+            document.getElementById('username').textContent = user.username || '-';
+            document.getElementById('fullName').textContent = user.fullName || '-';
+            document.getElementById('email').textContent = user.email || '-';
+            document.getElementById('phone').textContent = user.phone || '-';
+            document.getElementById('createdAt').textContent = formatDateTime(user.createdAt);
+            document.getElementById('lastLoginAt').textContent = formatDateTime(user.lastLoginAt);
+
+            // Status badge
+            document.getElementById('statusBadge').innerHTML = getStatusBadge(user);
+
+            // Role badge
+            document.getElementById('roleBadge').innerHTML = getRoleBadge(user.role);
+
+            // Company info
+            document.getElementById('companyName').textContent = user.companyName || '-';
+            document.getElementById('companyId').textContent = '#' + (user.companyId || '-');
+
+            // Company link
+            if (user.companyId) {
+                document.getElementById('companyLink').href = `/admin/companies?id=${user.companyId}`;
+            }
+
+            // Update action button based on status
+            updateActionButton(user);
+        }
+
+        // Populate edit form
+        function populateEditForm(user) {
+            document.getElementById('editFullName').value = user.fullName || '';
+            document.getElementById('editEmail').value = user.email || '';
+            document.getElementById('editPhone').value = user.phone || '';
+
+            // Set role based on user.role (handle both enum and string)
+            const roleStr = typeof user.role === 'string' ? user.role : (user.role?.name || '');
+            const normalizedRole = 'ROLE_' + roleStr.toUpperCase();
+            document.getElementById('editRole').value = normalizedRole;
+        }
+
+        // Update action button based on user status
+        function updateActionButton(user) {
+            const btn = document.getElementById('actionBtn');
+            const btnText = document.getElementById('actionButtonText');
+
+            const isActive = user.isActive !== false && user.isActive !== null;
+
+            if (isActive) {
+                btn.className = 'px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 cursor-pointer';
+                btnText.textContent = 'Deactivate User';
+                pendingAction = 'deactivate';
+            } else {
+                btn.className = 'px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 cursor-pointer';
+                btnText.textContent = 'Activate User';
+                pendingAction = 'activate';
+            }
+        }
+
+        // Handle user action (activate/deactivate)
+        function handleUserAction() {
+            const actionText = pendingAction === 'deactivate' ? 'deactivate' : 'activate';
+            const message = `Are you sure you want to ${actionText} this user?`;
+
+            document.getElementById('confirmModalTitle').textContent = `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} User`;
+            document.getElementById('confirmModalMessage').textContent = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        async function confirmAction() {
+            closeConfirmModal();
+
+            const endpoint = pendingAction === 'deactivate'
+                ? `/admin/api/users/${userId}/deactivate`
+                : `/admin/api/users/${userId}/activate`;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`Failed to ${pendingAction} user`);
+
+                const action = pendingAction === 'deactivate' ? 'deactivated' : 'activated';
+                showToast('success', `User ${action} successfully`);
+                loadUserDetails();
+            } catch (error) {
+                console.error(`Error ${pendingAction}ing user:`, error);
+                showToast('error', `Failed to ${pendingAction} user`);
+            }
+        }
+
+        // Reset edit form
+        function resetEditForm() {
+            if (userData) {
+                populateEditForm(userData);
+            }
+        }
+
+        // Submit edit user form
+        async function submitEditUser(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const updateData = {
+                fullName: formData.get('fullName') || null,
+                email: formData.get('email'),
+                phone: formData.get('phone') || null,
+                role: formData.get('role')
+            };
+
+            try {
+                const response = await fetch(`/admin/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update user');
+                }
+
+                showToast('success', 'User updated successfully');
+                loadUserDetails();
+            } catch (error) {
+                console.error('Error updating user:', error);
+                showToast('error', error.message || 'Failed to update user');
+            }
+        }
+
+        // Get role badge HTML
+        function getRoleBadge(role) {
+            const roleStr = typeof role === 'string' ? role : (role?.name || '');
+            const normalizedRole = roleStr.replace('ROLE_', '').toUpperCase();
+
+            const badges = {
+                'ADMIN': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Admin</span>',
+                'USER': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">User</span>',
+                'SYSTEM_ADMIN': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">System Admin</span>',
+                'MANAGER': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Manager</span>'
+            };
+            return badges[normalizedRole] || badges['USER'];
+        }
+
+        // Get status badge HTML
+        function getStatusBadge(user) {
+            const isActive = user.isActive !== false && user.isActive !== null;
+            return isActive
+                ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>'
+                : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>';
+        }
+
+        // Loading states
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('contentState').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('contentState').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('contentState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '-';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN');
+        }
+
+        // Toast notification
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'check-circle',
+                error: 'x-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                warning: 'bg-orange-50 border-orange-200 text-orange-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg border ${colors[type]} shadow-lg transition-all duration-300`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type]}" class="w-5 h-5"></i>
+                <p class="font-medium text-sm">${message}</p>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

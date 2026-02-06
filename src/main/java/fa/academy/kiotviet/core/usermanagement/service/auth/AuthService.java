@@ -50,6 +50,9 @@ public class AuthService {
         UserInfo user = userInfoRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
+        var result = userAuthRepository.findByUserId(user.getId());
+        log.debug("{}", result);
+
         // Get user authentication details
         UserAuth userAuth = userAuthRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid authentication details"));
@@ -149,7 +152,7 @@ public class AuthService {
      * Ensures the token belongs to the current user before logging out.
      *
      * @param tokenId Specific token ID to logout
-     * @param userId Current authenticated user ID
+     * @param userId  Current authenticated user ID
      */
     @Transactional
     public void logoutFromDevice(Long tokenId, Long userId) {
@@ -167,7 +170,8 @@ public class AuthService {
             throw new IllegalArgumentException("User account is disabled");
         }
 
-        if (!user.getCompany().getIsActive()) {
+        // System admins are not bound to a specific company
+        if (user.getRole() != UserInfo.UserRole.system_admin && !user.getCompany().getIsActive()) {
             throw new IllegalArgumentException("Company account is disabled");
         }
     }
@@ -237,10 +241,8 @@ public class AuthService {
         }
     }
 
-
     // Expose for controller MFA verify step
     public TwoFactorService getTwoFactorService() {
         return twoFactorService;
     }
 }
-

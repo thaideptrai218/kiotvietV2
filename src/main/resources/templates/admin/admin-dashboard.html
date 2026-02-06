@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>System Dashboard - Admin Panel</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --color-primary: #7C3AED;
+            --color-secondary: #A78BFA;
+            --color-cta: #F97316;
+            --color-bg: #FAF5FF;
+            --color-text: #4C1D95;
+        }
+
+        body {
+            font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fira Code', monospace;
+        }
+
+        .stat-card {
+            transition: all 200ms ease-in-out;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(124, 58, 237, 0.15);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        secondary: '#A78BFA',
+                        cta: '#F97316',
+                        'bg-custom': '#FAF5FF',
+                        'text-custom': '#4C1D95'
+                    },
+                    fontFamily: {
+                        'heading': ['Fira Code', 'monospace'],
+                        'body': ['Fira Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Modern Admin Header with Navigation -->
+    <div th:replace="~{admin/components/admin-modern-header-with-navigation :: modernAdminHeader('System Dashboard', 'dashboard')}"></div>
+
+    <!-- Main Content -->
+    <main class="min-h-screen px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 font-heading mb-2">System Dashboard</h1>
+            <p class="text-gray-600">Overview of platform metrics and activity</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Total Companies -->
+            <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 cursor-pointer">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <i data-lucide="building-2" class="text-purple-600 w-6 h-6"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600 font-medium">Total Companies</p>
+                        <h3 class="text-3xl font-bold text-gray-900 mt-1" id="totalCompanies">--</h3>
+                    </div>
+                </div>
+                <div class="flex items-center text-sm">
+                    <i data-lucide="check-circle" class="text-green-500 w-4 h-4 mr-1"></i>
+                    <span class="text-green-600 font-medium" id="activeCompanies">--</span>
+                    <span class="text-gray-500 ml-1">Active</span>
+                </div>
+            </div>
+
+            <!-- Total Users -->
+            <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 cursor-pointer">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i data-lucide="users" class="text-blue-600 w-6 h-6"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600 font-medium">Total Users</p>
+                        <h3 class="text-3xl font-bold text-gray-900 mt-1" id="totalUsers">--</h3>
+                    </div>
+                </div>
+                <div class="flex items-center text-sm">
+                    <i data-lucide="check-circle" class="text-green-500 w-4 h-4 mr-1"></i>
+                    <span class="text-green-600 font-medium" id="activeUsers">--</span>
+                    <span class="text-gray-500 ml-1">Active</span>
+                </div>
+            </div>
+
+            <!-- Suspended Companies -->
+            <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 cursor-pointer">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="p-3 bg-orange-100 rounded-lg">
+                        <i data-lucide="alert-triangle" class="text-orange-600 w-6 h-6"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600 font-medium">Suspended</p>
+                        <h3 class="text-3xl font-bold text-gray-900 mt-1" id="suspendedCompanies">--</h3>
+                    </div>
+                </div>
+                <div class="flex items-center text-sm">
+                    <i data-lucide="eye" class="text-orange-500 w-4 h-4 mr-1"></i>
+                    <span class="text-orange-600 font-medium">Requires Attention</span>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 cursor-pointer">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i data-lucide="heart-pulse" class="text-green-600 w-6 h-6"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600 font-medium">System Health</p>
+                        <h3 class="text-2xl font-bold text-gray-900 mt-1" id="systemHealth">Good</h3>
+                    </div>
+                </div>
+                <div class="flex items-center text-sm">
+                    <i data-lucide="check-circle" class="text-green-500 w-4 h-4 mr-1"></i>
+                    <span class="text-green-600 font-medium">All Systems Operational</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Company Growth Chart -->
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 font-heading">Company Growth</h3>
+                    <select class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                            id="companyGrowthFilter"
+                            onchange="updateCompanyChart()">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+                <div class="relative" style="height: 300px;">
+                    <canvas id="companyGrowthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- User Growth Chart -->
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 font-heading">User Growth</h3>
+                    <select class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                            id="userGrowthFilter"
+                            onchange="updateUserChart()">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+                <div class="relative" style="height: 300px;">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <a href="/admin/companies" th:href="@{/admin/companies}"
+               class="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary hover:shadow-lg transition-all duration-200 cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-1">Manage Companies</h4>
+                        <p class="text-sm text-gray-600">View all companies</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 w-5 h-5"></i>
+                </div>
+            </a>
+
+            <a href="/admin/users" th:href="@{/admin/users}"
+               class="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary hover:shadow-lg transition-all duration-200 cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-1">Manage Users</h4>
+                        <p class="text-sm text-gray-600">View all users</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 w-5 h-5"></i>
+                </div>
+            </a>
+
+            <a href="/admin/settings" th:href="@{/admin/settings}"
+               class="group bg-white rounded-xl p-6 border border-gray-200 hover:border-primary hover:shadow-lg transition-all duration-200 cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-1">System Settings</h4>
+                        <p class="text-sm text-gray-600">Configure settings</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 w-5 h-5"></i>
+                </div>
+            </a>
+
+            <button onclick="refreshDashboard()"
+                    class="group bg-gradient-to-r from-primary to-secondary text-white rounded-xl p-6 hover:shadow-lg transition-all duration-200 cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <div class="text-left">
+                        <h4 class="font-semibold mb-1">Refresh Data</h4>
+                        <p class="text-sm text-purple-100">Update metrics</p>
+                    </div>
+                    <i data-lucide="refresh-cw" class="group-hover:rotate-180 transition-transform duration-500 w-5 h-5"></i>
+                </div>
+            </button>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-sm"></div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Chart instances
+        let companyGrowthChartInstance = null;
+        let userGrowthChartInstance = null;
+
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardMetrics();
+            initCharts();
+        });
+
+        // Load dashboard metrics from API
+        async function loadDashboardMetrics() {
+            try {
+                const response = await fetch('/admin/api/dashboard', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load dashboard metrics');
+
+                const result = await response.json();
+                const data = result.data || result;
+
+                updateMetricsDisplay(data);
+            } catch (error) {
+                console.error('Error loading dashboard metrics:', error);
+                showToast('error', 'Failed to load dashboard metrics');
+            }
+        }
+
+        // Update metrics display
+        function updateMetricsDisplay(data) {
+            document.getElementById('totalCompanies').textContent = data.totalCompanies || 0;
+            document.getElementById('activeCompanies').textContent = data.activeCompanies || 0;
+            document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+            document.getElementById('activeUsers').textContent = data.activeUsers || 0;
+            document.getElementById('suspendedCompanies').textContent = data.suspendedCompanies || 0;
+            document.getElementById('systemHealth').textContent = data.systemHealth || 'Good';
+        }
+
+        // Initialize charts
+        function initCharts() {
+            const companyCtx = document.getElementById('companyGrowthChart');
+            const userCtx = document.getElementById('userGrowthChart');
+
+            if (companyCtx) {
+                companyGrowthChartInstance = new Chart(companyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: generateDemoLabels(30),
+                        datasets: [{
+                            label: 'New Companies',
+                            data: generateDemoData(30, 0, 10),
+                            borderColor: '#7C3AED',
+                            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 14 }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (userCtx) {
+                userGrowthChartInstance = new Chart(userCtx, {
+                    type: 'line',
+                    data: {
+                        labels: generateDemoLabels(30),
+                        datasets: [{
+                            label: 'New Users',
+                            data: generateDemoData(30, 0, 25),
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 14 }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Generate demo data for charts
+        function generateDemoLabels(days) {
+            const labels = [];
+            const today = new Date();
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' }));
+            }
+            return labels;
+        }
+
+        function generateDemoData(count, min, max) {
+            return Array.from({ length: count }, () => Math.floor(Math.random() * (max - min + 1)) + min);
+        }
+
+        // Update company chart based on filter
+        function updateCompanyChart() {
+            const days = parseInt(document.getElementById('companyGrowthFilter').value);
+            if (companyGrowthChartInstance) {
+                companyGrowthChartInstance.data.labels = generateDemoLabels(days);
+                companyGrowthChartInstance.data.datasets[0].data = generateDemoData(days, 0, 10);
+                companyGrowthChartInstance.update();
+            }
+        }
+
+        // Update user chart based on filter
+        function updateUserChart() {
+            const days = parseInt(document.getElementById('userGrowthFilter').value);
+            if (userGrowthChartInstance) {
+                userGrowthChartInstance.data.labels = generateDemoLabels(days);
+                userGrowthChartInstance.data.datasets[0].data = generateDemoData(days, 0, 25);
+                userGrowthChartInstance.update();
+            }
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            loadDashboardMetrics();
+            updateCompanyChart();
+            updateUserChart();
+            showToast('success', 'Dashboard refreshed successfully');
+        }
+
+        // Toast notification
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'check-circle',
+                error: 'x-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                warning: 'bg-orange-50 border-orange-200 text-orange-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg border ${colors[type]} shadow-lg transition-all duration-300`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type]}" class="w-5 h-5"></i>
+                <p class="font-medium text-sm">${message}</p>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

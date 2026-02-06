@@ -91,6 +91,10 @@ public class SecurityConfig {
                 // Health check endpoint
                 .requestMatchers("/actuator/health").permitAll()
 
+                // System Admin routes (BEFORE other rules - more specific first)
+                .requestMatchers("/admin/**").hasRole("SYSTEM_ADMIN")
+                .requestMatchers("/admin/api/**").hasRole("SYSTEM_ADMIN")
+
                 // Protect dashboard and other authenticated pages
                 .requestMatchers("/dashboard/**", "/dashboard").authenticated()
                 .requestMatchers("/products/**", "/products").authenticated()

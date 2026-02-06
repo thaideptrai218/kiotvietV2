@@ -70,6 +70,10 @@ public class Company {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(name = "is_suspended", nullable = false)
+    @Builder.Default
+    private Boolean isSuspended = false;
+
     @Column(name = "created_at", updatable = false)
     private java.time.LocalDateTime createdAt;
 

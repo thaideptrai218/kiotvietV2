@@ -144,7 +144,9 @@
 
         if (!justLoggedOut && kiotVietAuth.getToken()) {
             const redirectUrl = urlParams.get('redirect');
-            window.location.href = redirectUrl || '/dashboard';
+            const userInfo = kiotVietAuth.getUserInfo();
+            const defaultUrl = (userInfo && userInfo.role === 'system_admin') ? '/admin/dashboard' : '/dashboard';
+            window.location.href = redirectUrl || defaultUrl;
             return;
         }
 
@@ -172,7 +174,9 @@
                 // Check if there's a redirect URL from query parameters
                 const urlParams = new URLSearchParams(window.location.search);
                 const redirectUrl = urlParams.get('redirect');
-                window.location.href = redirectUrl || '/dashboard';
+                const userInfo = kiotVietAuth.getUserInfo();
+                const defaultUrl = (userInfo && userInfo.role === 'system_admin') ? '/admin/dashboard' : '/dashboard';
+                window.location.href = redirectUrl || defaultUrl;
             } else {
                 console.error('Login failed:', result.error);
                 errorMessage.textContent = result.error || 'Invalid username or password. Please try again.';
