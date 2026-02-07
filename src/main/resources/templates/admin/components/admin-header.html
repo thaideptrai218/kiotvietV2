@@ -1,146 +1,208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title th:text="${title} ?: 'Admin Panel - KiotViet'">Admin Panel - KiotViet</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"/>
-    <link rel="stylesheet" href="/css/admin-panel.css" th:href="@{/css/admin-panel.css}"/>
-</head>
-<body>
-<!-- Admin Header Fragment -->
-<header th:fragment="adminHeader(title)">
-    <div class="admin-header">
-        <div class="admin-header-inner">
-            <!-- Logo Section -->
-            <a href="/admin/dashboard" th:href="@{/admin/dashboard}" class="admin-logo">
-                <i class="fas fa-shield-alt admin-logo-icon"></i>
-                <span class="admin-logo-text">KiotViet Admin</span>
-            </a>
-
-            <!-- Header Right Section -->
-            <div class="admin-header-right">
-                <!-- System Admin Badge -->
-                <div class="system-admin-badge">
-                    <i class="fas fa-user-shield"></i>
-                    <span>System Admin</span>
-                </div>
-
-                <!-- User Actions -->
-                <div class="admin-header-actions">
-                    <!-- Back to Main App -->
-                    <a href="/dashboard" th:href="@{/dashboard}" class="admin-header-btn" title="Back to App">
-                        <i class="fas fa-arrow-left"></i>
-                        <span class="btn-text">App</span>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title th:text="${title} ?: 'Admin Panel - KiotViet'">
+            Admin Panel - KiotViet
+        </title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+            th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+        />
+        <link
+            rel="stylesheet"
+            href="/css/admin-panel.css"
+            th:href="@{/css/admin-panel.css}"
+        />
+    </head>
+    <body>
+        <!-- Admin Header Fragment -->
+        <header th:fragment="adminHeader(title)">
+            <div class="admin-header">
+                <div class="admin-header-inner">
+                    <!-- Logo Section -->
+                    <a
+                        href="/admin/dashboard"
+                        th:href="@{/admin/dashboard}"
+                        class="admin-logo"
+                    >
+                        <i class="fas fa-shield-alt admin-logo-icon"></i>
+                        <span class="admin-logo-text">KiotViet Admin</span>
                     </a>
 
-                    <!-- Notifications -->
-                    <button class="admin-header-btn" aria-label="Notifications" title="Notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </button>
+                    <!-- Header Right Section -->
+                    <div class="admin-header-right">
+                        <!-- System Admin Badge -->
+                        <div class="system-admin-badge">
+                            <i class="fas fa-user-shield"></i>
+                            <span>System Admin</span>
+                        </div>
 
-                    <!-- User Dropdown -->
-                    <div class="admin-user-dropdown">
-                        <button class="admin-avatar-btn" aria-label="User menu" onclick="toggleAdminUserDropdown()">
-                            <i class="fas fa-user-circle"></i>
-                        </button>
-                        <div class="admin-user-menu" id="adminUserMenu" style="display: none;" aria-hidden="true">
-                            <div class="admin-user-info">
-                                <div class="admin-user-avatar">
-                                    <i class="fas fa-user-shield"></i>
-                                </div>
-                                <div class="admin-user-details">
-                                    <div class="admin-user-name" id="adminUserName">Loading...</div>
-                                    <div class="admin-user-email" id="adminUserEmail">Loading...</div>
-                                    <div class="admin-user-role">System Administrator</div>
+                        <!-- User Actions -->
+                        <div class="admin-header-actions">
+                            <!-- Back to Main App -->
+                            <a
+                                href="/dashboard"
+                                th:href="@{/dashboard}"
+                                class="admin-header-btn"
+                                title="Back to App"
+                            >
+                                <i class="fas fa-arrow-left"></i>
+                                <span class="btn-text">App</span>
+                            </a>
+
+                            <!-- Notifications -->
+                            <button
+                                class="admin-header-btn"
+                                aria-label="Notifications"
+                                title="Notifications"
+                            >
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge">3</span>
+                            </button>
+
+                            <!-- User Dropdown -->
+                            <div class="admin-user-dropdown">
+                                <button
+                                    class="admin-avatar-btn"
+                                    aria-label="User menu"
+                                    onclick="toggleAdminUserDropdown()"
+                                >
+                                    <i class="fas fa-user-circle"></i>
+                                </button>
+                                <div
+                                    class="admin-user-menu"
+                                    id="adminUserMenu"
+                                    style="display: none"
+                                    aria-hidden="true"
+                                >
+                                    <div class="admin-user-info">
+                                        <div class="admin-user-avatar">
+                                            <i class="fas fa-user-shield"></i>
+                                        </div>
+                                        <div class="admin-user-details">
+                                            <div
+                                                class="admin-user-name"
+                                                id="adminUserName"
+                                            >
+                                                Loading...
+                                            </div>
+                                            <div
+                                                class="admin-user-email"
+                                                id="adminUserEmail"
+                                            >
+                                                Loading...
+                                            </div>
+                                            <div class="admin-user-role">
+                                                System Administrator
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="admin-dropdown-divider" />
+                                    <a
+                                        href="/profile"
+                                        th:href="@{/profile}"
+                                        class="admin-dropdown-item"
+                                    >
+                                        <i class="fas fa-user-edit"></i> Edit
+                                        Profile
+                                    </a>
+                                    <hr class="admin-dropdown-divider" />
+                                    <a
+                                        href="#"
+                                        class="admin-dropdown-item admin-dropdown-danger"
+                                        id="adminLogoutLink"
+                                    >
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        Logout
+                                    </a>
                                 </div>
                             </div>
-                            <hr class="admin-dropdown-divider"/>
-                            <a href="/admin/settings" th:href="@{/admin/settings}" class="admin-dropdown-item">
-                                <i class="fas fa-cog"></i> Settings
-                            </a>
-                            <a href="/profile" th:href="@{/profile}" class="admin-dropdown-item">
-                                <i class="fas fa-user-edit"></i> Edit Profile
-                            </a>
-                            <hr class="admin-dropdown-divider"/>
-                            <a href="#" class="admin-dropdown-item admin-dropdown-danger" id="adminLogoutLink">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <script th:src="@{/core/js/auth.js}"></script>
-    <script>
-        function toggleAdminUserDropdown() {
-            const menu = document.getElementById('adminUserMenu');
-            if (menu) {
-                const isHidden = menu.style.display === 'none';
-                menu.style.display = isHidden ? 'block' : 'none';
-                menu.setAttribute('aria-hidden', !isHidden);
-            }
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('adminUserMenu');
-            const avatarBtn = document.querySelector('.admin-avatar-btn');
-
-            if (dropdown && avatarBtn &&
-                !dropdown.contains(event.target) &&
-                !avatarBtn.contains(event.target)) {
-                dropdown.style.display = 'none';
-                dropdown.setAttribute('aria-hidden', 'true');
-            }
-        });
-
-        // Load admin user info
-        async function loadAdminUserInfo() {
-            if (typeof kiotVietAuth !== 'undefined') {
-                try {
-                    const isAuthenticated = await kiotVietAuth.isAuthenticated();
-                    if (isAuthenticated) {
-                        const userInfo = kiotVietAuth.getUserInfo();
-                        if (userInfo) {
-                            updateAdminUserInfo(userInfo);
-                        }
+            <script th:src="@{/core/js/auth.js}"></script>
+            <script>
+                function toggleAdminUserDropdown() {
+                    const menu = document.getElementById("adminUserMenu");
+                    if (menu) {
+                        const isHidden = menu.style.display === "none";
+                        menu.style.display = isHidden ? "block" : "none";
+                        menu.setAttribute("aria-hidden", !isHidden);
                     }
-                } catch (error) {
-                    console.error('Error loading admin user info:', error);
                 }
-            }
-        }
 
-        function updateAdminUserInfo(user) {
-            const userName = document.getElementById('adminUserName');
-            const userEmail = document.getElementById('adminUserEmail');
+                // Close dropdown when clicking outside
+                document.addEventListener("click", function (event) {
+                    const dropdown = document.getElementById("adminUserMenu");
+                    const avatarBtn =
+                        document.querySelector(".admin-avatar-btn");
 
-            if (userName) userName.textContent = user.username || user.fullName || 'Admin';
-            if (userEmail) userEmail.textContent = user.email || 'No email';
-        }
-
-        // Logout handler
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAdminUserInfo();
-
-            const logoutLink = document.getElementById('adminLogoutLink');
-            if (logoutLink) {
-                logoutLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (typeof kiotVietAuth !== 'undefined') {
-                        kiotVietAuth.logout();
-                    } else {
-                        window.location.href = '/login?logout=true';
+                    if (
+                        dropdown &&
+                        avatarBtn &&
+                        !dropdown.contains(event.target) &&
+                        !avatarBtn.contains(event.target)
+                    ) {
+                        dropdown.style.display = "none";
+                        dropdown.setAttribute("aria-hidden", "true");
                     }
                 });
-            }
-        });
-    </script>
-</header>
-</body>
+
+                // Load admin user info
+                async function loadAdminUserInfo() {
+                    if (typeof kiotVietAuth !== "undefined") {
+                        try {
+                            const isAuthenticated =
+                                await kiotVietAuth.isAuthenticated();
+                            if (isAuthenticated) {
+                                const userInfo = kiotVietAuth.getUserInfo();
+                                if (userInfo) {
+                                    updateAdminUserInfo(userInfo);
+                                }
+                            }
+                        } catch (error) {
+                            console.error(
+                                "Error loading admin user info:",
+                                error,
+                            );
+                        }
+                    }
+                }
+
+                function updateAdminUserInfo(user) {
+                    const userName = document.getElementById("adminUserName");
+                    const userEmail = document.getElementById("adminUserEmail");
+
+                    if (userName)
+                        userName.textContent =
+                            user.username || user.fullName || "Admin";
+                    if (userEmail)
+                        userEmail.textContent = user.email || "No email";
+                }
+
+                // Logout handler
+                document.addEventListener("DOMContentLoaded", function () {
+                    loadAdminUserInfo();
+
+                    const logoutLink =
+                        document.getElementById("adminLogoutLink");
+                    if (logoutLink) {
+                        logoutLink.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            if (typeof kiotVietAuth !== "undefined") {
+                                kiotVietAuth.logout();
+                            } else {
+                                window.location.href = "/login?logout=true";
+                            }
+                        });
+                    }
+                });
+            </script>
+        </header>
+    </body>
 </html>
