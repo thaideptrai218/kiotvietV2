@@ -7,7 +7,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge)
 
-A comprehensive product management system for large retail sellers in Vietnam, built with **Spring Boot 3.5.7** and **Java 21**. GOOD
+A comprehensive product management system for large retail sellers in Vietnam, built with **Spring Boot 3.5.7** and **Java 21**. GOOD v2
 
 ---
 
